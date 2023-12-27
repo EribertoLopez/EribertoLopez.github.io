@@ -7,14 +7,17 @@ const Intro = () => {
         Blog.
       </h1>
       <h4 className="text-center md:text-left text-lg mt-5 md:pl-8">
-        A statically generated blog example using{' '}
+        I'm Eri Lopez welcome to my blog 👋. 
+        My interests are personal development, computational biology, laser cutters, photography, acrylic pour painting, programming, and automation.
+
+        I hope you find something helpful or inspiring. {' '}
         <a
-          href="https://nextjs.org/"
+          href="https://www.linkedin.com/in/eribertolopez/"
           className="underline hover:text-blue-600 duration-200 transition-colors"
         >
-          Next.js
+          Let's connect!
         </a>{' '}
-        and {CMS_NAME}.
+         {/* {CMS_NAME}. */}
       </h4>
     </section>
   )

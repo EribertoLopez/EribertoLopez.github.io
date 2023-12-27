@@ -5,7 +5,7 @@ coverImage: '/assets/blog/preview/cover.jpg'
 date: '2023-12-20T05:43:07.322Z'
 author:
   name: Eri Lopez
-  picture: '/assets/blog/authors/joe.jpeg'
+  picture: '/assets/blog/authors/EriLopez3.png'
 ogImage:
   url: '/assets/blog/preview/cover.jpg'
 isPublished: true
