@@ -14,7 +14,7 @@ const NavBar = () => {
     };
     // TODO: Would be interesting to practice some CSS animations here, by animating the periods of each menuLink when
     return (
-        <div className={styles.landing}>
+        <div className={styles.navBar}>
             <header className={styles.header}>
                 <div className={styles.menuIcon} onClick={handleMenuClick}>
                     <div></div>
@@ -25,6 +25,7 @@ const NavBar = () => {
                             <li><a className={styles.menuLink} href="/posts">Blog.</a></li>
                             <li><a className={styles.menuLink} href="/projects">Projects.</a></li>
                             <li><a className={styles.menuLink} href="/lab">Lab.</a></li>
+                            <li><a className={styles.menuLink} href="/mscs">MSCS.</a></li>
                         </ul>
                     </div>
                 <h1>Welcome to My Portfolio</h1>
