@@ -12,7 +12,7 @@ const NavBar = () => {
     const handleNavClose = () => {
         setIsMenuOpen(false);
     };
-    // TODO: Would be interesting to practice some CSS animations here, by animating the periods of each menuLink when hovering
+    // TODO: Would be interesting to practice some CSS animations here, by animating the periods of each menuLink when
     return (
         <div className={styles.landing}>
             <header className={styles.header}>
@@ -22,10 +22,6 @@ const NavBar = () => {
                 </div>
                 {isMenuOpen && (
                     <div className={styles.fullScreenNav}>
-                        <div className={styles.menuIcon} onClick={handleNavClose}>
-                            <div></div>
-                            <div></div>
-                        </div>
                         <ul>
                             <li><a className={styles.menuLink} href="/posts">Blog.</a></li>
                             <li><a className={styles.menuLink} href="/projects">Projects.</a></li>
