@@ -1,4 +1,6 @@
-import Alert from './alert'
+import LandingPage from './LandingPage'
+import NavBar from './NavBar'
+// import Alert from './alert'
 import Footer from './footer'
 import Meta from './meta'
 
@@ -10,6 +12,7 @@ type Props = {
 const Layout = ({ preview, children }: Props) => {
   return (
     <>
+      <NavBar />
       <Meta />
       <div className="min-h-screen">
         {/* <Alert preview={preview} /> */}
