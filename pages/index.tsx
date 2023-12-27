@@ -14,20 +14,17 @@ type Props = {
 }
 
 export default function Index({ allPosts }: Props) {
-  // const heroPost = allPosts[0]
-  // const morePosts = allPosts.slice(1).filter((post) =>  post.isPublished === true )
   return (
-    <>
+    <div style={{ background: '#b3dcc6'}}>
       <Layout>
         <Head>
-          {/* <title>{`Next.js Blog Example with ${CMS_NAME}`}</title> */}
           <title>{`Home | Eriberto Lopez`}</title>
         </Head>
         <Container>
           <LandingPage />
         </Container>
       </Layout>
-    </>
+    </div>
   )
 }
 

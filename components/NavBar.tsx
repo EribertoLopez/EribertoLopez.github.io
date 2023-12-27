@@ -22,10 +22,9 @@ const NavBar = () => {
                 </div>
                     <div className={isMenuOpen ? styles.fullScreenNavOpen: styles.fullScreenNav}>
                         <ul>
-                            <li><a className={styles.menuLink} href="/posts">Blog.</a></li>
-                            <li><a className={styles.menuLink} href="/projects">Projects.</a></li>
-                            <li><a className={styles.menuLink} href="/lab">Lab.</a></li>
-                            <li><a className={styles.menuLink} href="/mscs">MSCS.</a></li>
+                            <li><a className={styles.menuLink} href="/">About.</a></li>
+                            <li><a className={styles.menuLink} href="/contact">Contact.</a></li>
+                            <li><a className={styles.menuLink} href="/projects">Portfolio.</a></li>
                         </ul>
                     </div>
                 <h1>Welcome to My Portfolio</h1>

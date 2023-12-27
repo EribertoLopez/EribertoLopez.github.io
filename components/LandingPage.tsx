@@ -10,34 +10,10 @@ const LandingPage = () => {
 
     return (
         <div className={styles.landing}>
-            {/* <header className={styles.header}>
-                <div className={styles.menuIcon} onClick={handleMenuClick}>
-                    <div></div>
-                    <div></div>
-                </div>
-                {isMenuOpen && (
-                    <nav className={styles.fullScreenNav}>
-                        <ul>
-                            <li><a className={styles.menu_link} href="/posts">Blog</a></li>
-                            <li><a className={styles.menu_link} href="/projects">Projects</a></li>
-                            <li><a className={styles.menu_link} href="/lab">Lab</a></li>
-                        </ul>
-                    </nav>
-                )}
-                <h1>Welcome to My Portfolio</h1>
-            </header> */}
-            <section id="blog" className={styles.blog}>
-                <div className={styles.h1}>Blog</div>
-                {/* Blog content */}
-            </section>
-            <section id="projects" className={styles.projects}>
-                <div className={styles.h1}>Projects</div>
-                {/* Projects content */}
-            </section>
-            <section id="lab" className={styles.lab}>
-                <div className={styles.h1}>Lab</div>
-                {/* Lab content */}
-            </section>
+            <a className={styles.h1} href="/posts">Blog.</a>
+            <a className={styles.h1} href="/projects">Projects.</a>
+            <a className={styles.h1} href="/lab">Lab.</a>
+            <a className={styles.h1} href="/mscs">MSCS.</a>
         </div>
     );
 };

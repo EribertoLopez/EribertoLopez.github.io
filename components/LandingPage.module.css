@@ -23,7 +23,6 @@
     height: 0.25rem;
     background: black;
 }
-/* #e3dbce */
 
 .fullScreenNav {
     position: fixed;
@@ -44,10 +43,6 @@
 
 .fullScreenNav li {
     margin: 20px 0;
-}
-
-.blog, .projects, .lab {
-    margin-top: 20px;
 }
 
 .h1 {
@@ -81,9 +76,9 @@
     border: 0px solid #000;
     font-family: Poppins, sans-serif;
     color: #000;
-    font-size: 20vh;
-    line-height: 22vh;
-    font-weight: 10;
+    font-size: 18vh;
+    line-height: 20vh;
+    /* font-weight: 1; */
     text-align: center;
     letter-spacing: -5px;
     text-transform: capitalize;
