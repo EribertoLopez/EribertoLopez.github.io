@@ -24,7 +24,25 @@
     height: 0.25rem;
     background: black;
 } */
+/* .menu-expand {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transform: translateY(-100%);
+    transition: transform 0.3s ease-in-out;
+}
 
+.menu-expand.open {
+    transform: translateY(100%);
+} */
 .fullScreenNav {
     position: fixed;
     top: 0;
@@ -37,6 +55,24 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    transform: translateY(-100%);
+    transition: transform 0.3s ease-in-out;
+}
+
+.fullScreenNavOpen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgb(227, 219, 206);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transform: translateY(0%);
+    transition: transform 0.3s ease-in-out;
 }
 
 .fullScreenNav ul {
@@ -138,7 +174,7 @@
     width: 2rem;
     height: 2rem;
     cursor: pointer;
-    z-index: 100;
+    z-index: 1;
 }
 
 .menuIcon div {
@@ -146,9 +182,6 @@
     height: 0.25rem;
     background: black;
 }
-/* .menuIcon.open {
-    z-index: 100;
-} */
 
 .color-swipe {
     position: absolute;

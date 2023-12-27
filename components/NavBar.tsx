@@ -20,15 +20,13 @@ const NavBar = () => {
                     <div></div>
                     <div></div>
                 </div>
-                {isMenuOpen && (
-                    <div className={styles.fullScreenNav}>
+                    <div className={isMenuOpen ? styles.fullScreenNavOpen: styles.fullScreenNav}>
                         <ul>
                             <li><a className={styles.menuLink} href="/posts">Blog.</a></li>
                             <li><a className={styles.menuLink} href="/projects">Projects.</a></li>
                             <li><a className={styles.menuLink} href="/lab">Lab.</a></li>
                         </ul>
                     </div>
-                )}
                 <h1>Welcome to My Portfolio</h1>
             </header>
         </div>
