@@ -6,6 +6,7 @@ import Head from 'next/head'
 import myImage from "../../public/favicon/IBelieveICanShibe_edited_50x50.png";
 
 import styles from './contact.module.css'
+import Image from "next/image";
 
 export default function Index() {
 
@@ -19,7 +20,7 @@ export default function Index() {
             <div className={styles.contact}>
                 <div >Under Construction </div>
                 <div >Contact Me</div>
-                <img src={myImage.src} alt="shibe" onClick={() => console.log('shibeee')}/>
+                <Image src={myImage.src} alt="shibe" onClick={() => console.log('shibeee')} width={50} height={50}/>
             </div>
         </Container>
       </Layout>
