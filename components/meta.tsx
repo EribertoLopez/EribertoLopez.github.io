@@ -36,7 +36,8 @@ const Meta = () => {
         name="description"
         content={`A statically generated blog example using Next.js and ${CMS_NAME}.`}
       /> */}
-      <meta property="og:image" content={myImage.src} />
+      <meta property="og:image" content='/favicon/acryclic_cells_rainbow_zoom_in.jpeg' />
+      {/* <meta property="og:image" content={myImage.src} /> */}
     </Head>
   )
 }
