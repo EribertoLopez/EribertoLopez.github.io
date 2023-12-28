@@ -1,6 +1,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import styles from "./NavBar.module.css";
+import React from "react";
+import myImage from "../public/favicon/IBelieveICanShibe_edited_50x50.png";
 
 const NavBar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -20,14 +22,14 @@ const NavBar = () => {
                     <div></div>
                     <div></div>
                 </div>
-                    <div className={isMenuOpen ? styles.fullScreenNavOpen: styles.fullScreenNav}>
-                        <ul>
-                            <li><a className={styles.menuLink} href="/">About.</a></li>
-                            <li><a className={styles.menuLink} href="/contact">Contact.</a></li>
-                            <li><a className={styles.menuLink} href="/projects">Portfolio.</a></li>
-                        </ul>
-                    </div>
-                <h1>Welcome to My Portfolio</h1>
+                <div className={isMenuOpen ? styles.fullScreenNavOpen: styles.fullScreenNav}>
+                    <ul>
+                        <li><a className={styles.menuLink} href="/">About.</a></li>
+                        <li><a className={styles.menuLink} href="/contact">Contact.</a></li>
+                        <li><a className={styles.menuLink} href="/projects">Portfolio.</a></li>
+                    </ul>
+                    <img src={myImage.src} alt="shibe" onClick={() => console.log('shibeee')}/>
+                </div>
             </header>
         </div>
     );

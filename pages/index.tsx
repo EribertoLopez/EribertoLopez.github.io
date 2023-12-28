@@ -14,6 +14,7 @@ type Props = {
 }
 
 export default function Index({ allPosts }: Props) {
+
   return (
     <div style={{ background: '#b3dcc6'}}>
       <Layout>

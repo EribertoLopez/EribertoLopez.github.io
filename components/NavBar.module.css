@@ -1,6 +1,7 @@
 /* NavBar.module.css */
 .navBar {
     padding: 20px;
+    z-index: 0;
 }
 
 .header {
@@ -37,6 +38,7 @@
     align-items: center;
     transform: translateY(0%);
     transition: transform 0.3s ease-in-out;
+    z-index: 1;
 }
 
 .fullScreenNavOpen ul {
@@ -75,6 +77,22 @@
     text-decoration: none;
     text-transform: none;
 }
+
+/* For screens smaller than 600px */
+@media (max-width: 600px) {
+    .menuLink {
+        font-size: 10vh;
+        line-height: 10vh;
+
+    }
+}
+
+/* For screens larger than 900px */
+@media (min-width: 900px) {
+    .menuLink {
+        font-size: 12vh;
+    }
+}
   
 .menuIcon {
     display: flex;
@@ -83,7 +101,7 @@
     width: 2rem;
     height: 2rem;
     cursor: pointer;
-    z-index: 1;
+    z-index: 2;
 }
 
 .menuIcon div {
