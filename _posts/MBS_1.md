@@ -12,7 +12,7 @@ isPublished: true
 ---
 
 ## Inspiration
-In the past I was pointed towards reading [_The Seven Spiritual Laws of Success_](https://en.wikipedia.org/wiki/The_Seven_Spiritual_Laws_of_Success). At the time I didn't understand how much noise was all around me and in my own thoughts. What it ultimately did was made the vision of the future I wanted to build hazy and hard to take a pragmatic approach towards reaching what I wanted. I needed a framework to be real with myself and ask myself deep questions without externalities influencing my motivations. From my experience, I found the book to be small but profound. I would read a section within the day and reflect throughout the week.
+In the past I was pointed towards reading [_The Seven Spiritual Laws of Success_](https://en.wikipedia.org/wiki/The_Seven_Spiritual_Laws_of_Success). At the time I didn't understand how much noise was all around me and in my own thoughts. Ultimately it made my vision of the future I wanted to build hazy and hard to take a pragmatic approach towards reaching my goals. I needed a framework to be real with myself and ask myself deep questions without externalities influencing my motivations. From my experience, I found the book to be short but profound. I would read a section within the day and reflect throughout the week.
 
 ## The Law of Pure Potentiality 
 _Take time to be silent, to just BE. Meditate for 30 minutes twice a day. Silently witness the intelligence within every living thing. Practice non-judgment. Mantra - Om Bhavam Namah_

@@ -1,0 +1,92 @@
+.landing {
+
+    padding: 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.h1 {
+    /* z-index: 0; */
+    position: static;
+    left: 0%;
+    top: 0%;
+    right: 0%;
+    bottom: 0%;
+    display: block;
+    width: auto;
+    min-width: 0px;
+    margin: 0px;
+    float: left;
+    clear: none;
+    -webkit-box-pack: center;
+    -webkit-justify-content: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-align-self: auto;
+    -ms-flex-item-align: auto;
+    -ms-grid-row-align: auto;
+    align-self: auto;
+    -webkit-box-flex: 0;
+    -webkit-flex: 0 0 auto;
+    -ms-flex: 0 0 auto;
+    flex: 0 0 auto;
+    border: 0px solid #000;
+    font-family: Poppins, sans-serif;
+    color: #000;
+    font-size: 15vh;
+    line-height: 18vh;
+    /* font-weight: 1; */
+    text-align: center;
+    letter-spacing: -5px;
+    text-transform: capitalize;
+  }
+  
+  .menuLink {
+    position: static;
+    left: auto;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    width: 48vh;
+    margin-top: 10px;
+    margin-bottom: 0px;
+    opacity: 1;
+    font-family: Poppins, sans-serif;
+    color: #000;
+    line-height: 12vh;
+    font-style: normal;
+    font-weight: 200;
+    text-align: left;
+    text-decoration: none;
+    text-transform: none;
+    transform: translateX(0%);
+    transition: transform 0.3s ease-in-out;
+}
+
+
+/* For screens smaller than 600px */
+@media (max-width: 600px) {
+    .menuLink {
+        font-size: 10vh;
+        line-height: 15vh;
+
+    }
+}
+
+/* For screens larger than 900px */
+@media (min-width: 900px) {
+    .menuLink {
+        font-size: 12vh;
+    }
+}
