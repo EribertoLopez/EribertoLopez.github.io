@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styles from './LandingPage.module.css';
+import Link from 'next/link';
 
 const LandingPage = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -10,10 +11,10 @@ const LandingPage = () => {
 
     return (
         <div className={styles.landing}>
-            <a className={styles.menuLink} href="/posts">Blog.</a>
-            <a className={styles.menuLink} href="/projects">Projects.</a>
-            <a className={styles.menuLink} href="/lab">Lab.</a>
-            <a className={styles.menuLink} href="/mscs">MSCS.</a>
+            <Link className={styles.menuLink} href="/posts">Blog.</Link>
+            <Link className={styles.menuLink} href="/projects">Projects.</Link>
+            <Link className={styles.menuLink} href="/lab">Lab.</Link>
+            <Link className={styles.menuLink} href="/mscs">MSCS.</Link>
         </div>
     );
 };

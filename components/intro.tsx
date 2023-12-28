@@ -7,7 +7,7 @@ const Intro = () => {
         Blog.
       </h1>
       <h4 className="text-center md:text-left text-lg mt-5 md:pl-8">
-        I'm Eri Lopez welcome to my blog 👋. 
+        I&apos;m Eri Lopez welcome to my blog 👋. 
         My interests are personal development, computational biology, laser cutters, photography, acrylic pour painting, programming, and automation.
 
         I hope you find something helpful or inspiring. {' '}
@@ -15,7 +15,7 @@ const Intro = () => {
           href="https://www.linkedin.com/in/eribertolopez/"
           className="underline hover:text-blue-600 duration-200 transition-colors"
         >
-          Let's connect!
+          Let&apos;s connect!
         </a>{' '}
          {/* {CMS_NAME}. */}
       </h4>
