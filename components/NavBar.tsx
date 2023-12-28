@@ -14,10 +14,6 @@ const NavBar = () => {
         setIsMenuOpen(!isMenuOpen);
     };
 
-    const handleNavClose = () => {
-        setIsMenuOpen(false);
-    };
-
     return (
         <div className={styles.navBar}>
             <header className={styles.header}>
