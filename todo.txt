@@ -1,0 +1,5 @@
+TODO:
+- add image to sidebar
+- add overlay to sidebar
+- implement responsive design
+- design blog post/content component

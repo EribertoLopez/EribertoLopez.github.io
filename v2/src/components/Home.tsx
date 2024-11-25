@@ -7,7 +7,9 @@ const Home = () => {
           <section className="mb-20">
             <div className="relative h-[500px] mb-8">
               <img 
-                src="https://images.unsplash.com/photo-1469474968028-56623f02e42e"
+                src="src/images/20170108_123337.jpg"
+                // src="src/images/me_infront_of_HPC_20180129_163043.jpg"
+                // src="https://images.unsplash.com/photo-1469474968028-56623f02e42e"
                 alt="Nature landscape"
                 className="w-full h-full object-cover rounded-lg"
               />
