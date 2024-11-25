@@ -1,19 +1,22 @@
 import React from 'react';
 import { Github, Twitter, Linkedin, Mail } from 'lucide-react';
+import { Sections } from '../ConfigUtils';
 
-const Sidebar = () => {
+const Sidebar = ({currentTheme, onThemeChange}: {currentTheme: string, onThemeChange: (t: Sections) => void}) => {
   return (
     <div 
       className="fixed w-80 h-screen bg-neutral-800 p-8 flex flex-col justify-between"
       style={{ 
         // backgroundImage: 'url(src/images/me_infront_of_HPC_20180129_163043.jpg)' 
         // backgroundImage: 'url(src/images/20170108_123337.jpg)', 
-        backgroundImage: 'url(src/images/me_infront_of_HPC_20180129_163043.jpg)', 
+        backgroundImage: currentTheme, 
+        // backgroundImage: 'url(src/images/me_infront_of_HPC_20180129_163043.jpg)', 
         // backgroundSize: '175%', // Adjusts the size of the background image
         backgroundSize: 'cover', // Adjusts the size of the background image
         backgroundPosition: 'center', // Centers the background image
         backgroundPositionY: '100%',
-        backgroundRepeat: 'no-repeat' // Prevents the background image from repeating
+        backgroundRepeat: 'no-repeat', // Prevents the background image from repeating
+        width: '25rem'
       }}
     >
       <div 
@@ -36,18 +39,35 @@ const Sidebar = () => {
         
         <nav>
           <ul className="space-y-4">
-            <li>
-              <a href="/latest" className="text-lg hover:text-blue-400 transition-colors">Latest</a>
-            </li>
-            <li>
-              <a href="/projects" className="text-lg hover:text-blue-400 transition-colors">Projects</a>
-            </li>
-            <li>
-              <a href="/about" className="text-lg hover:text-blue-400 transition-colors">About</a>
-            </li>
-            <li>
-              <a href="/contact" className="text-lg hover:text-blue-400 transition-colors">Contact</a>
-            </li>
+            {Object.entries(Sections).map(([key, _]) => {
+              console.log('key', key, Sections.Home, key == Sections.Home)
+              return (
+                <li key={key}>
+                  <a 
+                    href={key == Sections.Home ? "/" : `/${key.toLowerCase()}`}
+                    className="text-lg hover:text-blue-400 transition-colors"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onThemeChange(key as Sections)
+                      // console.log(key)
+                    }}
+                  >
+                    {key.charAt(0).toUpperCase() + key.slice(1)}
+                  </a>
+                  {/* <a 
+                    href={key == Sections.Home ? "/" : `/${key.toLowerCase()}`}
+                    className="text-lg hover:text-blue-400 transition-colors"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onThemeChange(key as Sections)
+                      // console.log(key)
+                    }}
+                  >
+                    {key.charAt(0).toUpperCase() + key.slice(1)}
+                  </a> */}
+                </li>
+              );
+            })}
           </ul>
         </nav>
       </div>

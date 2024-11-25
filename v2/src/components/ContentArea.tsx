@@ -5,8 +5,9 @@ import Home from './Home';
 import Projects from './Projects';
 import Blog from './Blog';
 import Sidebar from './Sidebar';
+import { Sections } from '../ConfigUtils';
 
-const ContentArea = () => {
+const ContentArea = ({currentTheme, onThemeChange}: {currentTheme: string, onThemeChange: (t: Sections) => void}) => {
   return (
     <Router>
       <Routes>
