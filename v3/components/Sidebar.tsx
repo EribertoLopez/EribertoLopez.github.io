@@ -1,5 +1,6 @@
 import React from 'react';
 import { Github, Twitter, Linkedin, Mail } from 'lucide-react';
+import Link from 'next/link';
 // import { Sections } from '../ConfigUtils';
 export enum Sections {
   Home = 'Home',
@@ -47,7 +48,7 @@ const Sidebar = ({currentTheme, onThemeChange}: {currentTheme: string, onThemeCh
               console.log('key', key, Sections.Home, key == Sections.Home)
               return (
                 <li key={key}>
-                  <a 
+                  <Link 
                     href={key == Sections.Home ? "/" : `/${key.toLowerCase()}`}
                     className="text-lg hover:text-blue-400 transition-colors"
                     onClick={(e) => {
@@ -57,7 +58,7 @@ const Sidebar = ({currentTheme, onThemeChange}: {currentTheme: string, onThemeCh
                     }}
                   >
                     {key.charAt(0).toUpperCase() + key.slice(1)}
-                  </a>
+                  </Link>
                   {/* <a 
                     href={key == Sections.Home ? "/" : `/${key.toLowerCase()}`}
                     className="text-lg hover:text-blue-400 transition-colors"
