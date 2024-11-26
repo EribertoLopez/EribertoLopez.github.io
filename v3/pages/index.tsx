@@ -5,19 +5,9 @@ import LandingPage from '../components/LandingPage'
 import Sidebar from '../components/Sidebar'
 import { useState, useCallback } from 'react'
 import ContentArea from '../components/ContentArea'
-// import image from './public/assets/images'
-export enum Sections {
-  Home = 'Home',
-  Projects = 'Projects',
-  Blog = 'Blog'
-}
+import { themes, Sections } from '../lib/ConfigUtils'
+import SidebarLayout from '../components/SidebarLayout'
 
-export const themes: {[key in Sections]: string }= {
-[Sections.Home]: 'url(/assets/images/me_infront_of_HPC_20180129_163043.jpg)',
-[Sections.Projects]: 'url(/assets/images/20170108_123337.jpg)',
-// [Sections.Projects]: 'url(src/images/projects_background.jpg)',
-[Sections.Blog]: 'url(src/images/blog_background.jpg)',
-}
 
 export default function Index() {
   const [currentTheme, setCurrentTheme] = useState<string>(themes[Sections.Home]);
@@ -26,18 +16,26 @@ export default function Index() {
   }, [themes])
 
   return (
-    <div>
-      <Head>
-        <title>{`Home | Eriberto Lopez`}</title>
-      </Head>
-      <Layout>
-        <Sidebar currentTheme={currentTheme} onThemeChange={handleThemeChange} />
-        <Container>
-          <ContentArea currentTheme={currentTheme} onThemeChange={handleThemeChange} />
-          {/* <LandingPage /> */}
-        </Container>
-      </Layout>
-    </div>
+
+    <SidebarLayout
+      headTitle={`Home | Eriberto Lopez`}
+      currentTheme={Sections.Home}
+      onThemeChange={handleThemeChange}
+    >
+      <ContentArea currentTheme={Sections.Home} onThemeChange={handleThemeChange} />
+    </SidebarLayout>
+    // <div>
+    //   <Head>
+    //     <title>{`Home | Eriberto Lopez`}</title>
+    //   </Head>
+    //   <Sidebar currentTheme={currentTheme} onThemeChange={handleThemeChange} />
+    //   <Layout>
+    //     <Container>
+    //       <ContentArea currentTheme={currentTheme} onThemeChange={handleThemeChange} />
+    //       {/* <LandingPage /> */}
+    //     </Container>
+    //   </Layout>
+    // </div>
   )
 }
 

@@ -1,12 +1,9 @@
 import React from 'react';
 import { Github, Twitter, Linkedin, Mail } from 'lucide-react';
 import Link from 'next/link';
-// import { Sections } from '../ConfigUtils';
-export enum Sections {
-  Home = 'Home',
-  Projects = 'Projects',
-  Blog = 'Blog'
-}
+import { Sections } from '../lib/ConfigUtils';
+
+
 const Sidebar = ({currentTheme, onThemeChange}: {currentTheme: string, onThemeChange: (t: Sections) => void}) => {
   return (
     <div 
@@ -14,7 +11,7 @@ const Sidebar = ({currentTheme, onThemeChange}: {currentTheme: string, onThemeCh
       style={{ 
         // backgroundImage: 'url(src/images/me_infront_of_HPC_20180129_163043.jpg)' 
         // backgroundImage: 'url(src/images/20170108_123337.jpg)', 
-        backgroundImage: currentTheme, 
+        backgroundImage: `url(${currentTheme})`, 
         // backgroundImage: 'url(src/images/me_infront_of_HPC_20180129_163043.jpg)', 
         // backgroundSize: '175%', // Adjusts the size of the background image
         backgroundSize: 'cover', // Adjusts the size of the background image
@@ -52,7 +49,7 @@ const Sidebar = ({currentTheme, onThemeChange}: {currentTheme: string, onThemeCh
                     href={key == Sections.Home ? "/" : `/${key.toLowerCase()}`}
                     className="text-lg hover:text-blue-400 transition-colors"
                     onClick={(e) => {
-                      e.preventDefault();
+                      // e.preventDefault();
                       onThemeChange(key as Sections)
                       // console.log(key)
                     }}

@@ -1,36 +1,25 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+// import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ExternalLink } from 'lucide-react';
-import Home from './Home';
-import Projects from './Projects';
-import Blog from './Blog';
+// import Home from './Home';
+// import Projects from './Projects';
+// import Blog from './Blog';
 import Sidebar from './Sidebar';
-import { Sections } from '../ConfigUtils';
+// import { Sections } from '../ConfigUtils';
+import { Sections, themes } from '../lib/ConfigUtils';
 
 const ContentArea = ({currentTheme, onThemeChange}: {currentTheme: string, onThemeChange: (t: Sections) => void}) => {
-  // return (
-  //  <div>ContentArea</div>
-  // );
-  
-//   return (
-//     <Router>
-//       <Routes>
-//         <Route path="/" element={<Home />} />
-//         <Route path="/projects" element={<Projects />} />
-//         <Route path="/blog" element={<Blog />} />
-//       </Routes>
-//     </Router>
-//   );
-// };
 
-// const ContentArea = () => {
   return (
     <div className="ml-80 w-full min-h-screen">
       <div className="max-w-4xl mx-auto p-8">
         <section className="mb-20">
           <div className="relative h-[500px] mb-8">
             <img 
-              src="https://images.unsplash.com/photo-1469474968028-56623f02e42e"
+              // src="https://images.unsplash.com/photo-1469474968028-56623f02e42e"
+              // src={themes[currentTheme].slice(4)}
+              src={themes[currentTheme]}
+              // src={'/assets/images/me_infront_of_HPC_20180129_163043.jpg'}
               alt="Nature landscape"
               className="w-full h-full object-cover rounded-lg"
             />
