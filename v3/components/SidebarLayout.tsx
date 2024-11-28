@@ -74,10 +74,10 @@ const SidebarLayout = ({headTitle, currentTheme, onThemeChange, children}: {head
         <Head>
             <title>{headTitle}</title>
         </Head>
-        <Header currentTheme={currentTheme} />
         {/* <Sidebar currentTheme={themes[currentTheme]} onThemeChange={onThemeChange} /> */}
         <Layout>
             <Container>
+        <Header currentTheme={currentTheme} />
                 {children}
             </Container>
         </Layout>
