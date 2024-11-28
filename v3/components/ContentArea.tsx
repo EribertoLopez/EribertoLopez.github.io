@@ -7,47 +7,49 @@ import { ExternalLink } from 'lucide-react';
 import Sidebar from './Sidebar';
 // import { Sections } from '../ConfigUtils';
 import { Sections, themes } from '../lib/ConfigUtils';
-
+import styles from './ContentArea.module.css'
 const ContentArea = ({currentTheme, onThemeChange}: {currentTheme: string, onThemeChange: (t: Sections) => void}) => {
   return (
-    <main className="flex-1 bg-gray-900">
-      <article className="p-6">
-        <h2 className="text-3xl font-bold mb-2">{currentTheme}</h2>
-        <p className="text-gray-400 mb-6">30 June 2018</p>
-        <img 
-          src="/api/placeholder/800/400" 
-          alt="Road through forest" 
-          className="w-full rounded-lg mb-6"
-        />
-      </article>
-      <article className="p-6">
-        <h2 className="text-3xl font-bold mb-2">Hitting The Road 2</h2>
-        <p className="text-gray-400 mb-6">30 June 2019</p>
-        <img 
-          src="/api/placeholder/800/400" 
-          alt="Road through forest" 
-          className="w-full rounded-lg mb-6"
-        />
-      </article>
-      <article className="p-6">
-        <h2 className="text-3xl font-bold mb-2">Hitting The Road</h2>
-        <p className="text-gray-400 mb-6">30 June 2018</p>
-        <img 
-          src="/api/placeholder/800/400" 
-          alt="Road through forest" 
-          className="w-full rounded-lg mb-6"
-        />
-      </article>
-      <article className="p-6">
-        <h2 className="text-3xl font-bold mb-2">Hitting The Road 2</h2>
-        <p className="text-gray-400 mb-6">30 June 2019</p>
-        <img 
-          src="/api/placeholder/800/400" 
-          alt="Road through forest" 
-          className="w-full rounded-lg mb-6"
-        />
-      </article>
-    </main>
+    // <main className="flex-1 bg-gray-900" style={{"paddingLeft": '30%'}}>
+    <main className={styles.contentArea}>
+    {/* <main className="flex-1 bg-gray-900 contentArea" > */}
+          <article className="p-6">
+            <h2 className="text-3xl font-bold mb-2">Hitting The Road - {currentTheme}</h2>
+            <p className="text-gray-400 mb-6">30 June 2018</p>
+            <img 
+              src="/api/placeholder/800/400" 
+              alt="Road through forest" 
+              className="w-full rounded-lg mb-6"
+            />
+          </article>
+          <article className="p-6">
+            <h2 className="text-3xl font-bold mb-2">Hitting The Road 2</h2>
+            <p className="text-gray-400 mb-6">30 June 2019</p>
+            <img 
+              src="/api/placeholder/800/400" 
+              alt="Road through forest" 
+              className="w-full rounded-lg mb-6"
+            />
+          </article>
+          <article className="p-6">
+            <h2 className="text-3xl font-bold mb-2">Hitting The Road</h2>
+            <p className="text-gray-400 mb-6">30 June 2018</p>
+            <img 
+              src="/api/placeholder/800/400" 
+              alt="Road through forest" 
+              className="w-full rounded-lg mb-6"
+            />
+          </article>
+          <article className="p-6">
+            <h2 className="text-3xl font-bold mb-2">Hitting The Road 2</h2>
+            <p className="text-gray-400 mb-6">30 June 2019</p>
+            <img 
+              src="/api/placeholder/800/400" 
+              alt="Road through forest" 
+              className="w-full rounded-lg mb-6"
+            />
+          </article>
+        </main>
   );
   // return (
   //   <div className="ml-80 w-full min-h-screen">
