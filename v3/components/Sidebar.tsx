@@ -2,12 +2,15 @@ import React from 'react';
 import { Github, Twitter, Linkedin, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { Sections } from '../lib/ConfigUtils';
+import styles from './SidebarLayout.module.css';
 
 
 const Sidebar = ({currentTheme, onThemeChange}: {currentTheme: string, onThemeChange: (t: Sections) => void}) => {
   return (
+    // <header></header>
     <div 
       className="fixed w-80 h-screen bg-neutral-800 p-8 flex flex-col justify-between"
+      // className={styles.sidebarLayout}
       style={{ 
         // backgroundImage: 'url(src/images/me_infront_of_HPC_20180129_163043.jpg)' 
         // backgroundImage: 'url(src/images/20170108_123337.jpg)', 
@@ -18,9 +21,13 @@ const Sidebar = ({currentTheme, onThemeChange}: {currentTheme: string, onThemeCh
         backgroundPosition: 'center', // Centers the background image
         backgroundPositionY: '100%',
         backgroundRepeat: 'no-repeat', // Prevents the background image from repeating
-        width: '25rem'
+        width: '30%',
+        right: 'auto',
+        position: 'fixed'
+        // width: '25rem'
       }}
     >
+      {/* <div className={styles.overlay}></div> */}
       <div 
         id="OVERLAY"
         style={{
@@ -35,6 +42,7 @@ const Sidebar = ({currentTheme, onThemeChange}: {currentTheme: string, onThemeCh
           // background: '-moz-linear-gradient(top, rgba(22,27,33,0) 0%, rgba(22,27,33,0.01) 1%, rgba(22,27,33,0.7) 70%, rgba(22,27,33,0.7) 100%)',
         }}
       ></div>
+      <div className={styles.headerImage}></div>
       <div id='MYINFO' style={{ marginTop: 'auto', zIndex: 2, position: 'relative' }}>
         <h1 className="text-4xl font-bold mb-4">Eriberto Lopez</h1>
         <p className="text-neutral-400 mb-8">Full-stack developer passionate about creating beautiful and functional web experiences.</p>
