@@ -7,10 +7,7 @@ type Props = {
 const Container = ({ children }: Props) => {
   // return <div id='mycontainer'>{children}</div>
   return <div 
-    id='mycontainer' 
-    // className="container mx-auto px-5"
-    className={styles.layoutContainer}
-    // style={{"paddingLeft": '30%'}}
+    id='mycontainer'
   >
     {children}
   </div>

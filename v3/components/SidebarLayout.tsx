@@ -77,12 +77,33 @@ const SidebarLayout = ({headTitle, currentTheme, onThemeChange, children}: {head
         {/* <Sidebar currentTheme={themes[currentTheme]} onThemeChange={onThemeChange} /> */}
         <Layout>
             <Container>
-        <Header currentTheme={currentTheme} />
+                <Header currentTheme={currentTheme} />
                 {children}
             </Container>
         </Layout>
   </div>
   );
 };
-
+// const SidebarLayout = ({headTitle, currentTheme, onThemeChange, children}: {headTitle: string, currentTheme: string, onThemeChange: (t: Sections) => void, children: React.ReactElement}) => {
+//     return (
+//       <div>
+//           <Head>
+//               <title>{headTitle}</title>
+//           </Head>
+//           {/* <Sidebar currentTheme={themes[currentTheme]} onThemeChange={onThemeChange} /> */}
+//           <div 
+//               id='testing-wrapper'
+//               style={{
+//                   marginInline: 'auto'
+//               }}
+//           >
+//               <div id='testing-container'>
+//                   <Header currentTheme={currentTheme} />
+//                   {children}
+//               </div>
+//           </div>
+//     </div>
+//     );
+//   };
+  
 export default SidebarLayout;

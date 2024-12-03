@@ -53,7 +53,7 @@ const ContentArea = ({currentTheme, onThemeChange}: {currentTheme: string, onThe
   // );
   return (
     <div className={`${styles.contentArea} w-full min-h-screen`}>
-      <div className="max-w-4xl mx-auto p-8">
+      <div className="mx-auto p-8">
         <section className="mb-20">
           <div className="relative h-[500px] mb-8">
             <img 
