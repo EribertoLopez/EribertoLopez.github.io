@@ -4,7 +4,6 @@ import SidebarLayout from '../components/SidebarLayout'
 import { ExternalLink } from 'lucide-react'
 
 const HomeContent = ({ currentTheme }: { currentTheme: string }) => {
-  console.log(themes[currentTheme], currentTheme)
   return (
     <div>
         <div className="relative h-[500px] mb-8">
