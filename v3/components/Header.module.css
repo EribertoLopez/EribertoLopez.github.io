@@ -91,9 +91,7 @@
   }
   
   .headerContent {
-    position: fixed;
-    width: 20%;
-    margin-top: auto;
+    /* margin-top: auto; */
   }
   
   .navContent {
