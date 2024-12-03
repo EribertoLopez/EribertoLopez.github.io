@@ -1,3 +1,4 @@
+/* TODO: Clean up unused css */
 .overlay {
     position: absolute;
     top: 0;
@@ -159,11 +160,16 @@
   @media only screen and (max-width: 1023px) {
     .header {
       position: relative;
-      /* width: 100%; */
       height: auto;
     }
     
     .mainContent {
       margin-left: 0;
+    }
+  }
+
+  @media only screen and (max-width: 768px) {
+    .headerDescription {
+      display: none;
     }
   }
