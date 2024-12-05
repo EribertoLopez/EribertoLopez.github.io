@@ -8,7 +8,7 @@ import Layout from './layout';
 import styles from './Header.module.css';
 import ContentArea from './ContentArea';
 
-const Header = ({ currentTheme }: { currentTheme: string }) => {
+const ContentHeader = ({ currentTheme }: { currentTheme: string }) => {
     return (
         <header
             className={`${styles.header} ${styles.headerBackground}`}
@@ -35,14 +35,16 @@ const Header = ({ currentTheme }: { currentTheme: string }) => {
             
             <nav className={styles.navContent}>
               <ul className="space-y-2">
-                {Object.entries(Sections).map(([key, _]) => {
+                {Object.entries(Sections).map(([key, value]) => {
+                    console.log('key', key, value, Sections.Home, key == Sections.Home)
+
                     return (
-                        <li key={key}>
+                        <li key={value}>
                             <Link 
-                                href={key == Sections.Home ? "/" : `/${key.toLowerCase()}`}
+                                href={value == Sections.Home ? "/" : `/${value.toLowerCase()}`}
                                 className={`${styles.navContentLink} hover:text-blue-400 transition-colors`}
                             >
-                                {key.charAt(0).toUpperCase() + key.slice(1)}
+                                {value.charAt(0).toUpperCase() + value.slice(1)}
                             </Link>
                         </li>
                     );
@@ -77,7 +79,7 @@ const SidebarLayout = ({headTitle, currentTheme, onThemeChange, children}: {head
         </Head>
         <Layout>
             <Container>
-                <Header currentTheme={currentTheme} />
+                <ContentHeader currentTheme={currentTheme} />
                 <ContentArea>{children}</ContentArea>
             </Container>
         </Layout>
