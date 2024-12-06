@@ -8,6 +8,7 @@ import { getAllProjects } from '../../lib/api';
 import Intro from '../../components/intro';
 import HeroPost from '../../components/hero-post';
 import MoreStories from '../../components/more-stories';
+import MoreProjects from '../../components/more-projects';
 
 
 const ProjectContent = ({ currentTheme }: { currentTheme: string }) => {
@@ -68,7 +69,7 @@ const ProjectContent = ({ currentTheme }: { currentTheme: string }) => {
 const Content = ({ currentTheme, allProjects }: { currentTheme: Sections, allProjects: Project[] }) => {
   const heroProj = allProjects[0]
   const moreProjs = allProjects.slice(1, allProjects.length).filter((p) =>  p.isPublished === true )
-
+  // TODO: Left off here, need to create Project component that shows picture until user hovers over and it displays the title over some shadow/gradient overlay
   return (
     <div>
       <Intro currentTheme={currentTheme}/>
@@ -83,7 +84,7 @@ const Content = ({ currentTheme, allProjects }: { currentTheme: Sections, allPro
           currentTheme={currentTheme}
         />
       )}
-      {moreProjs.length > 0 && <MoreStories posts={moreProjs} currentTheme={currentTheme} />}
+      {moreProjs.length > 0 && <MoreProjects posts={moreProjs} currentTheme={currentTheme} />}
     </div>
   )
 }
