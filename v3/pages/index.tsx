@@ -7,13 +7,14 @@ import { getAllPosts } from '../lib/api'
 import HeroPost from '../components/hero-post'
 import Intro from '../components/intro'
 import MoreStories from '../components/more-stories'
+import HeroProject from '../components/hero-project'
 
 type Props = {
   allPosts: Post[]
 }
 
 // 
-const Content = ({ currentTheme, allPosts }: { currentTheme: string, allPosts: Post[] }) =>  {
+const Content = ({ currentTheme, allPosts }: { currentTheme: Sections, allPosts: Post[] }) =>  {
   const heroPost = allPosts[0]
   const morePosts = allPosts.slice(1).filter((post) =>  post.isPublished === true )
   // return (
@@ -32,8 +33,21 @@ const Content = ({ currentTheme, allPosts }: { currentTheme: string, allPosts: P
   //     {morePosts.length > 0 && <MoreStories posts={morePosts} />}
   //   </div>
   // )
+
+  // const sections =  Array(['resume', 'quick description', 'strengths'])
   return (
     <div>
+        <HeroProject // testing only - doesn't create the  link path to the resource, b/c its tied to the currentTheme
+          key={heroPost.slug}
+          title={heroPost.title}
+          coverImage={heroPost.coverImage}
+          // coverImage={heroPost.coverImage}
+          date={heroPost.date}
+          author={heroPost.author}
+          slug={heroPost.slug}
+          excerpt={heroPost.excerpt}
+          currentTheme={Sections.Posts} // can hardcode the currentTheme to render post from other section and create the correct links
+        />
         <div className="relative h-[500px] mb-8">
           <img 
             // src="https://images.unsplash.com/photo-1469474968028-56623f02e42e"
@@ -90,7 +104,7 @@ const Content = ({ currentTheme, allPosts }: { currentTheme: string, allPosts: P
 
 
 export default function Index({ allPosts }: Props) {
-  const [currentTheme, setCurrentTheme] = useState<string>(Sections.Home);
+  const [currentTheme, setCurrentTheme] = useState<Sections>(Sections.Home);
   const handleThemeChange = useCallback((theme: Sections) => {
     setCurrentTheme(themes[theme]);
   }, [themes])
