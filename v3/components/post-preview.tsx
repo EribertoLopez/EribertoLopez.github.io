@@ -3,6 +3,7 @@ import DateFormatter from './date-formatter'
 import CoverImage from './cover-image'
 import Link from 'next/link'
 import type Author from '../interfaces/author'
+import { Sections } from '../lib/ConfigUtils'
 
 type Props = {
   title: string
@@ -11,6 +12,7 @@ type Props = {
   excerpt: string
   author: Author
   slug: string
+  currentTheme: Sections
 }
 
 const PostPreview = ({
@@ -20,16 +22,17 @@ const PostPreview = ({
   excerpt,
   author,
   slug,
+  currentTheme
 }: Props) => {
   return (
     <div>
       <div className="mb-5">
-        <CoverImage slug={slug} title={title} src={coverImage} />
+        <CoverImage slug={slug} title={title} src={coverImage} isHero={false} currentTheme={currentTheme} />
       </div>
       <h3 className="text-3xl mb-3 leading-snug">
         <Link
-          as={`/posts/${slug}`}
-          href="/posts/[slug]"
+          as={`/${currentTheme}/${slug}`}
+          href={`/${currentTheme}/[slug]`}
           className="hover:underline"
         >
           {title}

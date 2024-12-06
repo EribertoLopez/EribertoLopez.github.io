@@ -1,8 +1,9 @@
+// some sections must align with app router ie: directories in /pages
 export enum Sections {
-    Home = 'Latest',
+    Posts = 'Latest',
     Projects = 'Projects',
+    Home = 'About',
     // Blog = 'Blog',
-    Posts = 'Posts',
     Contact = 'Contact',
     // Resume = 'Resume',
     // About = 'About',

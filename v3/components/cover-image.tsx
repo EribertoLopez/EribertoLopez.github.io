@@ -1,15 +1,17 @@
 import cn from 'classnames'
 import Link from 'next/link'
 import Image from 'next/image'
+import { Sections } from '../lib/ConfigUtils'
 
 type Props = {
   title: string
   src: string
   slug?: string
   isHero: boolean
+  currentTheme: Sections
 }
 
-const CoverImage = ({ title, src, slug, isHero }: Props) => {
+const CoverImage = ({ title, src, slug, isHero, currentTheme }: Props) => {
   const image = isHero ? (
     <Image
       src={src}
@@ -33,10 +35,12 @@ const CoverImage = ({ title, src, slug, isHero }: Props) => {
       height={630}
     />
   );
+  const asPath: string = (currentTheme ? `/${currentTheme.toLowerCase()}` : '').concat(`/${slug}`) 
+  const hrefPath: string = (currentTheme ? `/${currentTheme.toLowerCase()}` : '').concat(`/[slug]`) 
   return (
     <div className={isHero ? "relative h-full" : "sm:mx-0"}>
       {slug ? (
-        <Link as={`/posts/${slug}`} href="/posts/[slug]" aria-label={title}>
+        <Link as={asPath} href={hrefPath} aria-label={title}>
           {image}
         </Link>
       ) : (

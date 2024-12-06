@@ -1,11 +1,13 @@
 import PostPreview from './post-preview'
 import type Post from '../interfaces/post'
+import { Sections } from '../lib/ConfigUtils'
 
 type Props = {
   posts: Post[]
+  currentTheme: Sections
 }
 
-const MoreStories = ({ posts }: Props) => {
+const MoreStories = ({ posts, currentTheme }: Props) => {
   return (
     <section>
       <h2 className="mb-8 text-5xl md:text-7xl font-bold tracking-tighter leading-tight">
@@ -21,6 +23,7 @@ const MoreStories = ({ posts }: Props) => {
             author={post.author}
             slug={post.slug}
             excerpt={post.excerpt}
+            currentTheme={currentTheme}
           />
         ))}
       </div>
