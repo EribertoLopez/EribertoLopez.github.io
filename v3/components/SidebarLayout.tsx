@@ -8,11 +8,11 @@ import Layout from './layout';
 import styles from './Header.module.css';
 import ContentArea from './ContentArea';
 
-const ContentHeader = ({ currentTheme }: { currentTheme: string }) => {
+const ContentHeader = ({ currentTheme, contentImage }: { currentTheme: string, contentImage: string }) => {
     return (
         <header
             className={`${styles.header} ${styles.headerBackground}`}
-            style={{backgroundImage: `url(${themes[currentTheme]})`}}
+            style={{backgroundImage: `url(${contentImage || themes[currentTheme]})`}}
         >
           <div className={styles.overlay}></div>
           <div className={styles.headerImage}></div>
@@ -71,7 +71,7 @@ const ContentHeader = ({ currentTheme }: { currentTheme: string }) => {
     )
 };
 
-const SidebarLayout = ({headTitle, currentTheme, onThemeChange, children}: {headTitle: string, currentTheme: string, onThemeChange: (t: Sections) => void, children: React.ReactElement}) => {
+const SidebarLayout = ({headTitle, currentTheme, onThemeChange, contentImage, children}: {headTitle: string, currentTheme: string, onThemeChange: (t: Sections) => void, contentImage: string, children: React.ReactElement}) => {
   return (
     <div>
         <Head>
@@ -79,7 +79,7 @@ const SidebarLayout = ({headTitle, currentTheme, onThemeChange, children}: {head
         </Head>
         <Layout>
             <Container>
-                <ContentHeader currentTheme={currentTheme} />
+                <ContentHeader currentTheme={currentTheme} contentImage={contentImage} />
                 <ContentArea>{children}</ContentArea>
             </Container>
         </Layout>

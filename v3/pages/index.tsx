@@ -2,8 +2,36 @@ import { useState, useCallback } from 'react'
 import { themes, Sections } from '../lib/ConfigUtils'
 import SidebarLayout from '../components/SidebarLayout'
 import { ExternalLink } from 'lucide-react'
+import Post from '../interfaces/post'
+import { getAllPosts } from '../lib/api'
+import HeroPost from '../components/hero-post'
+import Intro from '../components/intro'
+import MoreStories from '../components/more-stories'
 
-const HomeContent = ({ currentTheme }: { currentTheme: string }) => {
+type Props = {
+  allPosts: Post[]
+}
+
+// 
+const Content = ({ currentTheme, allPosts }: { currentTheme: string, allPosts: Post[] }) =>  {
+  const heroPost = allPosts[0]
+  const morePosts = allPosts.slice(1).filter((post) =>  post.isPublished === true )
+  // return (
+  //   <div className='mx-auto p-8'>
+  //     <Intro />
+  //     {heroPost && (
+  //       <HeroPost
+  //         title={heroPost.title}
+  //         coverImage={heroPost.coverImage}
+  //         date={heroPost.date}
+  //         author={heroPost.author}
+  //         slug={heroPost.slug}
+  //         excerpt={heroPost.excerpt}
+  //       />
+  //     )}
+  //     {morePosts.length > 0 && <MoreStories posts={morePosts} />}
+  //   </div>
+  // )
   return (
     <div>
         <div className="relative h-[500px] mb-8">
@@ -19,8 +47,9 @@ const HomeContent = ({ currentTheme }: { currentTheme: string }) => {
             <p className="text-neutral-300">Posted on March 14, 2024</p>
           </div>
         </div>
+        {/* {allPosts.map()} */}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20">
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20">
           {[1, 2, 3, 4].map((item) => (
             <div key={item} className="group cursor-pointer">
               <div className="relative h-64 mb-4">
@@ -53,12 +82,14 @@ const HomeContent = ({ currentTheme }: { currentTheme: string }) => {
               </a>
             </article>
           ))}
-        </div>
+        </div> */}
     </div>
   );
 }
 
-export default function Index() {
+
+
+export default function Index({ allPosts }: Props) {
   const [currentTheme, setCurrentTheme] = useState<string>(Sections.Home);
   const handleThemeChange = useCallback((theme: Sections) => {
     setCurrentTheme(themes[theme]);
@@ -69,9 +100,25 @@ export default function Index() {
       headTitle={`Home | Eriberto Lopez`}
       currentTheme={currentTheme}
       onThemeChange={handleThemeChange}
+      contentImage={undefined} // TODO: fix :(
     >
-      <HomeContent currentTheme={currentTheme} />
+      <Content currentTheme={currentTheme} allPosts={allPosts} />
     </SidebarLayout>
   )
 }
 
+export const getStaticProps = async () => {
+  const allPosts = getAllPosts([
+    'title',
+    'date',
+    'slug',
+    'author',
+    'coverImage',
+    'excerpt',
+    'isPublished',
+  ])
+
+  return {
+    props: { allPosts },
+  }
+}

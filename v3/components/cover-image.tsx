@@ -6,10 +6,23 @@ type Props = {
   title: string
   src: string
   slug?: string
+  isHero: boolean
 }
 
-const CoverImage = ({ title, src, slug }: Props) => {
-  const image = (
+const CoverImage = ({ title, src, slug, isHero }: Props) => {
+  const image = isHero ? (
+    <Image
+      src={src}
+      alt={`Cover Image for ${title}`}
+      className={cn('shadow-sm w-full h-full object-cover object-center', {
+        'hover:shadow-lg transition-shadow duration-200': slug,
+      })}
+      fill={true}
+      sizes="100vw"
+      style={{ objectPosition: 'center 40%' }} // Adjust percentage to control crop position
+    />
+
+  ) : (
     <Image
       src={src}
       alt={`Cover Image for ${title}`}
@@ -19,9 +32,9 @@ const CoverImage = ({ title, src, slug }: Props) => {
       width={1300}
       height={630}
     />
-  )
+  );
   return (
-    <div className="sm:mx-0">
+    <div className={isHero ? "relative h-full" : "sm:mx-0"}>
       {slug ? (
         <Link as={`/posts/${slug}`} href="/posts/[slug]" aria-label={title}>
           {image}
