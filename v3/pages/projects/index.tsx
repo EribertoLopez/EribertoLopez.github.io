@@ -3,6 +3,11 @@ import { themes, Sections } from '../../lib/ConfigUtils';
 import SidebarLayout from '../../components/SidebarLayout';
 import styles from '../../components/Header.module.css';
 import { ExternalLink } from 'lucide-react';
+import Project from '../../interfaces/project'
+import { getAllProjects } from '../../lib/api';
+import Intro from '../../components/intro';
+import HeroPost from '../../components/hero-post';
+import MoreStories from '../../components/more-stories';
 
 
 const ProjectContent = ({ currentTheme }: { currentTheme: string }) => {
@@ -60,11 +65,39 @@ const ProjectContent = ({ currentTheme }: { currentTheme: string }) => {
   );
 }
 
-export default function Index() {
-  const [currentTheme, setCurrentTheme] = useState<string>(themes[Sections.Projects]);
+const Content = ({ currentTheme, allProjects }: { currentTheme: Sections, allProjects: Project[] }) => {
+  const heroProj = allProjects[0]
+  const moreProjs = allProjects.slice(1, allProjects.length).filter((p) =>  p.isPublished === true )
+
+  return (
+    <div>
+      <Intro currentTheme={currentTheme}/>
+      {heroProj && (
+        <HeroPost
+          title={heroProj.title}
+          coverImage={heroProj.coverImage}
+          date={heroProj.date}
+          author={heroProj.author}
+          slug={heroProj.slug}
+          excerpt={heroProj.excerpt}
+          currentTheme={currentTheme}
+        />
+      )}
+      {moreProjs.length > 0 && <MoreStories posts={moreProjs} currentTheme={currentTheme} />}
+    </div>
+  )
+}
+
+type Props = {
+  allProjects: Project[]
+}
+
+export default function Index({ allProjects }: Props) {
+  const [currentTheme, setCurrentTheme] = useState<Sections>(Sections.Projects);
   const handleThemeChange = useCallback((theme: Sections) => {
     setCurrentTheme(themes[theme]);
   }, [themes])
+  console.log(allProjects)
 
   return (
     // <ResponsiveHeader/>
@@ -72,9 +105,26 @@ export default function Index() {
       headTitle={`Projects | Eriberto Lopez`}
       currentTheme={Sections.Projects}
       onThemeChange={handleThemeChange}
+      contentImage={undefined}
     >
-      <ProjectContent currentTheme={Sections.Projects} />
+      {/* <ProjectContent currentTheme={Sections.Projects} /> */}
+      <Content currentTheme={currentTheme} allProjects={allProjects} />
     </SidebarLayout>
   )
 }
 
+export const getStaticProps = async () => {
+  const allProjects = getAllProjects([
+    'title',
+    'date',
+    'slug',
+    'author',
+    'coverImage',
+    'excerpt',
+    'isPublished',
+  ])
+
+  return {
+    props: { allProjects },
+  }
+}
