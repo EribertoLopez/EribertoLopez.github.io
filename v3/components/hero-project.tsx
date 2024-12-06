@@ -2,6 +2,7 @@ import { useState } from 'react'
 import CoverImage from './cover-image'
 import type Author from '../interfaces/author'
 import { Sections } from '../lib/ConfigUtils'
+import Link from 'next/link'
 
 type Props = {
   title: string
@@ -23,6 +24,8 @@ const HeroProject = ({
   currentTheme
 }: Props) => {
   const [isHovered, setIsHovered] = useState(false);
+  const asPath: string = (currentTheme ? `/${currentTheme.toLowerCase()}` : '').concat(`/${slug}`) 
+  const hrefPath: string = (currentTheme ? `/${currentTheme.toLowerCase()}` : '').concat(`/[slug]`) 
 
   return (
     <section className="group">
@@ -46,8 +49,9 @@ const HeroProject = ({
         </div>
 
         {/* Content wrapper */}
-        <a 
-          href={`/${currentTheme}/${slug}`}
+        <Link 
+          as={asPath}
+          href={hrefPath}
           className="absolute inset-0 z-20 flex flex-col justify-end p-8"
         >
           {/* Hover content */}
@@ -82,7 +86,7 @@ const HeroProject = ({
               {title}
             </h3>
           </div>
-        </a>
+        </Link>
       </div>
     </section>
   )

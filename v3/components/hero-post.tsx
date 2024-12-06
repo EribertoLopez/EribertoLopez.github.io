@@ -24,6 +24,10 @@ const HeroPost = ({
   slug,
   currentTheme
 }: Props) => {
+  // TODO: This get repeatidly used when Link is used to route clicks
+  const asPath: string = (currentTheme ? `/${currentTheme.toLowerCase()}` : '').concat(`/${slug}`) 
+  const hrefPath: string = (currentTheme ? `/${currentTheme.toLowerCase()}` : '').concat(`/[slug]`) 
+
   return (
     <section>
       <div className="mb-8 md:mb-16 w-full mx-auto h-[500px]">
@@ -33,8 +37,8 @@ const HeroPost = ({
         <div>
           <h3 className="mb-4 text-4xl lg:text-5xl leading-tight">
             <Link
-              as={`/${currentTheme}/${slug}`}
-              href={`/${currentTheme}/[slug]`}
+              as={asPath}
+              href={hrefPath}
               className="hover:underline"
             >
               {title}
