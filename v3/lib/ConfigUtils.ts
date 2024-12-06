@@ -24,3 +24,8 @@ export const themes: {[key in Sections]: string }= {
 // [Sections.Projects]: 'url(src/images/projects_background.jpg)',
 // [Sections.Blog]: 'url(src/images/blog_background.jpg)',
 }
+
+export const MYGITHUB = 'https://github.com/EribertoLopez'
+export const MYLINKEDIN = 'https://linkedin.com/in/eribertolopez'
+export const MYEMAIL = 'mailto:elopez75@gatech.edu'
+export const MYTWITTER = "https://twitter.com"
