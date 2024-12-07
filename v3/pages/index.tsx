@@ -38,9 +38,11 @@ const Content = ({ currentTheme, allPosts, allResumes }: { currentTheme: Section
   // )
 
   // const sections =  Array(['resume', 'quick description', 'strengths'])
+  const description: string = "I\'m Eri Lopez welcome 👋. My interests are software development, synthetic & computational biology, laser cutters, photography, acrylic pour painting, and automation. I hope you find something helpful or inspiring. "
+
   return (
     <div>
-        <Intro currentTheme={currentTheme}/>
+        <Intro currentTheme={currentTheme} currentThemeIntro={description} />
         <HeroProject // testing only - doesn't create the  link path to the resource, b/c its tied to the currentTheme
           key={heroPost.slug}
           title={heroPost.title}

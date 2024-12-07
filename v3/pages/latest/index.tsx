@@ -16,10 +16,10 @@ type Props = {
 const Content = ({ currentTheme, allPosts }: { currentTheme: Sections, allPosts: Post[] }) => {
   const heroPost = allPosts[0]
   const morePosts = allPosts.slice(1, allPosts.length).filter((post) =>  post.isPublished === true )
-
+  const description: string = 'Here are some of the latest posts from my blog. '
   return (
     <div>
-      <Intro currentTheme={currentTheme}/>
+      <Intro currentTheme={currentTheme} currentThemeIntro={description}/>
       {heroPost && (
         <HeroPost
           title={heroPost.title}
