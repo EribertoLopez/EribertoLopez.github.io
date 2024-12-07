@@ -21,7 +21,7 @@ const CoverImage = ({ title, src, slug, isHero, currentTheme }: Props) => {
       })}
       fill={true}
       sizes="100vw"
-      style={{ objectPosition: 'center 40%' }} // Adjust percentage to control crop position
+      style={{ objectPosition: currentTheme === Sections.Resume ? 'center 20%' : 'center 40%' }} // Adjust percentage to control crop position
     />
 
   ) : (

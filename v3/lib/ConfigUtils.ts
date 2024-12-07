@@ -5,7 +5,7 @@ export enum Sections {
     Home = 'About',
     // Blog = 'Blog',
     Contact = 'Contact',
-    // Resume = 'Resume',
+    Resume = 'Resume',
     // About = 'About',
     // Another = 'Another',
     // Again = 'Again'
@@ -17,7 +17,7 @@ export const themes: {[key in Sections]: string }= {
 [Sections.Posts]: '/assets/images/20170108_123337.jpg',
 [Sections.Projects]: '/assets/images/20170108_123337.jpg',
 [Sections.Contact]: '/assets/images/20170108_123337.jpg',
-// [Sections.Resume]: '/assets/images/20170108_123337.jpg',
+[Sections.Resume]: '/assets/images/20170108_123337.jpg',
 // [Sections.About]: '/assets/images/20170108_123337.jpg',
 // [Sections.Another]: '/assets/images/20170108_123337.jpg',
 // [Sections.Again]: '/assets/images/20170108_123337.jpg',

@@ -46,7 +46,7 @@ export default function Index({ allPosts }: Props) {
 
   return (
     <SidebarLayout
-      headTitle={`Home | Eriberto Lopez`}
+      headTitle={`Latest | Eriberto Lopez`}
       currentTheme={currentTheme}
       onThemeChange={() => {}}
       contentImage={heroPost.coverImage}

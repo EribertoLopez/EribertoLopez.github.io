@@ -3,18 +3,21 @@ import { themes, Sections } from '../lib/ConfigUtils'
 import SidebarLayout from '../components/SidebarLayout'
 import { ExternalLink } from 'lucide-react'
 import Post from '../interfaces/post'
-import { getAllPosts } from '../lib/api'
+import { getAllPosts, getAllResumes } from '../lib/api'
 import HeroPost from '../components/hero-post'
 import Intro from '../components/intro'
 import MoreStories from '../components/more-stories'
 import HeroProject from '../components/hero-project'
+import ResumeHero from '../components/hero-resume'
 
 type Props = {
   allPosts: Post[]
+  allResumes: Post[]
 }
 
 // 
-const Content = ({ currentTheme, allPosts }: { currentTheme: Sections, allPosts: Post[] }) =>  {
+const Content = ({ currentTheme, allPosts, allResumes }: { currentTheme: Sections, allPosts: Post[], allResumes: Post[] }) =>  {
+  const heroResume = allResumes[0]
   const heroPost = allPosts[0]
   const morePosts = allPosts.slice(1).filter((post) =>  post.isPublished === true )
   // return (
@@ -37,6 +40,7 @@ const Content = ({ currentTheme, allPosts }: { currentTheme: Sections, allPosts:
   // const sections =  Array(['resume', 'quick description', 'strengths'])
   return (
     <div>
+        <Intro currentTheme={currentTheme}/>
         <HeroProject // testing only - doesn't create the  link path to the resource, b/c its tied to the currentTheme
           key={heroPost.slug}
           title={heroPost.title}
@@ -48,7 +52,20 @@ const Content = ({ currentTheme, allPosts }: { currentTheme: Sections, allPosts:
           excerpt={heroPost.excerpt}
           currentTheme={Sections.Posts} // can hardcode the currentTheme to render post from other section and create the correct links
         />
-        <div className="relative h-[500px] mb-8">
+        <ResumeHero // testing only - doesn't create the  link path to the resource, b/c its tied to the currentTheme
+          key={heroResume.slug}
+          title={heroResume.title}
+          coverImage={heroResume.coverImage}
+          // coverImage={heroPost.coverImage}
+          date={heroResume.date}
+          author={heroResume.author}
+          slug={heroResume.slug}
+          // slug={heroResume.slug}
+          excerpt={heroResume.excerpt}
+          currentTheme={Sections.Resume} // can hardcode the currentTheme to render post from other section and create the correct links
+        />
+
+        {/* <div className="relative h-[500px] mb-8">
           <img 
             // src="https://images.unsplash.com/photo-1469474968028-56623f02e42e"
             src={themes[currentTheme]}
@@ -60,7 +77,7 @@ const Content = ({ currentTheme, allPosts }: { currentTheme: Sections, allPosts:
             <h2 className="text-4xl font-bold mb-2">Latest Adventure</h2>
             <p className="text-neutral-300">Posted on March 14, 2024</p>
           </div>
-        </div>
+        </div> */}
         {/* {allPosts.map()} */}
 
         {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20">
@@ -103,7 +120,7 @@ const Content = ({ currentTheme, allPosts }: { currentTheme: Sections, allPosts:
 
 
 
-export default function Index({ allPosts }: Props) {
+export default function Index({ allPosts, allResumes }: Props) {
   const [currentTheme, setCurrentTheme] = useState<Sections>(Sections.Home);
   const handleThemeChange = useCallback((theme: Sections) => {
     setCurrentTheme(themes[theme]);
@@ -116,7 +133,7 @@ export default function Index({ allPosts }: Props) {
       onThemeChange={handleThemeChange}
       contentImage={undefined} // TODO: fix :(
     >
-      <Content currentTheme={currentTheme} allPosts={allPosts} />
+      <Content currentTheme={currentTheme} allPosts={allPosts} allResumes={allResumes} />
     </SidebarLayout>
   )
 }
@@ -131,8 +148,16 @@ export const getStaticProps = async () => {
     'excerpt',
     'isPublished',
   ])
-
+  const allResumes = getAllResumes([
+    'title',
+    'date',
+    'slug',
+    'author',
+    'coverImage',
+    'excerpt',
+    'isPublished',
+  ])
   return {
-    props: { allPosts },
+    props: { allPosts, allResumes },
   }
 }

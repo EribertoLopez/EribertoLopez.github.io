@@ -136,7 +136,9 @@ const ContentHeader = ({ currentTheme, contentImage }: { currentTheme: string, c
     )
 };
 
-const SidebarLayout = ({headTitle, currentTheme, onThemeChange, contentImage, children}: {headTitle: string, currentTheme: string, onThemeChange: (t: Sections) => void, contentImage: string, children: React.ReactElement}) => {
+const SidebarLayout = (
+    {headTitle, currentTheme, onThemeChange, contentImage, children}: 
+    {headTitle: string, currentTheme: string, onThemeChange: (t: Sections) => void, contentImage: string, children: React.ReactElement}) => {
   return (
     <div>
         <Head>
