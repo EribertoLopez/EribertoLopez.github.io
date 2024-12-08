@@ -98,7 +98,6 @@ export default function Index({ allProjects }: Props) {
   const handleThemeChange = useCallback((theme: Sections) => {
     setCurrentTheme(themes[theme]);
   }, [themes])
-  console.log(allProjects)
 
   return (
     // <ResponsiveHeader/>
