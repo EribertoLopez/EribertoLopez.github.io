@@ -227,139 +227,141 @@ const Resume = ({
 const MyResume = () => {
   const resumeData = {
     name: "Eriberto Lopez",
-    title: "Software Engineering Manager/Lead",
-    location: "Remote",
+    title: "Software Engineer",
+    location: "Los Angeles Metropolitan Area",
     contact: {
-      phone: "949.701.8662",
-      email: "elopez75@gatech.edu",
-      github: "EribertoLopez"
+      phone: "",  // Phone removed for privacy
+      email: "eribertolopez3@gmail.com",
+      github: "eribertolopez"
     },
-    profileImage: '/assets/blog/authors/EriLopez3.png', // You'll need to provide the actual path
-    
-    summary: "Software professional with experience in building and managing technical teams, mentoring agile team cultures, and developing full-stack systems. A detail-oriented researcher skilled in generating data for patent proposals, publications, and grant manuscripts. Proven track record in coordinating and designing software solutions that empower stakeholders in biotech, pharma, and Dept. of Defense to command and control devices while ensuring secure proprietary data capture. Recognized for leadership, innovative problem solving, and commitment to continuous improvement.",
+    profileImage: "/assets/profile.jpg", // You'll need to provide the actual path
+    summary: "At Strateos, I am currently working on engineering cloud infrastructure and applications to automate and structure scientific experiments. We enable organizations to capture their scientific intent and transform it into a deterministic machine readable schema that can be executed on the Strateos Cloud Lab Environment. We provide a centralized UI for operators and researchers to plan, execute, and analyze their experimental workflows. It empowers our users to scale the throughput of their experiment, reduce hands on time, and generate data that feed into data pipelines and data driven applications.",
     
     skills: [
       {
-        category: "Languages/Frameworks",
+        category: "Top Skills",
         items: [
-          "Python(Flask, FastAPI)", "JavaScript", "TypeScript(NextJS, React, ReactHooks, MobX)", 
-          "Java(SpringBoot, JPA, Hibernate)"
+          "FastAPI",
+          "Codegen",
+          "Engineering Management"
         ]
       },
       {
-        category: "Infrastructure & Tools",
+        category: "Languages",
         items: [
-          "GraphQL", "REST", "Terraform", "OpenAPI/Swagger", "AWS(IaaC, EKS, ECS, RDS)", 
+          "Spanish (Native or Bilingual)",
+          "English (Native or Bilingual)"
+        ]
+      },
+      {
+        category: "Technologies",
+        items: [
+          "Python(Flask, FastAPI)", 
+          "JavaScript", 
+          "TypeScript(NextJS, React, ReactHooks, MobX)", 
+          "Java(SpringBoot, JPA, Hibernate)",
+          "GraphQL",
+          "REST",
+          "Terraform",
+          "AWS(IaaC, EKS, ECS, RDS)",
           "ArgoCD"
-        ]
-      },
-      {
-        category: "Databases",
-        items: [
-          "MySQL", "Postgres", "RabbitMQ"
         ]
       }
     ],
   
+    certifications: [
+      "Agile at Work: Planning with Agile",
+      "User Stories",
+      "Cloud Developer Nanodegree Program"
+    ],
+  
     experience: [
       {
-        title: "Software Engineering Manager/Lead",
-        company: "Strateos, Inc.",
-        location: "Remote",
-        period: "7/2022 – Present",
-        description: "Pioneered the industry's first robotic cloud lab. Enables users to plan experiments, command-and-control robotic execution, securely capture proprietary data, and visualize real-time execution history from remote or on-site devices.",
+        title: "Sr. Software Engineer",
+        company: "Strateos",
+        location: "Menlo Park, California, United States",
+        period: "December 2021 - Present",
+        description: "Processing Experimental Workflows at Remote Laboratories",
         achievements: [
-          "Lead an internal team of 7 and third-party offshore development team as the tech lead for the workflows domain. Guide feature implementation to capture scientific intent and transform to machine-readable executable code.",
-          "Boosted team velocity by 38% through enhancements in average story points per developer, coupled with an 83% sprint completion rate over the last year. Use Jira & Slack APIs to automate processes and improve accountability.",
-          "Streamlined incident triaging processes, by improving team accountability for respective components. Resulted in a 113% increase in engineer volunteering rates.",
-          "Spearheaded and incorporated data-driven initiatives into quarterly roadmaps, significantly reducing tech debt and improving the user experience. Achieved a 53% reduction in workflow builder front-end total load time.",
-          "Optimized front-end React components by migrating to a MobX bi-directional stage-management approach."
-        ]
-      },
-      {
-        title: "Senior Software Engineer",
-        company: "Strateos, Inc.",
-        location: "Remote",
-        period: "12/2021 – 7/2022",
-        description: "Scaled Strateos' legacy scientific intent execution system from lambda functions to microservice architecture.",
-        achievements: [
-          "Spearheaded the development of a workflow execution system, offering scientists a platform to execute complex CWL workflows on shared infrastructure while safeguarding proprietary data.",
-          "Streamlined data ingestion pipelines for both web and robotic domains, reducing complexity and enhancing monitoring of raw data capture.",
-          "Contributor in filed patent for 'Systems and Methods For Processing Experimental Workflow at a Remote Laboratory'"
+          "Scientific laboratory instrument edge device deployment & configuration",
+          "Scientist centric graphical experimental workflow builder",
+          "Remotely manage team in feature implementations and contribute to workflow engine distributed system",
+          "Manage relationship between third party offshore development team to increase engineering resources to meet quarterly milestones",
+          "Performed frontend performance analysis and generated roadmap to decrease CPU and network consumption",
+          "Led initiative to streamline incident triaging processes, resulting in an increase in the engineer volunteering rate",
+          "Use Jira and Slack APIs and automation to improve developer velocity and accountability"
         ]
       },
       {
         title: "Software Engineer III",
-        company: "Strateos, Inc.",
-        location: "Menlo Park, CA",
-        period: "8/2019 – 12/2021",
-        description: "Developed and maintained features and scientific intent schemas that are device agnostic and reproducibly executed.",
+        company: "Strateos",
+        location: "Menlo Park, California",
+        period: "August 2019 - December 2021",
+        description: "Development and maintenance of scientific automation platform",
         achievements: [
-          "Achieved 64x increase in cloud lab sample throughput by optimizing computer vision and robotic commands.",
-          "Developed Python statistical software to automate cluster identification of multidimensional data, significantly reducing the hands-on quality control validation time for operational teams by 50%.",
-          "Curator of open-source machine readable scientific intent schemas, autoprotocol.org & autoprotocol-py"
+          "Interfaced with scientific clients to plan and manage automated experimental executions on cloud controlled devices",
+          "Track record of meeting client experimental needs and building robust, automated data pipelines",
+          "Established a mammalian flow cytometry data generation pipeline with automated gaussian distribution gating analysis",
+          "Implemented automated COVID-19 testing protocol for cloud controlled devices"
         ]
       },
       {
-        title: "Research Engineer II",
-        company: "University of Washington",
-        location: "Seattle, WA",
-        period: "7/2017 – 8/2019",
-        description: "Klavins Lab DARPA grant used to automate remote execution of the design, build, and test cycle for genetic systems.",
+        title: "Research Scientist/Engineer II",
+        company: "Department of Electrical & Computer Engineering - University of Washington",
+        location: "Greater Seattle Area",
+        period: "July 2017 - August 2019",
+        description: "Part of the UW BIOFAB team in the Klavins Lab",
         achievements: [
-          "Enabled Synergistic Discovery and Design DARPA stakeholders to remotely design, build, and test genetic CRISPR systems.",
-          "Developed a Python client to facilitate ETL processes, extracting and loading data from remote labs to Texas Advanced Computing Center's HPCs.",
-          "Integrated Klavins Lab scientific devices with web application (Ruby on Rails, Angular) and AWS cloud resources.",
-          "Co-authored algorithmic design of thousands of non-repetitive synthetic parts for genetic systems in microbes."
+          "Investigating Boolean logic synthetic gene circuits in Yeast & E. coli",
+          "Developing RNA Sequencing pipeline and automated assays",
+          "Automating high throughput assays through laboratory management software",
+          "Using relational database to associate and save scientific measurements",
+          "Teaching and mentoring undergraduate research assistants"
         ]
       }
     ],
   
     publications: [
       {
-        date: "7/2020",
-        journal: "Nature Biotechnology Journal",
-        title: "Automated design of thousands of non-repetitive parts for engineering stable genetic systems",
+        date: "2020",
+        journal: "Nature Biotechnology",
+        title: "Automated design of thousands of nonrepetitive parts for engineering stable genetic systems",
         description: [
-          "Used graph theory and state by state path generation to generate thousands of non-repetitive genetic part designs.",
-          "Characterized all promoters in a massively parallel RNASeq assay normalizing RNA fold expression by genomic copy number."
+          "Used graph theory and state by state path generation for genetic part designs",
+          "Characterized promoters in parallel RNASeq assay normalizing RNA fold expression"
         ]
       },
       {
-        date: "1/2021",
+        date: "2021",
         journal: "Synthetic Biology Journal",
-        title: "Aquarium: open-source laboratory software for design, execution, and data management",
+        title: "Aquarium: open-source laboratory software for design, execution and data management",
         description: [
-          "Collaborated on development of web application which integrates experimental design, inventory management, protocol execution, and data capture.",
-          "The containerized application allows scientists to scale up research, automate execution, and collaborate on biomedical and bioindustrial research."
+          "Web application for experimental design, inventory management, and data capture",
+          "Containerized application for scaling biomedical and bioindustrial research"
         ]
       }
     ],
   
     education: [
       {
-        degree: "Master of Science – Computer Science",
-        school: "Georgia Tech University",
-        location: "Atlanta, GA",
-        period: "12/2024",
-        details: [
-          "Specialization in Computing Systems",
-          "Computer Networks, Intro to Information Security, Software Arch & Design",
-          "Advanced Internet Computing, Robotic AI Techniques, Machine Learning for Trading"
-        ]
+        degree: "Cloud Developer Nanodegree Program",
+        school: "Udacity",
+        location: "",
+        period: ""
       },
       {
-        degree: "Bachelor of Science – Biology and Minor – Philosophy",
+        degree: "Bachelor of Science (B.Sc.) Biology",
         school: "Gonzaga University",
-        location: "Spokane, WA",
-        period: "5/2013"
+        location: "Spokane, Washington",
+        period: "2013",
+        details: ["Biochemistry and Cellular Biology"]
       }
     ],
   
     socialLinks: {
-      github: "https://github.com/eribertolopez",
-      linkedin: "https://linkedin.com/in/eribertolopez",
-      email: "mailto:EribertoLopez3@gmail.com"
+      github: "",  // You'll need to provide the actual URLs
+      linkedin: "https://www.linkedin.com/in/eribertolopez",
+      email: "mailto:eribertolopez3@gmail.com"
     }
   };
   

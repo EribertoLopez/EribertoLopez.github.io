@@ -3,7 +3,8 @@ import { themes, Sections } from '../lib/ConfigUtils'
 import SidebarLayout from '../components/SidebarLayout'
 import { ExternalLink } from 'lucide-react'
 import Post from '../interfaces/post'
-import { getAllPosts, getAllResumes } from '../lib/api'
+import Project from '../interfaces/project'
+import { getAllPosts, getAllProjects, getAllResumes } from '../lib/api'
 import HeroPost from '../components/hero-post'
 import Intro from '../components/intro'
 import MoreStories from '../components/more-stories'
@@ -12,11 +13,13 @@ import ResumeHero from '../components/hero-resume'
 
 type Props = {
   allPosts: Post[]
-  allResumes: Post[]
+  allResumes: Post[],
+  allProjects: Project[]
 }
 
 // 
-const Content = ({ currentTheme, allPosts, allResumes }: { currentTheme: Sections, allPosts: Post[], allResumes: Post[] }) =>  {
+const Content = ({ currentTheme, allPosts, allResumes, allProjects }: { currentTheme: Sections, allPosts: Post[], allResumes: Post[], allProjects: Project[] }) =>  {
+  const heroProj = allProjects[0]
   const heroResume = allResumes[0]
   const heroPost = allPosts[0]
   const morePosts = allPosts.slice(1).filter((post) =>  post.isPublished === true )
@@ -53,6 +56,17 @@ const Content = ({ currentTheme, allPosts, allResumes }: { currentTheme: Section
           slug={heroPost.slug}
           excerpt={heroPost.excerpt}
           currentTheme={Sections.Posts} // can hardcode the currentTheme to render post from other section and create the correct links
+        />
+        <HeroProject // testing only - doesn't create the  link path to the resource, b/c its tied to the currentTheme
+          key={heroProj.slug}
+          title={heroProj.title}
+          coverImage={heroProj.coverImage}
+          // coverImage={heroPost.coverImage}
+          date={heroProj.date}
+          author={heroProj.author}
+          slug={heroProj.slug}
+          excerpt={heroProj.excerpt}
+          currentTheme={Sections.Projects} // can hardcode the currentTheme to render post from other section and create the correct links
         />
         <ResumeHero // testing only - doesn't create the  link path to the resource, b/c its tied to the currentTheme
           key={heroResume.slug}
@@ -122,7 +136,7 @@ const Content = ({ currentTheme, allPosts, allResumes }: { currentTheme: Section
 
 
 
-export default function Index({ allPosts, allResumes }: Props) {
+export default function Index({ allPosts, allResumes, allProjects }: Props) {
   const [currentTheme, setCurrentTheme] = useState<Sections>(Sections.Home);
   const handleThemeChange = useCallback((theme: Sections) => {
     setCurrentTheme(themes[theme]);
@@ -135,7 +149,7 @@ export default function Index({ allPosts, allResumes }: Props) {
       onThemeChange={handleThemeChange}
       contentImage={undefined} // TODO: fix :(
     >
-      <Content currentTheme={currentTheme} allPosts={allPosts} allResumes={allResumes} />
+      <Content currentTheme={currentTheme} allPosts={allPosts} allResumes={allResumes} allProjects={allProjects}/>
     </SidebarLayout>
   )
 }
@@ -159,7 +173,16 @@ export const getStaticProps = async () => {
     'excerpt',
     'isPublished',
   ])
+  const allProjects = getAllProjects([
+    'title',
+    'date',
+    'slug',
+    'author',
+    'coverImage',
+    'excerpt',
+    'isPublished',
+  ])
   return {
-    props: { allPosts, allResumes },
+    props: { allPosts, allResumes, allProjects },
   }
 }
