@@ -50,7 +50,6 @@ const Sidebar = ({currentTheme, onThemeChange}: {currentTheme: string, onThemeCh
         <nav>
           <ul className="space-y-4">
             {Object.entries(Sections).map(([key, _]) => {
-              console.log('key', key, Sections.Home, key == Sections.Home)
               return (
                 <li key={key}>
                   <Link 
