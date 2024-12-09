@@ -12,6 +12,7 @@ type ProjectType = {
     url: string
   }
   content: string
+  gallery: string[]
 }
 
 export default ProjectType

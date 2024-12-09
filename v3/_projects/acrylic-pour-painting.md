@@ -9,6 +9,18 @@ author:
 ogImage:
   url: '/assets/images/acryclic_cells_rainbow_zoom_in.jpeg'
 isPublished: true
+gallery: [
+  '/assets/images/20220222_184412.jpg',
+  '/assets/images/me_drawing_at_SAMRemix.jpg',
+  '/assets/images/IMG_20220212_023454_101.jpg',
+  '/assets/images/20201222_223817.jpg',
+  '/assets/images/20220219_193229.jpg',
+  '/assets/images/20210322_212653.jpg',
+  '/assets/images/20201227_140411.jpg',
+  '/assets/images/20210506_211336.jpg',
+  '/assets/images/IMG_20220219_124117_460.jpg',
+  '/assets/images/IMG_20220220_133749_963.jpg',
+]
 ---
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Praesent elementum facilisis leo vel fringilla est ullamcorper eget. At imperdiet dui accumsan sit amet nulla facilities morbi tempus. Praesent elementum facilisis leo vel fringilla. Congue mauris rhoncus aenean vel. Egestas sed tempus urna et pharetra pharetra massa massa ultricies.
