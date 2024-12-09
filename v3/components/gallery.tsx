@@ -91,14 +91,14 @@ switch (imageCount) {
         areas: `
         "img1  img1  img1   img10  img10  img10  img2  img2  img2  img3  img3  img3"
         "img1  img1  img1   img10  img10  img10  img2  img2  img2  img3  img3  img3"
-        "img4  img4  img4   img10  img10  img10  img2  img2  img2  img3  img3  img3"
-        "img4  img4  img4   img10  img10  img10  img2  img2  img2  img3  img3  img3"
-        "img5  img5  img5   img10  img10  img10  img2  img2  img2  img3  img3  img3"
-        "img5  img5  img5   img7   img7   img7   img2  img2  img2  img9  img9  img9"
+        "img8  img8  img8   img10  img10  img10  img2  img2  img2  img3  img3  img3"
+        "img8  img8  img8   img10  img10  img10  img2  img2  img2  img3  img3  img3"
+        "img8  img8  img8   img7   img7   img7   img2  img2  img2  img3  img3  img3"
+        "img5  img5  img5   img7   img7   img7   img2  img2  img2  img3  img3  img3"
         "img6  img6  img6   img7   img7   img7   img2  img2  img2  img9  img9  img9"
         "img6  img6  img6   img7   img7   img7   img2  img2  img2  img9  img9  img9"
-        "img8  img8  img8   img7   img7   img7   img2  img2  img2  img9  img9  img9"
-        "img8  img8  img8   img7   img7   img7   img2  img2  img2  img9  img9  img9"
+        "img4  img4  img4   img7   img7   img7   img2  img2  img2  img9  img9  img9"
+        "img4  img4  img4   img7   img7   img7   img2  img2  img2  img9  img9  img9"
         `,
         columns: 'repeat(12, 1fr)',
         rows: 'repeat(10, 1fr)'
