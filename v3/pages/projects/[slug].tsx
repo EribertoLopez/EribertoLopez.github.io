@@ -2,16 +2,16 @@ import { useRouter } from 'next/router'
 import ErrorPage from 'next/error'
 import Container from '../../components/container'
 import PostBody from '../../components/post-body'
-import Header from '../../components/header'
 import PostHeader from '../../components/post-header'
 import Layout from '../../components/layout'
-import { getPostBySlug, getAllPosts, getProjectBySlug, getAllProjects } from '../../lib/api'
+import { getProjectBySlug, getAllProjects } from '../../lib/api'
 import PostTitle from '../../components/post-title'
 import Head from 'next/head'
 import markdownToHtml from '../../lib/markdownToHtml'
-import type PostType from '../../interfaces/post'
 import { Sections } from '../../lib/ConfigUtils'
 import ProjectType from '../../interfaces/project'
+import SidebarLayout from '../../components/SidebarLayout'
+import Gallery from '../../components/gallery'
 
 type Props = {
   post: ProjectType
@@ -29,11 +29,16 @@ export default function Post({ post, morePosts, preview, currentTheme = Sections
   return (
     <Layout preview={preview}>
       <Container>
-        <Header />
+        {/* <Header /> */}
         {router.isFallback ? (
           <PostTitle>Loading…</PostTitle>
         ) : (
-          <>
+          <SidebarLayout
+            headTitle={`Home | Eriberto Lopez`}
+            currentTheme={currentTheme}
+            onThemeChange={() => {}}
+            contentImage={post.coverImage} // TODO: fix :(            
+          >
             <article className="mb-32">
               <Head>
                 <title>{title}</title>
@@ -47,8 +52,16 @@ export default function Post({ post, morePosts, preview, currentTheme = Sections
                 currentTheme={currentTheme}
               />
               <PostBody content={post.content} />
+              <div className="mt-16">
+                {post.gallery && <Gallery images={
+                  post.gallery.map((g, i) => {
+                    return {
+                    src: g, gridArea: `img${i+1}`, alt: `alt-${i+1}`
+                  }})} 
+                />}
+              </div>
             </article>
-          </>
+          </SidebarLayout>
         )}
       </Container>
     </Layout>
@@ -70,6 +83,7 @@ export async function getStaticProps({ params }: Params) {
     'content',
     'ogImage',
     'coverImage',
+    'gallery'
   ])
   const content = await markdownToHtml(post.content || '')
 

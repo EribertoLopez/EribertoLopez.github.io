@@ -8,7 +8,7 @@ author:
   picture: '/assets/blog/authors/EriLopez3.png'
 ogImage:
   url: '/assets/blog/preview/cover.jpg'
-isPublished: true
+isPublished: false
 ---
 # Markdown Examples
 

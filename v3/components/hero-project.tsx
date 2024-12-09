@@ -35,7 +35,7 @@ const HeroProject = ({
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/30 z-10" />
+        <div className="absolute inset-0 bg-black/20 z-10" />
         
         {/* Image container with zoom effect */}
         <div className="relative h-full w-full transition-transform duration-500 group-hover:scale-105">

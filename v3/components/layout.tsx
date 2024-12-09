@@ -10,7 +10,6 @@ type Props = {
 }
 
 const Layout = ({ preview, children }: Props) => {
-  console.log("Layout.tsx: preview: ", preview);
   return (
     <div >
       <Meta />

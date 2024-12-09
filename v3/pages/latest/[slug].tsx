@@ -2,7 +2,6 @@ import { useRouter } from 'next/router'
 import ErrorPage from 'next/error'
 import Container from '../../components/container'
 import PostBody from '../../components/post-body'
-import Header from '../../components/header'
 import PostHeader from '../../components/post-header'
 import Layout from '../../components/layout'
 import { getPostBySlug, getAllPosts } from '../../lib/api'
@@ -11,6 +10,7 @@ import Head from 'next/head'
 import markdownToHtml from '../../lib/markdownToHtml'
 import type PostType from '../../interfaces/post'
 import { Sections } from '../../lib/ConfigUtils'
+import SidebarLayout from '../../components/SidebarLayout'
 
 type Props = {
   post: PostType
@@ -28,11 +28,16 @@ export default function Post({ post, morePosts, preview, currentTheme = Sections
   return (
     <Layout preview={preview}>
       <Container>
-        <Header />
+        {/* <Header /> */}
         {router.isFallback ? (
           <PostTitle>Loading…</PostTitle>
         ) : (
-          <>
+          <SidebarLayout
+            headTitle={`Home | Eriberto Lopez`}
+            currentTheme={currentTheme}
+            onThemeChange={() => {}}
+            contentImage={post.coverImage} // TODO: fix :(            
+          >
             <article className="mb-32">
               <Head>
                 <title>{title}</title>
@@ -47,7 +52,7 @@ export default function Post({ post, morePosts, preview, currentTheme = Sections
               />
               <PostBody content={post.content} />
             </article>
-          </>
+          </SidebarLayout>
         )}
       </Container>
     </Layout>
