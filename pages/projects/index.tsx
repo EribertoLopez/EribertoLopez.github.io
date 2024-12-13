@@ -1,13 +1,10 @@
-import { useState, useCallback } from 'react';
 import { themes, Sections } from '../../lib/ConfigUtils';
 import SidebarLayout from '../../components/SidebarLayout';
-import styles from '../../components/Header.module.css';
 import { ExternalLink } from 'lucide-react';
 import Project from '../../interfaces/project'
 import { getAllProjects } from '../../lib/api';
 import Intro from '../../components/intro';
 import HeroPost from '../../components/hero-post';
-import MoreStories from '../../components/more-stories';
 import MoreProjects from '../../components/more-projects';
 
 
@@ -72,7 +69,7 @@ const Content = ({ currentTheme, allProjects }: { currentTheme: Sections, allPro
   // TODO: Left off here, need to create Project component that shows picture until user hovers over and it displays the title over some shadow/gradient overlay
   return (
     <div>
-      <Intro currentTheme={currentTheme}/>
+      <Intro currentTheme={currentTheme} currentThemeIntro={''} />
       {heroProj && (
         <HeroPost
           title={heroProj.title}
@@ -94,21 +91,14 @@ type Props = {
 }
 
 export default function Index({ allProjects }: Props) {
-  const [currentTheme, setCurrentTheme] = useState<Sections>(Sections.Projects);
-  const handleThemeChange = useCallback((theme: Sections) => {
-    setCurrentTheme(themes[theme]);
-  }, [themes])
-
   return (
-    // <ResponsiveHeader/>
     <SidebarLayout
       headTitle={`Projects | Eriberto Lopez`}
       currentTheme={Sections.Projects}
-      onThemeChange={handleThemeChange}
+      onThemeChange={() => {}}
       contentImage={undefined}
     >
-      {/* <ProjectContent currentTheme={Sections.Projects} /> */}
-      <Content currentTheme={currentTheme} allProjects={allProjects} />
+      <Content currentTheme={Sections.Projects} allProjects={allProjects} />
     </SidebarLayout>
   )
 }
