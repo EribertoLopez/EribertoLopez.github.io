@@ -10,11 +10,11 @@ type Props = { currentTheme: Sections, allPosts: Post[] }
 
 const Content = ({ currentTheme, allPosts }: Props) => {
   const heroPost = allPosts[0]
-  const morePosts = allPosts.slice(1, allPosts.length).filter((post) =>  post.isPublished === true )
+  // const morePosts = allPosts.slice(1, allPosts.length).filter((post) =>  post.isPublished === true )
 
   return (
     <div>
-      <Intro currentTheme={currentTheme}/>
+      <Intro currentTheme={currentTheme} currentThemeIntro={''} />
       {heroPost && (
         <Resume />
       )}
@@ -24,7 +24,7 @@ const Content = ({ currentTheme, allPosts }: Props) => {
 
 export default function Index({ currentTheme = Sections.Home, allPosts }: Props) {
   const heroPost = allPosts[0]
-  const morePosts = allPosts.slice(1).filter((post) =>  post.isPublished === true )
+  // const morePosts = allPosts.slice(1).filter((post) =>  post.isPublished === true )
 
   return (
     <SidebarLayout

@@ -64,19 +64,15 @@ const Content = ({ currentTheme, allPosts, allResumes, allProjects }: { currentT
 
 
 export default function Index({ allPosts, allResumes, allProjects }: Props) {
-  const [currentTheme, setCurrentTheme] = useState<Sections>(Sections.Home);
-  const handleThemeChange = useCallback((theme: Sections) => {
-    setCurrentTheme(themes[theme]);
-  }, [themes])
 
   return (
     <SidebarLayout
       headTitle={`Home | Eriberto Lopez`}
-      currentTheme={currentTheme}
-      onThemeChange={handleThemeChange}
+      currentTheme={Sections.Home}
+      onThemeChange={() => {}}
       contentImage={undefined} // TODO: fix :(
     >
-      <Content currentTheme={currentTheme} allPosts={allPosts} allResumes={allResumes} allProjects={allProjects}/>
+      <Content currentTheme={Sections.Home} allPosts={allPosts} allResumes={allResumes} allProjects={allProjects}/>
     </SidebarLayout>
   )
 }
