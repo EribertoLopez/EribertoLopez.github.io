@@ -1,0 +1,53 @@
+.resume {
+    min-height: 100vh;
+    background-color: rgb(2, 6, 23);
+    color: white;
+    display: flex;
+    width: 100%;
+}
+
+.sidebar {
+    background-color: rgb(15, 23, 42); /* bg-slate-900 */
+    padding: 2rem;
+}
+
+.mainContent {
+    flex: 1;
+    padding: 2rem;
+}
+
+/* Mobile-first responsive design */
+@media screen and (max-width: 768px) {
+    .resume {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        padding: 1rem;
+    }
+    
+    .mainContent {
+        width: 100%;
+        padding: 1rem;
+    }
+}
+
+/* Tablet and larger screens */
+@media screen and (min-width: 769px) {
+    .resume {
+        flex-direction: row;
+    }
+    
+    .sidebar {
+        width: 18rem; /* w-72 equivalent */
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+    }
+    
+    .mainContent {
+        max-width: calc(100% - 18rem);
+    }
+}

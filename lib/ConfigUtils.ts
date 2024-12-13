@@ -4,7 +4,7 @@ export enum Sections {
     Projects = 'Projects',
     Home = 'About',
     // Blog = 'Blog',
-    Contact = 'Contact',
+    // Contact = 'Contact',
     Resume = 'Resume',
     // About = 'About',
     // Another = 'Another',

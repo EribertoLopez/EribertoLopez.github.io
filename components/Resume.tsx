@@ -9,7 +9,7 @@ import styles from './Header.module.css';
 import ContentArea from './ContentArea';
 import resumeData from '../lib/resumeConfig';
 import SidebarLayout from './SidebarLayout';
-
+import resumeStyles from './Resume.module.css';
 
 type Skill = {
   category: string;
@@ -83,12 +83,9 @@ const MyResume = ({
   contact
 }: ResumeProps) => {
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex">
+    <div className={resumeStyles.resume}>
       {/* Sidebar */}
-      <div className="w-72 bg-slate-900 p-8 flex flex-col">
-        
-
-
+      <div className={resumeStyles.sidebar}>
         {/* Skills Section */}
         {skills.map((skillGroup) => (
           <div key={skillGroup.category} className="mb-6">
@@ -108,7 +105,7 @@ const MyResume = ({
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-8">
+      <div className={resumeStyles.mainContent}>
         {/* Summary */}
         <div className="mb-12 bg-blue-900/50 p-6 rounded-lg">
           <h2 className="text-xl font-semibold mb-4">Summary</h2>
