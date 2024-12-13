@@ -7,7 +7,7 @@ import Container from './container';
 import Layout from './layout';
 import styles from './Header.module.css';
 import ContentArea from './ContentArea';
-import { resumeData } from '../pages/resume/resumeConfig';
+import resumeData from '../lib/resumeConfig';
 import SidebarLayout from './SidebarLayout';
 
 

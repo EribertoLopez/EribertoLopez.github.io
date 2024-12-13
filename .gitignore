@@ -400,3 +400,4 @@ FodyWeavers.xsd
 template/
 out/
 .DS_Store
+node_modules
