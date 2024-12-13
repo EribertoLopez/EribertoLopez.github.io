@@ -1,4 +1,0 @@
-TODO:
-- implement sidebar and contentArea linked theme
-- implement responsive design
-- design blog post/content component
