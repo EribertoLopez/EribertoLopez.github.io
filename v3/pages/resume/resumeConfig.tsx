@@ -18,8 +18,7 @@ export const resumeData = {
         items: [
           "Python",
           "Ruby",
-          "Javascript (D3, Node, React)",
-          "Scala",
+          "Typescript (React)",
           "Java",
           "Terraform",
           "Cloudformation",
@@ -30,8 +29,6 @@ export const resumeData = {
           "SQL",
           "ML",
           "CI/CD",
-          "TypeScript",
-          "GraphQL",
           "FastAPI",
           "SpringBoot",
           "NextJS"
@@ -88,7 +85,7 @@ export const resumeData = {
         period: "7/2022 – Present",
         description: "Lead the industry's first robotic cloud lab platform, providing scientists with an intuitive no-code planner to capture measurements, sample history, and decision making.",
         achievements: [
-          "Lead internal team of 7 and third-party offshore development team as tech lead for workflows domain",
+          "Lead internal team of 5 and third-party offshore development team for workflows domain",
           "Boosted team velocity by 38% through enhancements in average story points per developer",
           "Achieved 83% sprint completion rate over the last year",
           "Spearheaded process changes to optimize Internal Support Channel triaging",
