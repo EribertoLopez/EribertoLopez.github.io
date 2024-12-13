@@ -1,4 +1,4 @@
-export const resumeData = {
+const resumeData = {
     name: "Eriberto Lopez",
     title: "Software Engineering Manager",
     location: "Los Angeles Metropolitan Area",
@@ -223,3 +223,5 @@ export const resumeData = {
       email: "mailto:EribertoLopez3@gmail.com"
     }
   };
+
+  export default resumeData;
