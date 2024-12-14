@@ -12,55 +12,140 @@ const resumeData = {
     
     summary: "Team and goal-oriented software professional with experience in using web applications and cloud computing infrastructure to plan, scale, and optimize workflows. Experience coordinating and designing software from requirements to meet deadlines and achieve milestones from stakeholders in biotech, pharmaceuticals, and DARPA. Detailed researcher able to generate reliable data used in patent proposals, publications, and grant manuscripts.",
     
-    skills: [
-      {
-        category: "Technologies",
-        items: [
-          "Python",
-          "Ruby",
-          "Typescript (React)",
-          "Java",
-          "Terraform",
-          "Cloudformation",
-          "AWS",
-          "Kubernetes",
-          "Lambda",
-          "Docker",
-          "SQL",
-          "ML",
-          "CI/CD",
-          "FastAPI",
-          "SpringBoot",
-          "NextJS"
-        ]
-      },
-      {
-        category: "Scientific Technologies",
-        items: [
-          "NGS",
-          "RNASeq",
-          "CRISPR Design",
-          "Library Screening",
-          "Assay Development",
-          "Flow Cytometry",
-          "qPCR",
-          "Protein Characterization",
-          "Bioreactor Design",
-          "GC/MS",
-          "Molecular Techniques",
-          "High-Throughput Screening",
-          "Laboratory Automation",
-          "Synthetic Biology"
-        ]
-      },
-      {
-        category: "Languages",
-        items: [
-          "Spanish (Native or Bilingual)",
-          "English (Native or Bilingual)"
-        ]
-      }
-    ],
+"skills": [
+  {
+    "category": "Languages & Frameworks",
+    "items": [
+      "Python",
+      "Flask",
+      "FastAPI",
+      "Java",
+      "SpringBoot",
+      "JPA",
+      "Hibernate",
+      "Gradle",
+      "TypeScript",
+      "React",
+      "NextJS"
+     ]
+   },
+   {
+     "category": "AWS Cloud & Infrastructure",
+     "items": [
+       "EKS",
+       "ECS",
+       "IAM",
+       "Kinesis",
+       "DynamoDB",
+       "S3",
+       "CDN",
+       "CloudWatch",
+       "Serverless",
+       "Lambda",
+       "Relational Database Service",
+     ]
+   },
+    {
+      "category": "Databases & Caching",
+      "items": [
+        "SQL",
+        "Postgres",
+        "Redis",
+        "DynamoDB"
+      ]
+    },
+    {
+      "category": "API & Architecture",
+      "items": [
+        "OpenAPI",
+        "Swagger",
+        "GraphQL",
+        "REST",
+        "Microservices",
+        "MicroFrontends"
+      ]
+    },
+   {
+     "category": "Architecture & Design",
+     "items": [
+       "System Architecture",
+       "Workflow Automation",
+       "Frontend Performance Optimization",
+       "Microservices",
+       "MicroFrontends"
+     ]
+   },
+   {
+     "category": "DevOps & Infrastructure",
+     "items": [
+       "Terraform",
+       "Docker",
+       "ArgoCD",
+       "Kustomize",
+       "Helm",
+       "GitHub Actions",
+       "Jenkins",
+       "git"
+     ]
+   },
+   {
+     "category": "Project Management & Leadership",
+     "items": [
+       "Agile",
+       "JIRA",
+       "Technical Leadership",
+       "Offshore Management",
+       "Process Optimization",
+       "Research Planning",
+       "Client Relations",
+       "Team Building"
+     ]
+   },
+   {
+    "category": "Data Science & Analysis",
+    "items": [
+      "Jupyter Notebooks",
+      "Statistical analysis tools",
+      "pandas",
+      "numpy",
+      "scikit-learn",
+      "scipy",
+      "matplotlib",
+      "Multi-dimensional data analysis",
+      "Data Pipeline Engineering"
+    ]
+  },
+   {
+     "category": "Genomics & Gene Analysis",
+     "items": [
+       "NGS",
+       "RNASeq",
+       "qPCR",
+       "CRISPR Design"
+     ]
+   },
+   {
+     "category": "Laboratory & Analysis",
+     "items": [
+       "Library Screening",
+       "Assay Development",
+       "Flow Cytometry",
+       "Protein Characterization",
+       "Microbial Culturing",
+       "Western Blot",
+       "ELISA",
+       "Protocol Development",
+       "High-Throughput Methods",
+       "Experimental Design",
+       "Lab Automation",
+       "Metabolic Engineering",,
+       "Bioreactor Design",
+       "Molecular Cloning Techniques",
+       "LIMS",
+
+     ]
+   }
+ ],
   
     certifications: [
       {
