@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Github, Twitter, Linkedin, Mail, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Github, Twitter, Linkedin, Mail, X, Download } from 'lucide-react';
 import Link from 'next/link';
 import { MYEMAIL, MYGITHUB, MYLINKEDIN, MYTWITTER, Sections, themes } from '../lib/ConfigUtils';
 import Head from 'next/head';
@@ -67,7 +67,68 @@ type Contact = {
 };
 
 
+interface DownloadButtonProps {
+  localPdfPath: string;
+  fileName?: string;
+}
 
+
+const DownloadButton = ({ localPdfPath, fileName = 'Eriberto-Lopez-Resume.pdf' }: DownloadButtonProps) => {
+  const [pdfUrl, setPdfUrl] = useState<string>('');
+  const [isHovered, setIsHovered] = useState(false);
+
+  useEffect(() => {
+    const fetchPdf = async () => {
+      try {
+        const response = await fetch(localPdfPath);
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        setPdfUrl(url);
+      } catch (error) {
+        console.error('Error loading PDF:', error);
+      }
+    };
+
+    fetchPdf();
+    return () => {
+      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+    };
+  }, [localPdfPath]);
+
+  return (
+    <div className="relative group">
+      {/* Simple color frame */}
+      <div className="absolute -inset-1 bg-emerald-500 
+        rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300" />
+      
+      {/* Color reveal background */}
+      <div className="absolute inset-0 bg-emerald-50
+        rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300" />
+      
+      {/* White background layer */}
+      <div className="absolute inset-0 bg-white rounded-lg transform transition-transform duration-300 
+        group-hover:translate-x-1 group-hover:translate-y-1 group-hover:bg-white/90" />
+      
+      {/* Main button */}
+      <a
+        href={pdfUrl}
+        download={fileName}
+        className="relative block px-6 py-3 bg-transparent rounded-lg border-2 border-black 
+          font-medium text-black transform transition-all duration-300"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <div className="flex items-center justify-center gap-2">
+          <Download 
+            className={`w-5 h-5 transition-transform duration-300 
+              ${isHovered ? 'transform -translate-y-0.5' : ''}`}
+          />
+          <span className="text-m">Download Resume</span>
+        </div>
+      </a>
+    </div>
+  );
+};
 
 const MyResume = ({
   name,
@@ -86,6 +147,9 @@ const MyResume = ({
     <div className={resumeStyles.resume}>
       {/* Sidebar */}
       <div className={resumeStyles.sidebar}>
+        <div className="flex justify-center mb-6">
+          <DownloadButton localPdfPath="/assets/resumes/Eriberto_Lopez_Resume_10_30_24.pdf" />
+        </div>
         {/* Skills Section */}
         {skills.map((skillGroup) => (
           <div key={skillGroup.category} className="mb-6">
