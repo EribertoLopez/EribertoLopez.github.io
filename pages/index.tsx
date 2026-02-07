@@ -18,7 +18,7 @@ const Content = ({ currentTheme, allPosts, allResumes, allProjects }: { currentT
   const heroProj = allProjects[0]
   const heroResume = allResumes[0]
   const heroPost = allPosts[0]
-  const description: string = "I\'m Eri Lopez welcome 👋. My interests are software development, synthetic & computational biology, laser cutters, photography, acrylic pour painting, and automation. I hope you find something helpful or inspiring. "
+  const description: string = "Hey, I'm Eri Lopez 👋 — a senior full-stack engineer who loves building tools that make work easier. I've led engineering teams, shipped internal platforms, and dabbled in everything from computational biology to AI automation. Outside of code: acrylic pour painting, photography, and tinkering with laser cutters. Currently exploring new opportunities — let's connect!"
 
   return (
     <div>
