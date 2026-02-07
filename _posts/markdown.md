@@ -89,7 +89,7 @@ export default function Nextra({ Component, pageProps }) {
 
 - [Next.js](https://nextjs.org)
 - [Nextra](https://nextra.vercel.app/)
-- [Vercel](http://vercel.com)
+- [Vercel](https://vercel.com)
 
 ### Footnotes
 
