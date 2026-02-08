@@ -133,7 +133,7 @@ A special database designed to store embeddings and find similar ones quickly.
 **Regular database:** "Find all users where name = 'John'"
 **Vector database:** "Find all chunks that are similar to this question"
 
-We'll use **Pinecone** (free tier available) — it's like a filing cabinet that automatically organizes your documents by meaning.
+We'll use **Supabase** with the `pgvector` extension — it's a Postgres database with superpowers for storing and searching vectors. Supabase gives you a full database plus vector search in one place (free tier available).
 
 ---
 
@@ -165,11 +165,11 @@ main
         ├── feature/02-text-chunking
         │     └── Split documents into chunks
         │
-        ├── feature/03-local-embeddings
-        │     └── Generate embeddings with Ollama
+        ├── feature/03-embeddings
+        │     └── Generate embeddings (Ollama local / OpenAI prod)
         │
         ├── feature/04-vector-store
-        │     └── Store and search with Pinecone
+        │     └── Store and search with Supabase + pgvector
         │
         ├── feature/05-chat-api
         │     └── Build /api/chat endpoint
@@ -532,20 +532,27 @@ scripts/
 
 ---
 
-### 🌿 Branch 3: `feature/03-local-embeddings`
+### 🌿 Branch 3: `feature/03-embeddings`
 
-**Goal:** Convert text chunks into searchable vectors using Ollama.
+**Goal:** Convert text chunks into searchable vectors using a hybrid approach: **Ollama for local development**, **OpenAI for production**.
 
 **What you'll learn:**
-- Running AI models locally
+- Running AI models locally with Ollama
+- Using OpenAI's embedding API
+- Environment-based configuration
 - What embeddings look like
-- Async/await with multiple API calls
+
+#### Why Hybrid?
+- **Local (Ollama):** Free, fast iteration, no API costs during development
+- **Production (OpenAI):** Battle-tested, consistent quality, scales automatically
 
 #### Prerequisites
 ```bash
-# Install Ollama first: https://ollama.com/download
+# For local development - Install Ollama: https://ollama.com/download
 # Then pull an embedding model:
 ollama pull nomic-embed-text
+
+# For production - Get an OpenAI API key: https://platform.openai.com/api-keys
 ```
 
 #### Files to Create/Modify
@@ -574,28 +581,34 @@ scripts/
   }'
   ```
 
-- [ ] **Task 3.2:** Create `lib/embeddings.ts`
+- [ ] **Task 3.2:** Install OpenAI SDK
+  ```bash
+  npm install openai
+  ```
+
+- [ ] **Task 3.3:** Create `lib/embeddings.ts`
   ```typescript
   // lib/embeddings.ts
+  import OpenAI from "openai";
 
+  // Configuration - switches between Ollama (local) and OpenAI (production)
+  const USE_OPENAI = process.env.EMBEDDING_PROVIDER === "openai";
   const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
-  const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL || "nomic-embed-text";
+  const OLLAMA_MODEL = process.env.OLLAMA_EMBEDDING_MODEL || "nomic-embed-text";
+  const OPENAI_MODEL = process.env.OPENAI_EMBEDDING_MODEL || "text-embedding-3-small";
+
+  // OpenAI client (only initialized if using OpenAI)
+  const openai = USE_OPENAI ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
 
   /**
-   * Converts text into a vector (array of numbers) using Ollama.
-   * 
-   * This vector captures the "meaning" of the text in a way that
-   * computers can compare. Similar meanings = similar vectors.
-   * 
-   * @param text - The text to convert
-   * @returns An array of numbers (the embedding vector)
+   * Converts text into a vector using Ollama (local).
    */
-  export async function embedText(text: string): Promise<number[]> {
+  async function embedWithOllama(text: string): Promise<number[]> {
     const response = await fetch(`${OLLAMA_BASE_URL}/api/embeddings`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: EMBEDDING_MODEL,
+        model: OLLAMA_MODEL,
         prompt: text,
       }),
     });
@@ -609,8 +622,50 @@ scripts/
   }
 
   /**
-   * Embeds multiple texts. Processes them one at a time to avoid
-   * overwhelming the local Ollama server.
+   * Converts text into a vector using OpenAI (production).
+   */
+  async function embedWithOpenAI(text: string): Promise<number[]> {
+    if (!openai) throw new Error("OpenAI client not initialized");
+    
+    const response = await openai.embeddings.create({
+      model: OPENAI_MODEL,
+      input: text,
+    });
+    
+    return response.data[0].embedding;
+  }
+
+  /**
+   * Converts text into a vector (array of numbers).
+   * 
+   * Uses Ollama locally (free, fast) or OpenAI in production (reliable, scalable).
+   * Set EMBEDDING_PROVIDER=openai in production.
+   * 
+   * @param text - The text to convert
+   * @returns An array of numbers (the embedding vector)
+   */
+  export async function embedText(text: string): Promise<number[]> {
+    if (USE_OPENAI) {
+      return embedWithOpenAI(text);
+    }
+    return embedWithOllama(text);
+  }
+
+  /**
+   * Get the dimension of embeddings for the current provider.
+   * Important: Supabase needs to know the vector dimension!
+   */
+  export function getEmbeddingDimension(): number {
+    if (USE_OPENAI) {
+      // text-embedding-3-small = 1536 dimensions
+      return 1536;
+    }
+    // nomic-embed-text = 768 dimensions
+    return 768;
+  }
+
+  /**
+   * Embeds multiple texts. OpenAI can batch, Ollama goes one at a time.
    * 
    * @param texts - Array of texts to embed
    * @param onProgress - Optional callback for progress updates
@@ -619,26 +674,31 @@ scripts/
     texts: string[],
     onProgress?: (current: number, total: number) => void
   ): Promise<number[][]> {
-    const embeddings: number[][] = [];
+    if (USE_OPENAI && openai) {
+      // OpenAI supports batch embedding
+      const response = await openai.embeddings.create({
+        model: OPENAI_MODEL,
+        input: texts,
+      });
+      return response.data.map((d) => d.embedding);
+    }
     
+    // Ollama: one at a time
+    const embeddings: number[][] = [];
     for (let i = 0; i < texts.length; i++) {
-      const embedding = await embedText(texts[i]);
+      const embedding = await embedWithOllama(texts[i]);
       embeddings.push(embedding);
       
       if (onProgress) {
         onProgress(i + 1, texts.length);
       }
     }
-    
     return embeddings;
   }
 
   /**
    * Calculates how similar two vectors are.
    * Returns a number between -1 and 1, where 1 = identical.
-   * 
-   * This is called "cosine similarity" — it measures the angle
-   * between two vectors. Smaller angle = more similar.
    */
   export function cosineSimilarity(a: number[], b: number[]): number {
     if (a.length !== b.length) {
@@ -659,20 +719,24 @@ scripts/
   }
   ```
 
-- [ ] **Task 3.3:** Create test script `scripts/test-embeddings.ts`
+- [ ] **Task 3.4:** Create test script `scripts/test-embeddings.ts`
   ```typescript
   // scripts/test-embeddings.ts
-  import { embedText, cosineSimilarity } from "../lib/embeddings";
+  import * as dotenv from "dotenv";
+  dotenv.config({ path: ".env.local" });
+  
+  import { embedText, cosineSimilarity, getEmbeddingDimension } from "../lib/embeddings";
 
   async function main() {
-    console.log("🔢 Testing embeddings...\n");
+    const provider = process.env.EMBEDDING_PROVIDER === "openai" ? "OpenAI" : "Ollama";
+    console.log(`🔢 Testing embeddings with ${provider}...\n`);
     
     // Test 1: Generate an embedding
     const text1 = "I have 5 years of experience with React and TypeScript";
     console.log(`Text: "${text1}"`);
     
     const embedding1 = await embedText(text1);
-    console.log(`Embedding length: ${embedding1.length} dimensions`);
+    console.log(`Embedding length: ${embedding1.length} dimensions (expected: ${getEmbeddingDimension()})`);
     console.log(`First 5 values: [${embedding1.slice(0, 5).map(n => n.toFixed(4)).join(", ")}...]`);
     console.log();
     
@@ -694,7 +758,6 @@ scripts/
     console.log(`"${text3.substring(0, 30)}..." = ${(similarity13 * 100).toFixed(1)}% similar`);
     console.log();
     
-    // The React texts should be much more similar than React vs cooking!
     if (similarity12 > similarity13) {
       console.log("✅ Embeddings correctly identify similar content!");
     } else {
@@ -705,32 +768,42 @@ scripts/
   main().catch(console.error);
   ```
 
-- [ ] **Task 3.4:** Run the test
+- [ ] **Task 3.5:** Run the test
   ```bash
+  # Test with Ollama (local, default)
   npx ts-node scripts/test-embeddings.ts
+  
+  # Test with OpenAI (if you have API key set)
+  EMBEDDING_PROVIDER=openai npx ts-node scripts/test-embeddings.ts
   ```
 
 #### Definition of Done
-- [ ] Ollama generates embeddings successfully
-- [ ] Embedding vectors have correct dimensions (768 for nomic-embed-text)
+- [ ] Ollama generates embeddings locally (768 dimensions for nomic-embed-text)
+- [ ] OpenAI generates embeddings when configured (1536 dimensions for text-embedding-3-small)
 - [ ] Similar texts have higher similarity scores
-- [ ] Different topics have lower similarity scores
+- [ ] Environment variable switches between providers
 
 ---
 
 ### 🌿 Branch 4: `feature/04-vector-store`
 
-**Goal:** Store embeddings in Pinecone and search for similar content.
+**Goal:** Store embeddings in Supabase (Postgres + pgvector) and search for similar content.
 
 **What you'll learn:**
-- Using a vector database
-- Storing and querying embeddings
-- Environment variables for API keys
+- Setting up Supabase with vector search
+- SQL for vector similarity search
+- Using Supabase client in TypeScript
+
+#### Why Supabase?
+- **Full database + vectors in one place** — no separate vector DB to manage
+- **Postgres underneath** — familiar SQL, great tooling
+- **Free tier is generous** — 500MB database, plenty for a portfolio
+- **pgvector extension** — battle-tested vector similarity search
 
 #### Prerequisites
-1. Create a free Pinecone account: https://www.pinecone.io/
-2. Create an index called `portfolio` with dimension `768` (matches nomic-embed-text)
-3. Get your API key
+1. Create a free Supabase account: https://supabase.com/
+2. Create a new project
+3. Get your project URL and API keys from Settings > API
 
 #### Files to Create/Modify
 
@@ -739,9 +812,10 @@ lib/
 ├── documents.ts    # (from Branch 1)
 ├── chunking.ts     # (from Branch 2)
 ├── embeddings.ts   # (from Branch 3)
-└── vectorStore.ts  # NEW: Pinecone functions
+└── vectorStore.ts  # NEW: Supabase functions
 
 scripts/
+├── setup-db.ts     # One-time database setup
 ├── ingest.ts       # Full ingestion pipeline
 └── test-search.ts  # Test searching
 
@@ -750,37 +824,133 @@ scripts/
 
 #### Step-by-Step Tasks
 
-- [ ] **Task 4.1:** Install Pinecone client
+- [ ] **Task 4.1:** Install Supabase client
   ```bash
-  npm install @pinecone-database/pinecone
+  npm install @supabase/supabase-js
   ```
 
 - [ ] **Task 4.2:** Create `.env.local` (add to .gitignore!)
   ```
-  PINECONE_API_KEY=your-api-key-here
-  PINECONE_INDEX=portfolio
+  # Supabase
+  SUPABASE_URL=https://your-project.supabase.co
+  SUPABASE_ANON_KEY=your-anon-key
+  SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+  
+  # Embeddings (for local dev, leave EMBEDDING_PROVIDER unset to use Ollama)
+  # EMBEDDING_PROVIDER=openai
+  # OPENAI_API_KEY=your-openai-key
   ```
 
-- [ ] **Task 4.3:** Create `lib/vectorStore.ts`
+- [ ] **Task 4.3:** Create `scripts/setup-db.ts` (one-time setup)
+  ```typescript
+  // scripts/setup-db.ts
+  // Run this ONCE to set up the database schema
+  
+  import * as dotenv from "dotenv";
+  dotenv.config({ path: ".env.local" });
+  
+  import { createClient } from "@supabase/supabase-js";
+  import { getEmbeddingDimension } from "../lib/embeddings";
+
+  const supabase = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY! // Need service role for DDL
+  );
+
+  async function main() {
+    const dimension = getEmbeddingDimension();
+    console.log(`🔧 Setting up database for ${dimension}-dimensional embeddings...\n`);
+    
+    // Enable pgvector extension
+    console.log("1. Enabling pgvector extension...");
+    const { error: extError } = await supabase.rpc("exec_sql", {
+      sql: "CREATE EXTENSION IF NOT EXISTS vector;"
+    });
+    
+    // Note: If exec_sql doesn't exist, run this in Supabase SQL editor:
+    // CREATE EXTENSION IF NOT EXISTS vector;
+    
+    // Create the documents table
+    console.log("2. Creating documents table...");
+    const { error: tableError } = await supabase.from("documents").select("id").limit(1);
+    
+    if (tableError?.code === "42P01") {
+      // Table doesn't exist, create it
+      // Run this SQL in Supabase SQL Editor:
+      console.log(`
+⚠️  Run this SQL in your Supabase SQL Editor (Database > SQL Editor):
+
+-------------------------------------------
+-- Enable the pgvector extension
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Create the documents table
+CREATE TABLE documents (
+  id TEXT PRIMARY KEY,
+  content TEXT NOT NULL,
+  metadata JSONB DEFAULT '{}'::jsonb,
+  embedding vector(${dimension}),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Create an index for fast similarity search
+CREATE INDEX ON documents 
+USING ivfflat (embedding vector_cosine_ops)
+WITH (lists = 100);
+
+-- Create a function to search for similar documents
+CREATE OR REPLACE FUNCTION match_documents(
+  query_embedding vector(${dimension}),
+  match_count INT DEFAULT 5,
+  match_threshold FLOAT DEFAULT 0.0
+)
+RETURNS TABLE (
+  id TEXT,
+  content TEXT,
+  metadata JSONB,
+  similarity FLOAT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    d.id,
+    d.content,
+    d.metadata,
+    1 - (d.embedding <=> query_embedding) AS similarity
+  FROM documents d
+  WHERE 1 - (d.embedding <=> query_embedding) > match_threshold
+  ORDER BY d.embedding <=> query_embedding
+  LIMIT match_count;
+END;
+$$;
+-------------------------------------------
+
+Then run this script again to verify.
+      `);
+      return;
+    }
+    
+    console.log("✅ Database is ready!");
+  }
+
+  main().catch(console.error);
+  ```
+
+- [ ] **Task 4.4:** Create `lib/vectorStore.ts`
   ```typescript
   // lib/vectorStore.ts
-  import { Pinecone } from "@pinecone-database/pinecone";
+  import { createClient } from "@supabase/supabase-js";
 
-  // Initialize Pinecone client
-  const pinecone = new Pinecone({
-    apiKey: process.env.PINECONE_API_KEY!,
-  });
-
-  // Get reference to our index
-  const index = pinecone.Index(process.env.PINECONE_INDEX || "portfolio");
+  // Initialize Supabase client
+  const supabase = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY!
+  );
 
   /**
-   * Stores a chunk with its embedding in Pinecone.
-   * 
-   * Each record has:
-   * - id: Unique identifier
-   * - values: The embedding vector (array of numbers)
-   * - metadata: Extra info we want to retrieve later
+   * Stores a chunk with its embedding in Supabase.
    */
   export async function upsertChunk(
     id: string,
@@ -788,20 +958,18 @@ scripts/
     text: string,
     metadata: Record<string, string>
   ): Promise<void> {
-    await index.upsert([
-      {
-        id,
-        values: embedding,
-        metadata: {
-          ...metadata,
-          text, // Store the original text so we can retrieve it
-        },
-      },
-    ]);
+    const { error } = await supabase.from("documents").upsert({
+      id,
+      content: text,
+      metadata,
+      embedding,
+    });
+    
+    if (error) throw error;
   }
 
   /**
-   * Stores multiple chunks at once (faster than one at a time).
+   * Stores multiple chunks at once.
    */
   export async function upsertChunks(
     chunks: Array<{
@@ -811,29 +979,29 @@ scripts/
       metadata: Record<string, string>;
     }>
   ): Promise<void> {
-    // Pinecone recommends batches of 100
+    // Supabase handles batching internally, but let's chunk for progress
     const batchSize = 100;
     
     for (let i = 0; i < chunks.length; i += batchSize) {
       const batch = chunks.slice(i, i + batchSize);
       
-      await index.upsert(
+      const { error } = await supabase.from("documents").upsert(
         batch.map((chunk) => ({
           id: chunk.id,
-          values: chunk.embedding,
-          metadata: {
-            ...chunk.metadata,
-            text: chunk.text,
-          },
+          content: chunk.text,
+          metadata: chunk.metadata,
+          embedding: chunk.embedding,
         }))
       );
+      
+      if (error) throw error;
       
       console.log(`  Upserted batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(chunks.length / batchSize)}`);
     }
   }
 
   /**
-   * Searches for chunks similar to the query.
+   * Searches for chunks similar to the query using pgvector.
    * 
    * @param queryEmbedding - The embedding of the search query
    * @param topK - How many results to return
@@ -848,33 +1016,36 @@ scripts/
     text: string;
     metadata: Record<string, any>;
   }>> {
-    const results = await index.query({
-      vector: queryEmbedding,
-      topK,
-      includeMetadata: true,
+    const { data, error } = await supabase.rpc("match_documents", {
+      query_embedding: queryEmbedding,
+      match_count: topK,
+      match_threshold: 0.0,
     });
     
-    return results.matches?.map((match) => ({
-      id: match.id,
-      score: match.score || 0,
-      text: (match.metadata?.text as string) || "",
-      metadata: match.metadata || {},
-    })) || [];
+    if (error) throw error;
+    
+    return (data || []).map((row: any) => ({
+      id: row.id,
+      score: row.similarity,
+      text: row.content,
+      metadata: row.metadata,
+    }));
   }
 
   /**
-   * Deletes all vectors (useful for re-ingesting).
+   * Deletes all documents (useful for re-ingesting).
    */
   export async function deleteAll(): Promise<void> {
-    await index.deleteAll();
+    const { error } = await supabase.from("documents").delete().neq("id", "");
+    if (error) throw error;
   }
   ```
 
-- [ ] **Task 4.4:** Create the full ingestion script `scripts/ingest.ts`
+- [ ] **Task 4.5:** Create the full ingestion script `scripts/ingest.ts`
   ```typescript
   // scripts/ingest.ts
   // This script runs the entire pipeline:
-  // Load docs → Chunk → Embed → Store
+  // Load docs → Chunk → Embed → Store in Supabase
   
   import * as dotenv from "dotenv";
   dotenv.config({ path: ".env.local" });
@@ -885,7 +1056,8 @@ scripts/
   import { upsertChunks, deleteAll } from "../lib/vectorStore";
 
   async function main() {
-    console.log("🚀 Starting ingestion pipeline...\n");
+    const provider = process.env.EMBEDDING_PROVIDER === "openai" ? "OpenAI" : "Ollama";
+    console.log(`🚀 Starting ingestion pipeline (embeddings via ${provider})...\n`);
     
     // Step 1: Load documents
     console.log("📄 Step 1: Loading documents...");
@@ -925,8 +1097,8 @@ scripts/
     }
     console.log();
     
-    // Step 4: Store in Pinecone
-    console.log("🗄️ Step 4: Storing in Pinecone...");
+    // Step 4: Store in Supabase
+    console.log("🗄️ Step 4: Storing in Supabase...");
     console.log("   Clearing existing data...");
     await deleteAll();
     
@@ -934,13 +1106,13 @@ scripts/
     await upsertChunks(chunksWithEmbeddings);
     
     console.log("\n✅ Ingestion complete!");
-    console.log(`   ${docs.length} documents → ${chunks.length} chunks → stored in Pinecone`);
+    console.log(`   ${docs.length} documents → ${chunks.length} chunks → stored in Supabase`);
   }
 
   main().catch(console.error);
   ```
 
-- [ ] **Task 4.5:** Create search test `scripts/test-search.ts`
+- [ ] **Task 4.6:** Create search test `scripts/test-search.ts`
   ```typescript
   // scripts/test-search.ts
   import * as dotenv from "dotenv";
@@ -951,8 +1123,10 @@ scripts/
 
   async function main() {
     const query = process.argv[2] || "What is your experience with React?";
+    const provider = process.env.EMBEDDING_PROVIDER === "openai" ? "OpenAI" : "Ollama";
     
-    console.log(`🔍 Searching for: "${query}"\n`);
+    console.log(`🔍 Searching for: "${query}"`);
+    console.log(`   (using ${provider} embeddings)\n`);
     
     // Embed the query
     const queryEmbedding = await embedText(query);
@@ -973,17 +1147,28 @@ scripts/
   main().catch(console.error);
   ```
 
-- [ ] **Task 4.6:** Run the full pipeline
+- [ ] **Task 4.7:** Run the full pipeline
   ```bash
-  # Run ingestion
+  # First, set up the database (follow the SQL instructions)
+  npx ts-node scripts/setup-db.ts
+  
+  # Run ingestion (with Ollama locally)
   npx ts-node scripts/ingest.ts
   
   # Test search
   npx ts-node scripts/test-search.ts "What programming languages do you know?"
   ```
 
+#### ⚠️ Important: Embedding Dimension Consistency
+When you switch between Ollama (768d) and OpenAI (1536d), you need to:
+1. Re-run the database setup SQL with the correct dimension
+2. Re-ingest all documents
+
+For production, set `EMBEDDING_PROVIDER=openai` and use 1536-dimension vectors.
+
 #### Definition of Done
-- [ ] Pinecone account created and index set up
+- [ ] Supabase project created with pgvector enabled
+- [ ] Database schema created (documents table + match_documents function)
 - [ ] Ingestion script runs successfully
 - [ ] Search returns relevant results
 - [ ] Different queries return different relevant chunks
@@ -1238,8 +1423,11 @@ npx ts-node scripts/test-search.ts "your query here"
 # Check Ollama is running
 curl http://localhost:11434/api/tags
 
-# View Pinecone dashboard
-# https://app.pinecone.io/
+# View Supabase dashboard
+# https://supabase.com/dashboard
+
+# Test with OpenAI embeddings instead of Ollama
+EMBEDDING_PROVIDER=openai npx ts-node scripts/ingest.ts
 ```
 
 ---
