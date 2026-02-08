@@ -1,80 +1,75 @@
 // lib/chunking.ts
+import { createHash } from "crypto";
+import { pipelineConfig } from "./config";
+import type { LoadedDocument, Chunk } from "./types";
 
-export interface Chunk {
-  id: string;
-  text: string;
-  metadata: {
-    source: string; // Which file this came from
-    chunkIndex: number; // Which chunk number (0, 1, 2, ...)
-  };
-}
+// Re-export Chunk for backwards compatibility
+export type { Chunk } from "./types";
 
 export interface ChunkingOptions {
-  chunkSize: number; // Target size in characters
-  overlap: number; // How much chunks should overlap
+  chunkSize: number;
+  overlap: number;
 }
 
 /**
- * Splits text into overlapping chunks.
- *
- * WHY OVERLAP?
- * Imagine a sentence that spans two chunks. Without overlap,
- * we might cut it in half and lose the meaning. Overlap ensures
- * we don't lose context at chunk boundaries.
- *
- * Example with overlap=50:
- * Chunk 1: "...end of chunk one. Start of important sentence..."
- * Chunk 2: "...of important sentence that continues here..."
- *          ↑ This part appears in BOTH chunks
+ * Generates a content-based chunk ID using MD5 hash.
+ * Stable across re-runs with same content, changes when content changes.
+ */
+function generateChunkId(source: string, text: string): string {
+  return createHash("md5").update(`${source}:${text}`).digest("hex").slice(0, 16);
+}
+
+/**
+ * Splits text into overlapping chunks with sentence-boundary awareness.
  */
 export function chunkText(
   text: string,
   source: string,
-  options: ChunkingOptions = { chunkSize: 500, overlap: 100 }
+  options?: Partial<ChunkingOptions>
 ): Chunk[] {
-  const { chunkSize, overlap } = options;
+  const chunkSize = options?.chunkSize ?? pipelineConfig.chunking.chunkSize;
+  const overlap = options?.overlap ?? pipelineConfig.chunking.overlap;
   const chunks: Chunk[] = [];
 
-  // Clean up the text (remove extra whitespace)
   const cleanText = text.replace(/\s+/g, " ").trim();
 
   let start = 0;
   let chunkIndex = 0;
 
   while (start < cleanText.length) {
-    // Calculate end position
-    let end = start + chunkSize;
+    let end = Math.min(start + chunkSize, cleanText.length);
 
-    // If we're not at the end, try to break at a sentence
+    // Try to break at a sentence boundary
     if (end < cleanText.length) {
-      // Look for a period, question mark, or newline near the end
       const breakPoint = cleanText.lastIndexOf(". ", end);
       if (breakPoint > start + chunkSize / 2) {
-        end = breakPoint + 1; // Include the period
+        end = breakPoint + 1;
       }
     }
 
-    // Extract the chunk
-    const chunkText = cleanText.slice(start, end).trim();
+    const chunkContent = cleanText.slice(start, end).trim();
 
-    if (chunkText.length > 0) {
+    if (chunkContent.length > 0) {
       chunks.push({
-        id: `${source}-chunk-${chunkIndex}`,
-        text: chunkText,
+        id: generateChunkId(source, chunkContent),
+        text: chunkContent,
+        source,
         metadata: {
           source,
-          chunkIndex,
+          chunkIndex: String(chunkIndex),
         },
       });
       chunkIndex++;
     }
 
-    // Move start position (accounting for overlap)
-    start = end - overlap;
+    // Move start, accounting for overlap
+    const nextStart = end - overlap;
 
-    // Prevent infinite loop
-    if (start <= 0 && chunkIndex > 0) {
+    // Prevent infinite loop: ensure forward progress
+    if (nextStart <= start) {
       start = end;
+    } else {
+      start = nextStart;
     }
   }
 
@@ -85,8 +80,8 @@ export function chunkText(
  * Chunks multiple documents at once.
  */
 export function chunkDocuments(
-  documents: { filename: string; content: string }[],
-  options?: ChunkingOptions
+  documents: LoadedDocument[],
+  options?: Partial<ChunkingOptions>
 ): Chunk[] {
   const allChunks: Chunk[] = [];
 
