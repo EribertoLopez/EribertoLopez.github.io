@@ -1,63 +1,98 @@
-# A statically generated blog example using Next.js, Markdown, and TypeScript
+# EribertoLopez.github.io
 
-This is the existing [blog-starter](https://github.com/vercel/next.js/tree/canary/examples/blog-starter) plus TypeScript.
+Personal portfolio and blog built with Next.js, featuring an AI-powered chat experience that lets visitors ask questions about my work, projects, and experience.
 
-This example showcases Next.js's [Static Generation](https://nextjs.org/docs/basic-features/pages) feature using Markdown files as the data source.
+## What's Here
 
-The blog posts are stored in `/_posts` as Markdown files with front matter support. Adding a new Markdown file in there will create a new blog post.
+- **Portfolio & Blog** — Static pages built with Next.js, Markdown, and TypeScript
+- **AI Chat Widget** — RAG-powered chat using Claude, with document ingestion, embeddings, and vector search
+- **Documentation** — Architecture decisions, API reference, and deployment guides in [`docs/`](./docs/)
 
-To create the blog posts we use [`remark`](https://github.com/remarkjs/remark) and [`remark-html`](https://github.com/remarkjs/remark-html) to convert the Markdown files into an HTML string, and then send it down as a prop to the page. The metadata of every post is handled by [`gray-matter`](https://github.com/jonschlinkert/gray-matter) and also sent in props to the page.
+## Quick Start
 
-## Demo
+### Prerequisites
 
-[https://next-blog-starter.vercel.app/](https://next-blog-starter.vercel.app/)
+- **Node.js** ≥ 18
+- **npm** (comes with Node)
 
-## Deploy your own
-
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=next-example) or preview live with [StackBlitz](https://stackblitz.com/github/vercel/next.js/tree/canary/examples/blog-starter)
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/vercel/next.js/tree/canary/examples/blog-starter&project-name=blog-starter&repository-name=blog-starter)
-
-### Related examples
-
-- [WordPress](/examples/cms-wordpress)
-- [DatoCMS](/examples/cms-datocms)
-- [Sanity](/examples/cms-sanity)
-- [TakeShape](/examples/cms-takeshape)
-- [Prismic](/examples/cms-prismic)
-- [Contentful](/examples/cms-contentful)
-- [Strapi](/examples/cms-strapi)
-- [Agility CMS](/examples/cms-agilitycms)
-- [Cosmic](/examples/cms-cosmic)
-- [ButterCMS](/examples/cms-buttercms)
-- [Storyblok](/examples/cms-storyblok)
-- [GraphCMS](/examples/cms-graphcms)
-- [Kontent](/examples/cms-kontent)
-- [Umbraco Heartcore](/examples/cms-umbraco-heartcore)
-- [Builder.io](/examples/cms-builder-io)
-- [TinaCMS](/examples/cms-tina/)
-- [Enterspeed](/examples/cms-enterspeed)
-
-## How to use
-
-Execute [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [npm](https://docs.npmjs.com/cli/init), [Yarn](https://yarnpkg.com/lang/en/docs/cli/create/), or [pnpm](https://pnpm.io) to bootstrap the example:
+### Local Development
 
 ```bash
-npx create-next-app --example blog-starter blog-starter-app
+# Install dependencies
+npm install
+
+# Start the dev server
+npm run dev
 ```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+### Environment Variables
+
+To enable the AI chat locally, create a `.env.local` file:
 
 ```bash
-yarn create next-app --example blog-starter blog-starter-app
+# Required
+ANTHROPIC_API_KEY=your-key-here
+SUPABASE_URL=your-supabase-url
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# Optional
+EMBEDDING_PROVIDER=ollama          # "ollama" (local) or "openai"
+OPENAI_API_KEY=your-key            # Required if EMBEDDING_PROVIDER=openai
+CHAT_MODEL=claude-sonnet-4-20250514        # Default model
+TOP_K=5                            # Number of chunks to retrieve
+MATCH_THRESHOLD=0.5                # Similarity threshold (0-1)
 ```
 
-```bash
-pnpm create next-app --example blog-starter blog-starter-app
-```
+> **Note:** The portfolio and blog work without any env vars. The AI chat features require the variables above.
 
-Your blog should be up and running on [http://localhost:3000](http://localhost:3000)! If it doesn't work, post on [GitHub discussions](https://github.com/vercel/next.js/discussions).
+### Useful Commands
 
-Deploy it to the cloud with [Vercel](https://vercel.com/new?utm_source=github&utm_medium=readme&utm_campaign=next-example) ([Documentation](https://nextjs.org/docs/deployment)).
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server |
+| `npm run build` | Production build |
+| `npm run start` | Serve production build |
+| `npm run typecheck` | Run TypeScript checks |
 
-# Notes
+## Architecture
 
-`blog-starter` uses [Tailwind CSS](https://tailwindcss.com) [(v3.0)](https://tailwindcss.com/blog/tailwindcss-v3).
+The AI chat uses a RAG (Retrieval-Augmented Generation) pipeline:
+
+1. **Document Loading** — PDF, DOCX, and Markdown files are parsed
+2. **Chunking** — Documents are split into searchable segments
+3. **Embeddings** — Chunks are embedded via Ollama (local) or OpenAI
+4. **Vector Store** — Embeddings stored in Supabase with pgvector
+5. **Chat API** — `/api/chat` retrieves relevant chunks and generates responses with Claude
+
+See [`docs/AI_CHAT_ARCHITECTURE.md`](./docs/AI_CHAT_ARCHITECTURE.md) for the full system design.
+
+## Deployment
+
+> ⚠️ **The deployment process is subject to change as the project evolves.**
+
+**Portfolio (Static Site):**
+- Built with `next build` using `output: 'export'` for static HTML
+- Deployed to GitHub Pages
+
+**AI Chat (API + Ingestion):**
+- Chat API runs on Vercel (Next.js API routes)
+- Ingestion pipeline runs on ECS Fargate via GitHub Actions
+- Vector storage in Supabase (pgvector)
+
+See [`docs/AI_CHAT_DEPLOYMENT.md`](./docs/AI_CHAT_DEPLOYMENT.md) for environment setup and deployment details.
+
+## Documentation
+
+| Doc | Description |
+|-----|-------------|
+| [Architecture](./docs/AI_CHAT_ARCHITECTURE.md) | System design and data flow |
+| [Developer Guide](./docs/AI_CHAT_DEVELOPER_GUIDE.md) | Contributing and local setup |
+| [API Reference](./docs/AI_CHAT_API_REFERENCE.md) | Chat API endpoints |
+| [Decisions](./docs/AI_CHAT_DECISIONS.md) | Architecture decision records |
+| [Deployment](./docs/AI_CHAT_DEPLOYMENT.md) | Deployment and infrastructure |
+
+## License
+
+MIT
