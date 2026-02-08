@@ -27,6 +27,35 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+### Starting locally and using the AI chat
+
+1. **Set up environment**  
+   Create `.env.local` in the project root with at least:
+   - `SUPABASE_URL` — your Supabase project URL (Project Settings → API)
+   - `SUPABASE_SERVICE_ROLE_KEY` — service_role key from Supabase (Project Settings → API)
+   - `ANTHROPIC_API_KEY` — your Anthropic API key (e.g. `sk-ant-oat01-...` from [console.anthropic.com](https://console.anthropic.com))
+   - `EMBEDDING_PROVIDER=ollama` (or `openai`; if OpenAI, add `OPENAI_API_KEY`)
+
+2. **Create the Supabase table**  
+   Run `npx tsx scripts/setup-db.ts`, then run the SQL it prints in the **Supabase dashboard → SQL Editor**.
+
+3. **Embeddings (if using Ollama)**  
+   Install [Ollama](https://ollama.com), run `ollama serve`, then `ollama pull nomic-embed-text`.
+
+4. **Ingest documents**  
+   Add content to the `documents/` folder (e.g. `about.md`, `projects.md`, `resume.pdf`). Then run:
+   ```bash
+   npx tsx scripts/ingest.ts
+   ```
+
+5. **Start the app**  
+   From the repo root run `npm run dev` and open [http://localhost:3000](http://localhost:3000).
+
+6. **Use the chat**  
+   Click the chat bubble (bottom-right) and ask questions that should be in your docs (e.g. “What’s Eriberto’s experience with Python?”, “Summarize the resume”).
+
+**Troubleshooting:** Restart the dev server after changing `.env.local`. If answers are generic or missing, re-run `npx tsx scripts/ingest.ts`. For Ollama errors, ensure `ollama serve` is running and `nomic-embed-text` is pulled. Check the dev server terminal for 503 or other errors.
+
 ### Environment Variables
 
 To enable the AI chat locally, create a `.env.local` file:

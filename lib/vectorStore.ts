@@ -1,12 +1,20 @@
 // lib/vectorStore.ts — Backwards-compatible re-exports
 // New code should import from lib/vectorStore/index.ts
 import { createVectorStore } from "./vectorStore/index";
+import type { VectorRepository } from "./vectorStore/types";
 import type { ChunkRecord, SearchResult } from "./types";
 
 export { createVectorStore } from "./vectorStore/index";
 export type { VectorRepository } from "./vectorStore/types";
 
-const store = createVectorStore();
+// Lazy singleton — defers envRequired() calls until first use,
+// so dotenv.config() in scripts has time to load .env.local.
+let _store: VectorRepository | null = null;
+
+function getStore(): VectorRepository {
+  if (!_store) _store = createVectorStore();
+  return _store;
+}
 
 export async function upsertChunk(
   id: string,
@@ -14,13 +22,13 @@ export async function upsertChunk(
   text: string,
   metadata: Record<string, string>
 ): Promise<void> {
-  await store.upsert([{ id, embedding, text, metadata }]);
+  await getStore().upsert([{ id, embedding, text, metadata }]);
 }
 
 export async function upsertChunks(
   chunks: ChunkRecord[]
 ): Promise<void> {
-  await store.upsert(chunks, (current, total) => {
+  await getStore().upsert(chunks, (current, total) => {
     console.log(`  Upserted batch ${current}/${total}`);
   });
 }
@@ -29,9 +37,9 @@ export async function searchSimilar(
   queryEmbedding: number[],
   topK = 5
 ): Promise<SearchResult[]> {
-  return store.search(queryEmbedding, topK);
+  return getStore().search(queryEmbedding, topK);
 }
 
 export async function deleteAll(): Promise<void> {
-  await store.deleteAll();
+  await getStore().deleteAll();
 }

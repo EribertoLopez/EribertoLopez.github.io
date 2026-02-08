@@ -24,10 +24,21 @@ async function main() {
     .select("id")
     .limit(1);
 
-  if (tableError?.code === "42P01") {
-    // Table doesn't exist
+  const tableMissing =
+    tableError?.code === "42P01" || // PostgreSQL: undefined_table
+    tableError?.message?.includes("schema cache") || // PostgREST: table not in schema cache
+    tableError?.code === "PGRST204"; // PostgREST: table not found
+
+  if (tableError && !tableMissing) {
+    // Unexpected error — surface it
+    console.error("❌ Unexpected error checking for documents table:", tableError);
+    return;
+  }
+
+  if (tableMissing) {
     console.log(`
-⚠️  Run this SQL in your Supabase SQL Editor (Database > SQL Editor):
+⚠️  The "documents" table does not exist yet.
+   Run this SQL in your Supabase SQL Editor (Dashboard > SQL Editor > New query):
 
 -------------------------------------------
 -- Enable the pgvector extension
@@ -42,10 +53,10 @@ CREATE TABLE documents (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Create an index for fast similarity search
-CREATE INDEX ON documents 
-USING ivfflat (embedding vector_cosine_ops)
-WITH (lists = 100);
+-- Create an HNSW index for fast similarity search
+-- (HNSW works correctly even on an empty table, unlike IVFFlat)
+CREATE INDEX ON documents
+USING hnsw (embedding vector_cosine_ops);
 
 -- Create a function to search for similar documents
 CREATE OR REPLACE FUNCTION match_documents(
