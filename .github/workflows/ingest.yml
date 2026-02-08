@@ -1,0 +1,62 @@
+name: Ingest Documents
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for re-ingestion'
+        required: false
+        default: 'Document update'
+  push:
+    paths:
+      - 'documents/**'
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  ingest:
+    name: Build & Run Ingestion
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-west-2
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          ECR_REPOSITORY: portfolio-ingest
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -f Dockerfile.ingest -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: Run ECS Task
+        env:
+          CLUSTER: portfolio-cluster
+          TASK_DEFINITION: portfolio-ingest
+          SUBNET_ID: ${{ secrets.SUBNET_ID }}
+          SECURITY_GROUP_ID: ${{ secrets.SECURITY_GROUP_ID }}
+        run: |
+          aws ecs run-task \
+            --cluster $CLUSTER \
+            --task-definition $TASK_DEFINITION \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[$SUBNET_ID],securityGroups=[$SECURITY_GROUP_ID],assignPublicIp=ENABLED}" \
+            --count 1
+
+      - name: Summary
+        run: echo "✅ Ingestion triggered! Check ECS console for task status."

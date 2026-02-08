@@ -1,0 +1,44 @@
+{
+  "family": "portfolio-ingest",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "ingest",
+      "image": "ACCOUNT_ID.dkr.ecr.us-west-2.amazonaws.com/portfolio-ingest:latest",
+      "essential": true,
+      "environment": [
+        {
+          "name": "EMBEDDING_PROVIDER",
+          "value": "openai"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "SUPABASE_URL",
+          "valueFrom": "arn:aws:secretsmanager:us-west-2:ACCOUNT_ID:secret:portfolio/supabase-url"
+        },
+        {
+          "name": "SUPABASE_SERVICE_ROLE_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-west-2:ACCOUNT_ID:secret:portfolio/supabase-service-role-key"
+        },
+        {
+          "name": "OPENAI_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-west-2:ACCOUNT_ID:secret:portfolio/openai-api-key"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/portfolio-ingest",
+          "awslogs-region": "us-west-2",
+          "awslogs-stream-prefix": "ingest"
+        }
+      }
+    }
+  ]
+}
