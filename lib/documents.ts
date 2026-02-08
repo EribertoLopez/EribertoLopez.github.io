@@ -1,101 +1,82 @@
-// lib/documents.ts
-import fs from "fs";
+// lib/documents.ts — Document loading using Factory Pattern
+import fs from "fs/promises";
 import path from "path";
-import { PDFParse } from "pdf-parse";
-import mammoth from "mammoth";
+import { getLoader, getSupportedExtensions } from "./loaders";
+import { DocumentLoadError } from "./errors";
+import type { LoadedDocument } from "./types";
 
-// Parse PDF using pdf-parse v2 API
-async function parsePdf(buffer: Buffer): Promise<string> {
-  const parser = new PDFParse({ data: buffer });
-  const result = await parser.getText();
-  await parser.destroy();
-  return result.text;
-}
-
-// This type describes what a loaded document looks like
-export interface LoadedDocument {
-  filename: string;
-  content: string;
-  type: "pdf" | "docx" | "markdown" | "text";
-}
+// Re-export for backwards compatibility
+export type { LoadedDocument } from "./types";
 
 /**
- * Reads a single file and extracts its text content.
- *
- * @param filePath - Full path to the file
- * @returns The extracted text content
+ * Reads a single file and extracts its text content using the appropriate loader.
  */
 async function extractText(filePath: string): Promise<string> {
   const ext = path.extname(filePath).toLowerCase();
+  const loader = getLoader(ext);
 
-  if (ext === ".pdf") {
-    // PDF files need special parsing
-    const buffer = fs.readFileSync(filePath);
-    return parsePdf(buffer);
+  if (!loader) {
+    throw new DocumentLoadError(`Unsupported file type: ${ext}`);
   }
 
-  if (ext === ".docx") {
-    // Word documents need mammoth to extract text
-    const result = await mammoth.extractRawText({ path: filePath });
-    return result.value;
-  }
+  return loader.load(filePath);
+}
 
-  if ([".md", ".txt"].includes(ext)) {
-    // Plain text files can be read directly
-    return fs.readFileSync(filePath, "utf-8");
-  }
-
-  throw new Error(`Unsupported file type: ${ext}`);
+/**
+ * Determines the document type from file extension.
+ */
+function getDocumentType(ext: string): string {
+  if (ext === ".pdf") return "pdf";
+  if (ext === ".docx") return "docx";
+  if (ext === ".md") return "markdown";
+  return "text";
 }
 
 /**
  * Loads all documents from a directory.
  *
  * @param dirPath - Path to the documents folder
+ * @param recursive - Whether to traverse subdirectories (default: false)
  * @returns Array of loaded documents with their content
  */
 export async function loadDocuments(
-  dirPath: string
+  dirPath: string,
+  recursive = false
 ): Promise<LoadedDocument[]> {
-  // Get list of all files in the directory
-  const files = fs.readdirSync(dirPath);
-
+  const supportedExts = getSupportedExtensions();
+  const entries = await fs.readdir(dirPath, { withFileTypes: true });
   const documents: LoadedDocument[] = [];
 
-  for (const filename of files) {
-    const filePath = path.join(dirPath, filename);
+  for (const entry of entries) {
+    const fullPath = path.join(dirPath, entry.name);
 
-    // Skip directories
-    if (fs.statSync(filePath).isDirectory()) {
+    if (entry.isDirectory()) {
+      if (recursive) {
+        const subDocs = await loadDocuments(fullPath, true);
+        documents.push(...subDocs);
+      }
       continue;
     }
 
-    // Skip unsupported files
-    const ext = path.extname(filename).toLowerCase();
-    if (![".pdf", ".docx", ".md", ".txt"].includes(ext)) {
-      console.log(`Skipping unsupported file: ${filename}`);
+    const ext = path.extname(entry.name).toLowerCase();
+    if (!supportedExts.includes(ext)) {
+      console.log(`Skipping unsupported file: ${entry.name}`);
       continue;
     }
 
     try {
-      const content = await extractText(filePath);
-
+      const content = await extractText(fullPath);
       documents.push({
-        filename,
+        filename: entry.name,
         content,
-        type:
-          ext === ".pdf"
-            ? "pdf"
-            : ext === ".docx"
-            ? "docx"
-            : ext === ".md"
-            ? "markdown"
-            : "text",
+        type: getDocumentType(ext),
       });
-
-      console.log(`✅ Loaded: ${filename} (${content.length} characters)`);
+      console.log(`✅ Loaded: ${entry.name} (${content.length} characters)`);
     } catch (error) {
-      console.error(`❌ Failed to load ${filename}:`, error);
+      throw new DocumentLoadError(
+        `Failed to load ${entry.name}`,
+        error
+      );
     }
   }
 
