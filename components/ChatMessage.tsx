@@ -1,5 +1,6 @@
 // components/ChatMessage.tsx
 import React from "react";
+import ReactMarkdown from "react-markdown";
 import styles from "./ChatWidget.module.css";
 
 interface ChatMessageProps {
@@ -13,7 +14,11 @@ export default function ChatMessage({ role, content }: ChatMessageProps) {
       className={`${styles.message} ${role === "user" ? styles.userMessage : styles.assistantMessage}`}
     >
       <div className={styles.messageBubble}>
-        {content}
+        {role === "assistant" ? (
+          <ReactMarkdown>{content}</ReactMarkdown>
+        ) : (
+          content
+        )}
       </div>
     </div>
   );
