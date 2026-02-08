@@ -5,9 +5,10 @@ import styles from "./ChatWidget.module.css";
 interface ChatInputProps {
   onSend: (message: string) => void;
   disabled: boolean;
+  maxLength?: number;
 }
 
-export default function ChatInput({ onSend, disabled }: ChatInputProps) {
+export default function ChatInput({ onSend, disabled, maxLength = 2000 }: ChatInputProps) {
   const [input, setInput] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -28,6 +29,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
         onChange={(e) => setInput(e.target.value)}
         placeholder="Ask me anything..."
         disabled={disabled}
+        maxLength={maxLength}
         aria-label="Chat message input"
       />
       <button
