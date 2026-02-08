@@ -53,10 +53,10 @@ CREATE TABLE documents (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Create an HNSW index for fast similarity search
--- (HNSW works correctly even on an empty table, unlike IVFFlat)
-CREATE INDEX ON documents
-USING hnsw (embedding vector_cosine_ops);
+-- For small datasets (<1000 rows), sequential scan is fast and exact.
+-- Add an HNSW index when your dataset grows:
+-- CREATE INDEX ON documents USING hnsw (embedding vector_cosine_ops)
+--   WITH (m = 16, ef_construction = 200);
 
 -- Create a function to search for similar documents
 CREATE OR REPLACE FUNCTION match_documents(

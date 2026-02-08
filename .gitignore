@@ -401,3 +401,4 @@ template/
 out/
 .DS_Store
 node_modules
+.env.local

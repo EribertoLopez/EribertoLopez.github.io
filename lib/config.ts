@@ -38,11 +38,15 @@ export const pipelineConfig = {
     url: () => envRequired("SUPABASE_URL"),
     key: () => envRequired("SUPABASE_SERVICE_ROLE_KEY"),
     batchSize: env("UPSERT_BATCH_SIZE", 100) as number,
-    matchThreshold: envFloat("MATCH_THRESHOLD", 0.5),
+    matchThreshold: envFloat("MATCH_THRESHOLD", 0.3),
     topK: env("TOP_K", 5) as number,
   },
   chat: {
+    provider: (env("CHAT_PROVIDER", "ollama") as string) as
+      | "ollama"
+      | "anthropic",
     model: env("CHAT_MODEL", "claude-sonnet-4-20250514") as string,
+    ollamaModel: env("OLLAMA_CHAT_MODEL", "llama3.2") as string,
     maxTokens: env("CHAT_MAX_TOKENS", 1024) as number,
     maxMessageLength: env("CHAT_MAX_MESSAGE_LENGTH", 2000) as number,
     maxHistoryLength: env("CHAT_MAX_HISTORY", 50) as number,

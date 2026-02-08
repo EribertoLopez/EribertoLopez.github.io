@@ -1,14 +1,12 @@
 // lib/ai.ts
-import Anthropic from "@anthropic-ai/sdk";
 import { embedText } from "./embeddings";
 import { searchSimilar } from "./vectorStore";
 import { pipelineConfig } from "./config";
 import { ChatError, EmbeddingError, VectorStoreError } from "./errors";
+import { createChatProvider } from "./chat";
 import type { ChatMessage } from "./types";
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const chatProvider = createChatProvider();
 
 /**
  * Build system prompt with retrieved context sandboxed as data.
@@ -41,20 +39,13 @@ function sanitizeInput(input: string): string {
 }
 
 /**
- * Generate a chat response (non-streaming).
+ * Retrieve relevant document chunks for a query.
  */
-export async function generateChatResponse(
-  userMessage: string,
-  conversationHistory: ChatMessage[]
-): Promise<string> {
-  const sanitized = sanitizeInput(userMessage);
-
-  // Step 1: Find relevant document chunks
-  let relevantChunks: string[];
+async function retrieveContext(query: string): Promise<string[]> {
   try {
-    const queryEmbedding = await embedText(sanitized);
+    const queryEmbedding = await embedText(query);
     const relevantDocs = await searchSimilar(queryEmbedding, pipelineConfig.vectorStore.topK);
-    relevantChunks = relevantDocs.map((doc) => doc.text);
+    return relevantDocs.map((doc) => doc.text);
   } catch (error) {
     if (error instanceof EmbeddingError) {
       throw new ChatError("Search unavailable — embedding service failed", error);
@@ -64,27 +55,20 @@ export async function generateChatResponse(
     }
     throw new ChatError("Failed to retrieve context", error);
   }
+}
 
-  // Step 2: Build the prompt
+/**
+ * Generate a chat response (non-streaming).
+ */
+export async function generateChatResponse(
+  userMessage: string,
+  conversationHistory: ChatMessage[]
+): Promise<string> {
+  const sanitized = sanitizeInput(userMessage);
+  const relevantChunks = await retrieveContext(sanitized);
   const systemPrompt = buildSystemPrompt(relevantChunks);
 
-  // Step 3: Call Claude
-  try {
-    const response = await anthropic.messages.create({
-      model: pipelineConfig.chat.model,
-      max_tokens: pipelineConfig.chat.maxTokens,
-      system: systemPrompt,
-      messages: [
-        ...conversationHistory,
-        { role: "user", content: sanitized },
-      ],
-    });
-
-    const textBlock = response.content.find((block) => block.type === "text");
-    return textBlock?.text || "I'm sorry, I couldn't generate a response.";
-  } catch (error) {
-    throw new ChatError("AI response failed", error);
-  }
+  return chatProvider.generate(systemPrompt, conversationHistory, sanitized);
 }
 
 /**
@@ -96,34 +80,8 @@ export async function generateChatResponseStream(
   onChunk: (text: string) => void
 ): Promise<void> {
   const sanitized = sanitizeInput(userMessage);
-
-  let relevantChunks: string[];
-  try {
-    const queryEmbedding = await embedText(sanitized);
-    const relevantDocs = await searchSimilar(queryEmbedding, pipelineConfig.vectorStore.topK);
-    relevantChunks = relevantDocs.map((doc) => doc.text);
-  } catch (error) {
-    throw new ChatError("Failed to retrieve context", error);
-  }
-
+  const relevantChunks = await retrieveContext(sanitized);
   const systemPrompt = buildSystemPrompt(relevantChunks);
 
-  const stream = anthropic.messages.stream({
-    model: pipelineConfig.chat.model,
-    max_tokens: pipelineConfig.chat.maxTokens,
-    system: systemPrompt,
-    messages: [
-      ...conversationHistory,
-      { role: "user", content: sanitized },
-    ],
-  });
-
-  for await (const event of stream) {
-    if (
-      event.type === "content_block_delta" &&
-      event.delta.type === "text_delta"
-    ) {
-      onChunk(event.delta.text);
-    }
-  }
+  return chatProvider.generateStream(systemPrompt, conversationHistory, sanitized, onChunk);
 }
