@@ -5,19 +5,60 @@ name: Deploy Site
 on:
   push:
     branches: [main]
-    paths-ignore: ["infra/**", "lambda/**", ".github/workflows/deploy-infra.yml"]
+    paths:
+      - "app/**"
+      - "components/**"
+      - "lib/**"
+      - "public/**"
+      - "next.config.*"
+      - "package.json"
   workflow_dispatch:
+  workflow_call:  # Allow triggering from deploy-infra when API URL changes
+
+concurrency:
+  group: deploy-site
+  cancel-in-progress: false
 
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
+    environment: production
     permissions:
       id-token: write
       contents: read
     steps:
       - uses: actions/checkout@v4
-      # TODO: Setup Node.js, install deps, build
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
       # TODO: Configure AWS credentials via OIDC
-      # TODO: S3 sync with --delete
-      # TODO: CloudFront invalidation
-      - run: echo "TODO - next build && aws s3 sync out/ s3://BUCKET/ --delete"
+      # - uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     role-to-assume: ${{ secrets.AWS_SITE_DEPLOY_ROLE_ARN }}
+      #     aws-region: us-east-1
+
+      # TODO: Fetch API URL from CDK outputs or SSM Parameter Store
+      # - run: export NEXT_PUBLIC_CHAT_API_URL=$(aws ssm get-parameter ...)
+
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_CHAT_API_URL: ${{ vars.CHAT_API_URL }}
+
+      # TODO: S3 sync
+      # - run: aws s3 sync out/ s3://${{ vars.S3_BUCKET_NAME }}/ --delete
+
+      # TODO: CloudFront invalidation (wait for completion)
+      # - run: |
+      #     INVALIDATION_ID=$(aws cloudfront create-invalidation --distribution-id ${{ vars.CF_DISTRIBUTION_ID }} --paths "/*" --query 'Invalidation.Id' --output text)
+      #     aws cloudfront wait invalidation-completed --distribution-id ${{ vars.CF_DISTRIBUTION_ID }} --id $INVALIDATION_ID
+
+      # Smoke test
+      # - run: |
+      #     sleep 10
+      #     HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://eribertolopez.com)
+      #     if [ "$HTTP_STATUS" != "200" ]; then echo "Smoke test failed: HTTP $HTTP_STATUS"; exit 1; fi
