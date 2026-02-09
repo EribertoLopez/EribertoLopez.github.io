@@ -1,4 +1,4 @@
-// TODO: Phase 6 - RDS PostgreSQL + pgvector Vector Store
+// Phase 6 - RDS PostgreSQL + pgvector Vector Store
 // Replaces Supabase pgvector with self-managed RDS PostgreSQL.
 //
 // This module provides:
@@ -7,9 +7,13 @@
 // - Document upsert with embeddings
 // - Schema initialization (CREATE EXTENSION, tables)
 //
+// LocalStack: Set USE_LOCALSTACK=true to connect to local PostgreSQL
+// instead of RDS. See lib/aws-config.ts for connection details.
+//
 // See docs/AWS_MIGRATION_PLAN.md "Phase 6" for details.
 
 // import { Pool } from "pg";
+import { getDbConfig, isLocalStack } from "../aws-config";
 
 export interface DocumentChunk {
   id: string;
@@ -26,6 +30,11 @@ export interface SearchResult {
 }
 
 export class RdsVectorStore {
+  // Connection config comes from lib/aws-config.ts:
+  // - LocalStack mode: uses env vars (DB_HOST, DB_USER, etc.)
+  // - Production: uses Secrets Manager credentials via RDS Proxy + IAM auth
+  private readonly config = getDbConfig();
+
   // TODO: Initialize connection pool from Secrets Manager credentials
   // TODO: Use IAM database authentication as alternative
 
