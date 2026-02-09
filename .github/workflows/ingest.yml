@@ -1,0 +1,24 @@
+# Phase 5: Run Ingestion Pipeline via ECS Fargate
+# See docs/AWS_MIGRATION_PLAN.md "Phase 5"
+name: Ingest Documents
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_reingest:
+        description: "Force re-ingestion of all documents"
+        type: boolean
+        default: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      # TODO: Build Docker image, push to ECR
+      # TODO: Run ECS Fargate task
+      # TODO: Wait for task completion, check exit code
+      - run: echo "TODO - build, push, run ECS Fargate ingestion task"

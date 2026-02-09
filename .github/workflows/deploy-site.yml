@@ -1,0 +1,23 @@
+# Phase 5: Build and Deploy Static Site to S3/CloudFront
+# See docs/AWS_MIGRATION_PLAN.md "Phase 5"
+name: Deploy Site
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["infra/**", "lambda/**", ".github/workflows/deploy-infra.yml"]
+  workflow_dispatch:
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      # TODO: Setup Node.js, install deps, build
+      # TODO: Configure AWS credentials via OIDC
+      # TODO: S3 sync with --delete
+      # TODO: CloudFront invalidation
+      - run: echo "TODO - next build && aws s3 sync out/ s3://BUCKET/ --delete"

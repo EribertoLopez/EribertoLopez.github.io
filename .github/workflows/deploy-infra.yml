@@ -1,0 +1,29 @@
+# Phase 5: Deploy Infrastructure via CDK
+# Triggered on changes to infra/ directory
+# See docs/AWS_MIGRATION_PLAN.md "Phase 5"
+name: Deploy Infrastructure
+
+on:
+  push:
+    branches: [main]
+    paths: ["infra/**"]
+  workflow_dispatch:
+
+# TODO: Configure OIDC authentication with AWS
+# TODO: Add environment protection rules
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      # TODO: Configure AWS credentials via OIDC
+      # - uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+      #     aws-region: us-east-1
+      # TODO: Install CDK, run cdk deploy
+      - run: echo "TODO - cdk deploy --all --require-approval never"

@@ -1,0 +1,20 @@
+# Phase 5: Deploy Chat API Lambda
+# See docs/AWS_MIGRATION_PLAN.md "Phase 5"
+name: Deploy API
+
+on:
+  push:
+    branches: [main]
+    paths: ["lambda/**"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      # TODO: Bundle Lambda, update function code
+      - run: echo "TODO - bundle and deploy Lambda function"
