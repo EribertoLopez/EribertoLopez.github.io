@@ -1,0 +1,54 @@
+# LocalStack Docker Compose for local AWS development
+# Usage: docker compose -f docker-compose.localstack.yml up -d
+# Dashboard: http://localhost:4566/_localstack/health
+#
+# Services emulated: S3, CloudFront (stubbed), Lambda, API Gateway,
+# DynamoDB, SQS, Secrets Manager, SSM, IAM, STS, Bedrock (stubbed)
+
+version: "3.8"
+
+services:
+  localstack:
+    image: localstack/localstack:3.4
+    container_name: localstack-aws-dev
+    ports:
+      - "4566:4566"           # LocalStack Gateway
+      - "4510-4559:4510-4559" # External service ports
+    environment:
+      - SERVICES=s3,lambda,apigateway,apigatewayv2,dynamodb,sqs,secretsmanager,ssm,iam,sts,cloudfront,logs
+      - DEBUG=${LOCALSTACK_DEBUG:-0}
+      - LAMBDA_EXECUTOR=docker-reuse
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - AWS_DEFAULT_REGION=us-east-1
+      - PERSISTENCE=1
+    volumes:
+      - "./localstack/init:/etc/localstack/init/ready.d"
+      - "./localstack/data:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL with pgvector for local vector store (mirrors RDS Phase 6)
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: localstack-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: chatdev
+      POSTGRES_PASSWORD: localdev123
+      POSTGRES_DB: portfolio_chat
+    volumes:
+      - "./localstack/init-db:/docker-entrypoint-initdb.d"
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chatdev"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pgdata:
