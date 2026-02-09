@@ -1,0 +1,41 @@
+# Phase 5: Deploy Infrastructure via CDK
+# See docs/AWS_MIGRATION_PLAN.md "Phase 5"
+name: Deploy Infrastructure
+
+on:
+  push:
+    branches: [main]
+    paths: ["infra/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-infra
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # TODO: Configure AWS credentials via OIDC (CDK deploy role — broader permissions)
+      # - uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     role-to-assume: ${{ secrets.AWS_CDK_DEPLOY_ROLE_ARN }}
+      #     aws-region: us-east-1
+
+      - run: cd infra && npm ci
+      # TODO: cdk deploy --all --require-approval never
+      - run: echo "TODO - cdk deploy"
+
+      # Trigger site redeploy if API URL changed
+      # TODO: Compare API URL output with previous, trigger deploy-site if changed

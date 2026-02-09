@@ -1,0 +1,38 @@
+# Phase 5: Deploy Chat API Lambda
+# See docs/AWS_MIGRATION_PLAN.md "Phase 5"
+name: Deploy API
+
+on:
+  push:
+    branches: [main]
+    paths: ["lambda/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # TODO: Configure AWS credentials via OIDC (Lambda deploy role)
+      # TODO: Bundle Lambda, update function code
+      - run: echo "TODO - bundle and deploy Lambda function"
+
+      # Smoke test — hit health endpoint
+      # - run: |
+      #     API_URL=$(aws ssm get-parameter --name /chat-api/url --query 'Parameter.Value' --output text)
+      #     HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/health")
+      #     if [ "$HTTP_STATUS" != "200" ]; then echo "Health check failed: HTTP $HTTP_STATUS"; exit 1; fi
