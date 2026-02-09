@@ -402,3 +402,5 @@ out/
 .DS_Store
 node_modules
 .env.local
+# LocalStack persistent data
+localstack/data/
