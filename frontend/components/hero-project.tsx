@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import CoverImage from './cover-image'
-import type Author from '../interfaces/author'
+import type Author from '../types/author'
 import { Sections } from '../lib/ConfigUtils'
 import Link from 'next/link'
 
@@ -13,20 +13,20 @@ type Props = {
   slug: string
   currentTheme: Sections
 }
-// should render a coverimage
-const ResumeHero = ({
+
+const HeroProject = ({
   title,
   coverImage,
   date,
   excerpt,
   author,
   slug,
-  currentTheme = Sections.Resume
+  currentTheme
 }: Props) => {
   const [isHovered, setIsHovered] = useState(false);
-  const asPath: string = (currentTheme ? `/${currentTheme.toLowerCase()}` : '')//.concat(`/${slug}`) 
-  const hrefPath: string = (currentTheme ? `/${currentTheme.toLowerCase()}` : '')//.concat(`/[slug]`) 
-  
+  const asPath: string = (currentTheme ? `/${currentTheme.toLowerCase()}` : '').concat(`/${slug}`) 
+  const hrefPath: string = (currentTheme ? `/${currentTheme.toLowerCase()}` : '').concat(`/[slug]`) 
+
   return (
     <section className="group">
       <div 
@@ -35,7 +35,7 @@ const ResumeHero = ({
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/30 z-10" />
+        <div className="absolute inset-0 bg-black/20 z-10" />
         
         {/* Image container with zoom effect */}
         <div className="relative h-full w-full transition-transform duration-500 group-hover:scale-105">
@@ -53,7 +53,6 @@ const ResumeHero = ({
           as={asPath}
           href={hrefPath}
           className="absolute inset-0 z-20 flex flex-col justify-end p-8"
-          
         >
           {/* Hover content */}
           <div 
@@ -93,4 +92,4 @@ const ResumeHero = ({
   )
 }
 
-export default ResumeHero
+export default HeroProject

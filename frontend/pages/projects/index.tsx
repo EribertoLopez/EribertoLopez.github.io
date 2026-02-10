@@ -1,7 +1,7 @@
 import { themes, Sections } from '../../lib/ConfigUtils';
 import SidebarLayout from '../../components/SidebarLayout';
 import { ExternalLink } from 'lucide-react';
-import Project from '../../interfaces/project'
+import Project from '../../types/project'
 import { getAllProjects } from '../../lib/api';
 import Intro from '../../components/intro';
 import HeroPost from '../../components/hero-post';

@@ -1,7 +1,7 @@
 import { getAllResumes } from '../../lib/api';
 import SidebarLayout from '../../components/SidebarLayout';
 import { Sections } from '../../lib/ConfigUtils';
-import Post from '../../interfaces/post'
+import Post from '../../types/post'
 import Intro from '../../components/intro';
 import Resume from '../../components/Resume';
 

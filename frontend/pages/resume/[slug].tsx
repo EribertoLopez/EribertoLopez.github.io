@@ -9,9 +9,9 @@ import { getPostBySlug, getAllPosts, getProjectBySlug, getAllProjects, getAllRes
 import PostTitle from '../../components/post-title'
 import Head from 'next/head'
 import markdownToHtml from '../../lib/markdownToHtml'
-import type PostType from '../../interfaces/post'
+import type PostType from '../../types/post'
 import { Sections } from '../../lib/ConfigUtils'
-import ProjectType from '../../interfaces/project'
+import ProjectType from '../../types/project'
 import { Github, Linkedin, Globe } from 'lucide-react'
 
 type Props = {

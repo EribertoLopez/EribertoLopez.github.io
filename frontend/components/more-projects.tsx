@@ -1,8 +1,8 @@
 import PostPreview from './post-preview'
-import type Post from '../interfaces/post'
+import type Post from '../types/post'
 import { Sections } from '../lib/ConfigUtils'
 import ProjectPreview from './project-preview'
-import ProjectType from '../interfaces/project'
+import ProjectType from '../types/project'
 import HeroProject from './hero-project'
 
 type Props = {
