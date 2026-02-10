@@ -1,10 +1,11 @@
 import fs from 'fs'
-import { join } from 'path'
+import path, { join } from 'path'
 import matter from 'gray-matter'
 
-const postsDirectory = join(process.cwd(), 'content', '_posts')
-const projectsDirectory = join(process.cwd(), 'content', '_projects')
-const resumeDirectory = join(process.cwd(), 'content', '_resumes')
+const rootDir = path.resolve(__dirname, '..')
+const postsDirectory = join(rootDir, 'content', '_posts')
+const projectsDirectory = join(rootDir, 'content', '_projects')
+const resumeDirectory = join(rootDir, 'content', '_resumes')
 
 export function getPostSlugs() {
   return fs.readdirSync(postsDirectory)

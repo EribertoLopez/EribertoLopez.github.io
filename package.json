@@ -25,6 +25,10 @@
     "deploy:frontend": "npm run frontend:build && npm --prefix infrastructure run deploy:frontend",
     "deploy:backend": "npm run backend:build && npm --prefix infrastructure run deploy:backend",
 
+    "frontend:install": "npm --prefix frontend install",
+    "backend:install": "npm --prefix backend install",
+    "infrastructure:install": "npm --prefix infrastructure install",
+
     "_comment_utilities": "=== UTILITIES ===",
     "codegen": "sh ./scripts/codegen.sh"
   },
