@@ -8,19 +8,26 @@ const entities: any[] = [];
 
 export const DatabaseServiceType = Symbol.for("DatabaseService");
 
+let cachedDataSource: DataSource | null = null;
+
 export class DatabaseService {
   async closeConnections() {
-    const dataSource = await this.getDataSource();
-    await dataSource.destroy();
+    if (cachedDataSource?.isInitialized) {
+      await cachedDataSource.destroy();
+      cachedDataSource = null;
+    }
   }
 
   async getDataSource(): Promise<DataSource> {
-    const config = this.getConnetionConfig();
-    console.log("config", config);
-    return await new DataSource(config).initialize();
+    if (cachedDataSource?.isInitialized) {
+      return cachedDataSource;
+    }
+    const config = this.getConnectionConfig();
+    cachedDataSource = await new DataSource(config).initialize();
+    return cachedDataSource;
   }
 
-  getConnetionConfig = (): any => {
+  getConnectionConfig = (): any => {
     const databaseURI = `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
 
     // Enable SSL for non-local environments (AWS RDS requires SSL)
@@ -38,7 +45,6 @@ export class DatabaseService {
       namingStrategy: new SnakeNamingStrategy(),
       logging: true,
       synchronize: false,
-      // Enable SSL for AWS RDS (proxy or direct connections)
       ssl: !isLocal
         ? {
             rejectUnauthorized: false,

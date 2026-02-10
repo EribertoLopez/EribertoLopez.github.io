@@ -34,7 +34,7 @@ export const addCorsHeaders = (
         "http://localhost:3000";
 
   const headers = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": allowOrigin,
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Session-Id",
     ...response.headers, // Preserve any existing headers
