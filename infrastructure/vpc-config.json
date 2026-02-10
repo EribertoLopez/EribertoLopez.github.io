@@ -1,0 +1,52 @@
+{
+  "vpcConfig": {
+    "local": {
+      "vpcId": "vpc-0751d21692306c953",
+      "vpcCidr": "10.6.0.0/21",
+      "vpcName": "hsf-prod-internal_apps-vpc",
+      "availabilityZones": ["us-west-1a", "us-west-1c"],
+      "subnets": {
+        "public": {
+          "subnet1": {
+            "id": "subnet-0c175ab5e52d71066",
+            "az": "us-west-1a"
+          },
+          "subnet2": {
+            "id": "subnet-0c272d8fe5361f52f",
+            "az": "us-west-1c"
+          }
+        },
+        "privateApp": {
+          "subnet1": {
+            "id": "subnet-072d7b2feabe9dd0b",
+            "az": "us-west-1a"
+          },
+          "subnet2": {
+            "id": "subnet-0c68bdd2c9ccfdaf7",
+            "az": "us-west-1c"
+          }
+        },
+        "privateData": {
+          "subnet1": {
+            "id": "subnet-0eedfbb8c06292d1b",
+            "az": "us-west-1a"
+          },
+          "subnet2": {
+            "id": "subnet-06501c3ea18c5b482",
+            "az": "us-west-1c"
+          }
+        }
+      },
+      "securityGroups": {
+        "lambda": "",
+        "rds": "sg-022ea13b4871be8a0",
+        "alb": "",
+        "ecsEc2": "sg-0c6004f5809f17333"
+      },
+      "natGateways": {
+        "natGw1": "nat-081e81c202fce4c7c",
+        "natGw2": "nat-07456d0754f82c5c5"
+      }
+    }
+  }
+}
