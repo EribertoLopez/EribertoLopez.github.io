@@ -15,7 +15,7 @@ import { internalAppsDBConfig } from "../bin/env-config";
 import { NamingConvention } from "../bin/naming";
 import { ProjectConfig } from "../bin/project-config";
 
-const DATA_PIPELINE_BUCKET_SCHOLAR_IMAGES_FOLDER = "scholar-profile-images";
+const DATA_PIPELINE_BUCKET_IMAGES_FOLDER = "profile-images";
 
 export interface ECSStackProps extends cdk.StackProps {
   environment: string;
@@ -33,7 +33,7 @@ export interface ECSStackProps extends cdk.StackProps {
   artilleryKey: string;
 }
 
-// TODO: This comes from a previous project (Fund-A-Scholar) and should be refactored to be more generic.
+// ECS stack for background data processing tasks.
 export class ECSStack extends cdk.Stack {
   private _cluster!: ecs.Cluster;
   private _taskDefinition!: ecs.FargateTaskDefinition;
@@ -47,9 +47,7 @@ export class ECSStack extends cdk.Stack {
   private _originDataS3BucketName!: string;
   private _redisHost!: string;
   private _redisPort!: string;
-  private _prosperFasBucketName!: string;
-  private _prosperFasObjectKeyPrefix!: string;
-  private _prosperFasAWSRegion!: string;
+  // Removed: project-specific pipeline fields
   private _baseUrl!: string;
   private _artilleryKey!: string;
   private _naming!: NamingConvention;
@@ -88,10 +86,8 @@ export class ECSStack extends cdk.Stack {
     this._baseUrl = baseUrl;
     this._artilleryKey = artilleryKey;
     
-    // TODO: Very specific to Fund-A-Scholar - should be refactored to be more generic.
-    this._prosperFasBucketName = `${projectConfig.projectSlug}-prosper-${environment}-data-pipeline`;
-    this._prosperFasObjectKeyPrefix = `incoming/scholar-data/hsf`;
-    this._prosperFasAWSRegion = `us-west-1`;
+    
+    
 
     // Use provided image URI or construct from ECR repository
     const eltImageUri =
@@ -161,7 +157,7 @@ export class ECSStack extends cdk.Stack {
     // 2. Cache policy for profile images
     const imageCachePolicy = new cloudfront.CachePolicy(
       this,
-      "ScholarImagesCachePolicy",
+      "ImagesCachePolicy",
       {
         defaultTtl: cdk.Duration.days(30),
         minTtl: cdk.Duration.hours(1),
@@ -179,7 +175,7 @@ export class ECSStack extends cdk.Stack {
 
     this.cloudfrontDistribution = new cloudfront.Distribution(
       this,
-      "ScholarImagesDistribution",
+      "ImagesDistribution",
       {
         defaultBehavior: {
           origin: s3Origin,
@@ -188,23 +184,23 @@ export class ECSStack extends cdk.Stack {
           cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
         },
         additionalBehaviors: {
-          [`${DATA_PIPELINE_BUCKET_SCHOLAR_IMAGES_FOLDER}/*`]: {
+          [`${DATA_PIPELINE_BUCKET_IMAGES_FOLDER}/*`]: {
             origin: s3Origin,
             viewerProtocolPolicy:
               cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
             cachePolicy: imageCachePolicy,
           },
         },
-        comment: "Public CDN for scholar-profile-images only",
+        comment: "Public CDN for profile-images only",
         priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
       }
     );
 
-    // 4. Restrict bucket so CloudFront can only read scholar-profile-images/*
+    // 4. Restrict bucket so CloudFront can only read profile-images/*
     this.dataBucket.addToResourcePolicy(
       new iam.PolicyStatement({
         actions: ["s3:GetObject"],
-        resources: [this.dataBucket.arnForObjects("scholar-profile-images/*")],
+        resources: [this.dataBucket.arnForObjects("profile-images/*")],
         principals: [new iam.ServicePrincipal("cloudfront.amazonaws.com")],
         conditions: {
           StringEquals: {
@@ -224,9 +220,9 @@ export class ECSStack extends cdk.Stack {
       value: this.dataBucket.bucketName,
     });
 
-    new cdk.CfnOutput(this, "ScholarImagesDistributionId", {
-      exportName: this._naming.cloudfrontExportName("scholar-images-distribution-id"),
-      description: "ID of the scholar images distribution",
+    new cdk.CfnOutput(this, "ImagesDistributionId", {
+      exportName: this._naming.cloudfrontExportName("images-distribution-id"),
+      description: "ID of the images distribution",
       value: this.cloudfrontDistribution.distributionId,
     });
   }
@@ -374,7 +370,10 @@ export class ECSStack extends cdk.Stack {
           "s3:DeleteObject",
           "s3:ListBucket",
         ],
-        resources: ["*"],
+        resources: [
+          dataPipelineBucket.bucketArn,
+          dataPipelineBucket.arnForObjects("*"),
+        ],
       })
     );
 
@@ -414,16 +413,16 @@ export class ECSStack extends cdk.Stack {
         ENVIRONMENT: environment,
         AWS_REGION: this.region,
         DATA_PIPELINE_BUCKET_NAME: dataPipelineBucket.bucketName,
-        DATA_PIPELINE_BUCKET_SCHOLAR_IMAGES_FOLDER:
-          DATA_PIPELINE_BUCKET_SCHOLAR_IMAGES_FOLDER,
+        DATA_PIPELINE_BUCKET_IMAGES_FOLDER:
+          DATA_PIPELINE_BUCKET_IMAGES_FOLDER,
         DATA_PIPELINE_CDN_URL: cloudfrontDistribution.distributionDomainName,
         ORIGIN_DATA_AWS_REGION: this._originDataAWSRegion,
         ORIGIN_DATA_AWS_ACCESS_KEY_ID: this._originDataAWSAccessKeyId,
         ORIGIN_DATA_AWS_SECRET_ACCESS_KEY: this._originDataAWSSecretAccessKey,
         ORIGIN_DATA_S3_BUCKET_NAME: this._originDataS3BucketName,
-        PROSPER_FAS_BUCKET_NAME: this._prosperFasBucketName,
-        PROSPER_FAS_OBJECT_KEY_PREFIX: this._prosperFasObjectKeyPrefix,
-        FAS_PROSPER_AWS_REGION: this._prosperFasAWSRegion,
+        
+        
+        
         REDIS_HOST: redisHost,
         REDIS_PORT: redisPort,
         REDIS_TLS_ENABLED: "true",
@@ -456,7 +455,7 @@ export class ECSStack extends cdk.Stack {
         vpcStack.ec2EcsSecurityGroup,
         vpcStack.lambdaSecurityGroup, // CrossVPCSecurityGroupId equivalent
       ],
-      assignPublicIp: true, // TODO: do we need this?
+      assignPublicIp: false,
     });
 
     // Create SSM Parameters
@@ -592,7 +591,7 @@ export class ECSStack extends cdk.Stack {
         vpcStack.ec2EcsSecurityGroup,
         vpcStack.lambdaSecurityGroup, // CrossVPCSecurityGroupId equivalent
       ],
-      assignPublicIp: true, // TODO: do we need this?
+      assignPublicIp: false,
     });
 
     // Create SSM Parameters
@@ -693,7 +692,7 @@ export class ECSStack extends cdk.Stack {
         events: [s3.EventType.OBJECT_CREATED],
         filters: [
           {
-            prefix: `${tenantIdentifier}/incoming/scholar-data/`,
+            prefix: `${tenantIdentifier}/incoming/data/`,
             suffix: ".csv",
           },
         ],

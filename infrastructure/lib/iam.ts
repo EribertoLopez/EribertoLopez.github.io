@@ -3,17 +3,20 @@ import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as kms from "aws-cdk-lib/aws-kms";
 
+import { ProjectConfig } from "../bin/project-config";
+
 export interface IamStackProps extends cdk.StackProps {
   environment: string;
+  projectConfig: ProjectConfig;
   databaseSecretArn?: string;
   isLocalDeployment?: boolean;
 }
 
 export class IamStack extends cdk.Stack {
-  public readonly scholarsRole: iam.Role;
-  public readonly stripeRole: iam.Role;
+  public readonly apiRole: iam.Role;
+  public readonly webhookRole: iam.Role;
   public readonly transactionsRole: iam.Role;
-  public readonly stripeWebhookRole: iam.Role;
+  public readonly webhookProcessorRole: iam.Role;
   public readonly loginRole: iam.Role;
   public readonly databaseMigrationRole: iam.Role;
   public readonly transactionEventsRole: iam.Role;
@@ -22,14 +25,14 @@ export class IamStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: IamStackProps) {
     super(scope, id, props);
 
-    const { environment, databaseSecretArn, isLocalDeployment } = props;
+    const { environment, projectConfig, databaseSecretArn, isLocalDeployment } = props;
 
     // Create KMS key for Lambda environment variable encryption FIRST
     // This must be created before IAM roles so roles can reference it
     this.lambdaKmsKey = new kms.Key(this, "LambdaEnvironmentKmsKey", {
       description: `KMS key for Lambda environment variable encryption - ${environment}`,
       enableKeyRotation: true, // Enable automatic key rotation for enhanced security
-      alias: `alias/fund-a-scholar-lambda-env-${environment}`,
+      alias: `alias/${projectConfig.projectSlug}-lambda-env-${environment}`,
       removalPolicy: isLocalDeployment
         ? cdk.RemovalPolicy.DESTROY
         : cdk.RemovalPolicy.RETAIN, // Retain key in production for data recovery
@@ -65,7 +68,7 @@ export class IamStack extends cdk.Stack {
             effect: iam.Effect.ALLOW,
             actions: ["rds-db:connect"],
             resources: [
-              `arn:aws:rds-db:${this.region}:${this.account}:dbuser:*/hsf_internal_apps`,
+              `arn:aws:rds-db:${this.region}:${this.account}:dbuser:*/${projectConfig.projectSlug}`,
             ],
           }),
         ],
@@ -110,24 +113,24 @@ export class IamStack extends cdk.Stack {
         ],
       });
 
-    const scholarsPolicies: { [name: string]: iam.PolicyDocument } = {
+    const apiPolicies: { [name: string]: iam.PolicyDocument } = {
       RDSProxyPolicy: createRdsProxyPolicy(),
       ElastiCachePolicy: createElastiCachePolicy(),
       KmsPolicy: createKmsPolicy(),
       RDSDescribePolicy: createRdsDescribePolicy(),
     };
     if (databaseSecretArn) {
-      scholarsPolicies.SecretsManagerPolicy =
+      apiPolicies.SecretsManagerPolicy =
         createSecretsManagerPolicy(databaseSecretArn);
     }
-    this.scholarsRole = new iam.Role(this, "ScholarsRole", {
-      roleName: `fund-a-scholar-${environment}-scholars-role`,
+    this.apiRole = new iam.Role(this, "ApiRole", {
+      roleName: `${projectConfig.projectSlug}-${environment}-api-role`,
       assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
       managedPolicies: commonManagedPolicies,
-      inlinePolicies: scholarsPolicies,
+      inlinePolicies: apiPolicies,
     });
 
-    const stripePolicies: { [name: string]: iam.PolicyDocument } = {
+    const webhookPolicies: { [name: string]: iam.PolicyDocument } = {
       RDSProxyPolicy: createRdsProxyPolicy(),
       ElastiCachePolicy: createElastiCachePolicy(),
       KmsPolicy: createKmsPolicy(),
@@ -135,15 +138,15 @@ export class IamStack extends cdk.Stack {
     };
 
     if (databaseSecretArn) {
-      stripePolicies.SecretsManagerPolicy =
+      webhookPolicies.SecretsManagerPolicy =
         createSecretsManagerPolicy(databaseSecretArn);
     }
 
-    this.stripeRole = new iam.Role(this, "StripeRole", {
-      roleName: `fund-a-scholar-${environment}-stripe-role`,
+    this.webhookRole = new iam.Role(this, "WebhookRole", {
+      roleName: `${projectConfig.projectSlug}-${environment}-webhook-role`,
       assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
       managedPolicies: commonManagedPolicies,
-      inlinePolicies: stripePolicies,
+      inlinePolicies: webhookPolicies,
     });
 
     const transactionsPolicies: { [name: string]: iam.PolicyDocument } = {
@@ -159,13 +162,13 @@ export class IamStack extends cdk.Stack {
     }
 
     this.transactionsRole = new iam.Role(this, "TransactionsRole", {
-      roleName: `fund-a-scholar-${environment}-transactions-role`,
+      roleName: `${projectConfig.projectSlug}-${environment}-transactions-role`,
       assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
       managedPolicies: commonManagedPolicies,
       inlinePolicies: transactionsPolicies,
     });
 
-    const stripeWebhookPolicies: { [name: string]: iam.PolicyDocument } = {
+    const webhookProcessorPolicies: { [name: string]: iam.PolicyDocument } = {
       RDSProxyPolicy: createRdsProxyPolicy(),
       ElastiCachePolicy: createElastiCachePolicy(),
       KmsPolicy: createKmsPolicy(),
@@ -175,7 +178,7 @@ export class IamStack extends cdk.Stack {
             effect: iam.Effect.ALLOW,
             actions: ["sqs:SendMessage", "sqs:GetQueueAttributes"],
             resources: [
-              `arn:aws:sqs:${this.region}:${this.account}:fundascholar-${environment}-transaction-events-queue.fifo`,
+              `arn:aws:sqs:${this.region}:${this.account}:${projectConfig.projectSlug}-${environment}-transaction-events-queue.fifo`,
             ],
           }),
         ],
@@ -197,15 +200,15 @@ export class IamStack extends cdk.Stack {
     };
 
     if (databaseSecretArn) {
-      stripeWebhookPolicies.SecretsManagerPolicy =
+      webhookProcessorPolicies.SecretsManagerPolicy =
         createSecretsManagerPolicy(databaseSecretArn);
     }
 
-    this.stripeWebhookRole = new iam.Role(this, "StripeWebhookRole", {
-      roleName: `fund-a-scholar-${environment}-stripe-webhook-role`,
+    this.webhookProcessorRole = new iam.Role(this, "WebhookProcessorRole", {
+      roleName: `${projectConfig.projectSlug}-${environment}-webhook-processor-role`,
       assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
       managedPolicies: commonManagedPolicies,
-      inlinePolicies: stripeWebhookPolicies,
+      inlinePolicies: webhookProcessorPolicies,
     });
 
     const loginPolicies: { [name: string]: iam.PolicyDocument } = {
@@ -221,7 +224,7 @@ export class IamStack extends cdk.Stack {
     }
 
     this.loginRole = new iam.Role(this, "LoginRole", {
-      roleName: `fund-a-scholar-${environment}-login-role`,
+      roleName: `${projectConfig.projectSlug}-${environment}-login-role`,
       assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
       managedPolicies: commonManagedPolicies,
       inlinePolicies: loginPolicies,
@@ -239,7 +242,7 @@ export class IamStack extends cdk.Stack {
     }
 
     this.databaseMigrationRole = new iam.Role(this, "DatabaseMigrationRole", {
-      roleName: `fund-a-scholar-${environment}-db-migration-role`,
+      roleName: `${projectConfig.projectSlug}-${environment}-db-migration-role`,
       assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
       managedPolicies: [
         ...commonManagedPolicies,
@@ -263,7 +266,7 @@ export class IamStack extends cdk.Stack {
               "sqs:GetQueueAttributes",
             ],
             resources: [
-              `arn:aws:sqs:${this.region}:${this.account}:fundascholar-${environment}-transaction-events-queue.fifo`,
+              `arn:aws:sqs:${this.region}:${this.account}:${projectConfig.projectSlug}-${environment}-transaction-events-queue.fifo`,
             ],
           }),
         ],
@@ -290,23 +293,23 @@ export class IamStack extends cdk.Stack {
     }
 
     this.transactionEventsRole = new iam.Role(this, "TransactionEventsRole", {
-      roleName: `fund-a-scholar-${environment}-transaction-events-role`,
+      roleName: `${projectConfig.projectSlug}-${environment}-transaction-events-role`,
       assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
       managedPolicies: commonManagedPolicies,
       inlinePolicies: transactionEventsPolicies,
     });
 
     // Output all role ARNs for use in other stacks
-    new cdk.CfnOutput(this, "ScholarsRoleArn", {
-      value: this.scholarsRole.roleArn,
-      description: "IAM role ARN for Scholars Lambda function",
-      exportName: `${this.stackName}-ScholarsRoleArn`,
+    new cdk.CfnOutput(this, "ApiRoleArn", {
+      value: this.apiRole.roleArn,
+      description: "IAM role ARN for API Lambda function",
+      exportName: `${this.stackName}-ApiRoleArn`,
     });
 
-    new cdk.CfnOutput(this, "StripeRoleArn", {
-      value: this.stripeRole.roleArn,
-      description: "IAM role ARN for Stripe Lambda function",
-      exportName: `${this.stackName}-StripeRoleArn`,
+    new cdk.CfnOutput(this, "WebhookRoleArn", {
+      value: this.webhookRole.roleArn,
+      description: "IAM role ARN for Webhook Lambda function",
+      exportName: `${this.stackName}-WebhookRoleArn`,
     });
 
     new cdk.CfnOutput(this, "TransactionsRoleArn", {
@@ -315,10 +318,10 @@ export class IamStack extends cdk.Stack {
       exportName: `${this.stackName}-TransactionsRoleArn`,
     });
 
-    new cdk.CfnOutput(this, "StripeWebhookRoleArn", {
-      value: this.stripeWebhookRole.roleArn,
-      description: "IAM role ARN for Stripe Webhook Lambda function",
-      exportName: `${this.stackName}-StripeWebhookRoleArn`,
+    new cdk.CfnOutput(this, "WebhookProcessorRoleArn", {
+      value: this.webhookProcessorRole.roleArn,
+      description: "IAM role ARN for webhook processor Lambda function",
+      exportName: `${this.stackName}-WebhookProcessorRoleArn`,
     });
 
     new cdk.CfnOutput(this, "LoginRoleArn", {
@@ -346,7 +349,7 @@ export class IamStack extends cdk.Stack {
     });
 
     // Add tags
-    cdk.Tags.of(this).add("Project", "Fund-A-Scholar");
+    cdk.Tags.of(this).add("Project", projectConfig.projectDisplayName);
     cdk.Tags.of(this).add("Environment", environment);
   }
 }

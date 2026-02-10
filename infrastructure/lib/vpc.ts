@@ -27,7 +27,7 @@ export class VpcStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: VpcStackProps) {
     super(scope, id, props);
 
-    const { projectName = "Fund-A-Scholar", environment, isLocalEnvironment = false, vpcConfig } = props;
+    const { projectName = "EribertoLopez", environment, isLocalEnvironment = false, vpcConfig } = props;
 
     if (isLocalEnvironment) {
       this.createLocalResources(projectName, environment);

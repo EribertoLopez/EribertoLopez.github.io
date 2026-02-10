@@ -2,7 +2,7 @@
 
 [Back to root](../README.md)
 
-This directory contains the AWS CDK (Cloud Development Kit) infrastructure code for this template project.
+This directory contains the AWS CDK (Cloud Development Kit) infrastructure code for the Eriberto Lopez Portfolio.
 
 ## Prerequisites
 
@@ -61,7 +61,7 @@ The infrastructure includes:
 
 - **API Gateway**: REST API endpoints
 - **Lambda Functions**: Serverless compute for API logic
-- **RDS PostgreSQL**: Database for scholars and transactions
+- **RDS PostgreSQL**: Database for application data
 - **ElastiCache Redis**: Caching layer for performance
 - **SQS**: Message queue for webhook event processing
 
@@ -112,8 +112,8 @@ ENVIRONMENT=prod npm run deploy
 
 Resources are named with the following pattern:
 
-- S3 Bucket: `fund-a-scholar-website-{account}-{region}`
-- DynamoDB Tables: `fund-a-scholar-{resource}-{stackName}`
+- S3 Bucket: `eribertolopez-website-{account}-{region}`
+- DynamoDB Tables: `eribertolopez-{resource}-{stackName}`
 
 ## Stacks
 
@@ -209,13 +209,13 @@ The template uses a centralized naming utility in [`bin/naming.ts`](bin/naming.t
 
 | Resource Type | Pattern | Example |
 |--------------|---------|---------|
-| Stack ID | `{projectName}-{StackType}-Stack` | `TemplateProject-VPC-Stack` |
-| Lambda | `{projectName}-{env}-{functionName}` | `TemplateProject-dev-Scholars` |
-| S3 Bucket | `{projectSlug}-{env}-{purpose}` | `templateproject-dev-data-pipeline` |
-| SSM Parameter | `/{projectSlug}/{env}/{param}` | `/templateproject/dev/api-endpoint` |
-| SQS Queue | `{projectSlug}-{env}-{purpose}` | `templateproject-dev-events` |
-| ElastiCache | `{projectSlug}-{env}-redis` | `templateproject-dev-redis` |
-| Log Group | `/aws/lambda/{projectName}-{env}-{fn}` | `/aws/lambda/TemplateProject-dev-Scholars` |
+| Stack ID | `{projectName}-{StackType}-Stack` | `EribertoLopez-VPC-Stack` |
+| Lambda | `{projectName}-{env}-{functionName}` | `EribertoLopez-dev-Api` |
+| S3 Bucket | `{projectSlug}-{env}-{purpose}` | `eribertolopez-dev-data-pipeline` |
+| SSM Parameter | `/{projectSlug}/{env}/{param}` | `/eribertolopez/dev/api-endpoint` |
+| SQS Queue | `{projectSlug}-{env}-{purpose}` | `eribertolopez-dev-events` |
+| ElastiCache | `{projectSlug}-{env}-redis` | `eribertolopez-dev-redis` |
+| Log Group | `/aws/lambda/{projectName}-{env}-{fn}` | `/aws/lambda/EribertoLopez-dev-Api` |
 
 ### Usage in Stacks
 
@@ -225,9 +225,9 @@ import { NamingConvention } from "../bin/naming";
 const naming = new NamingConvention(projectConfig, environment);
 
 // Use naming methods
-const lambdaName = naming.lambdaName("Scholars");  // "TemplateProject-dev-Scholars"
-const bucketName = naming.bucketName("uploads");    // "templateproject-dev-uploads"
-const ssmPath = naming.ssmPath("api-url");          // "/templateproject/dev/api-url"
+const lambdaName = naming.lambdaName("Api");  // "EribertoLopez-dev-Api"
+const bucketName = naming.bucketName("uploads");    // "eribertolopez-dev-uploads"
+const ssmPath = naming.ssmPath("api-url");          // "/eribertolopez/dev/api-url"
 ```
 
 ## LocalStack Development
@@ -294,7 +294,7 @@ npm run destroy
 
 ### Adding New Resources
 
-1. Add the resource to `lib/fund-a-scholar-stack.ts`
+1. Add the resource to `lib/ (appropriate stack file)`
 2. Update any necessary IAM permissions
 3. Add outputs if the resource needs to be referenced externally
 4. Test with `npm run synth` before deploying

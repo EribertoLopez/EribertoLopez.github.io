@@ -24,7 +24,7 @@ export class SQSStack extends cdk.Stack {
 
     this.createTransactionQueue();
   }
-  // TODO: This comes from a previous project (Fund-A-Scholar) and should be refactored to be more generic.
+  // Transaction events queue for async processing
   private createTransactionQueue() {
     // dead letter queue for transaction events
     this.transactionEventsDeadLetterQueue = new cdk.aws_sqs.Queue(

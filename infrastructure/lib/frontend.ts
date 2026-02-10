@@ -77,7 +77,7 @@ export class FrontendStack extends cdk.Stack {
           }
 
           // Next.js export with trailingSlash: false emits "route.html"
-          // Rewrite "/fund-a-scholar" -> "/fund-a-scholar.html"
+          // Rewrite "/route" -> "/route.html"
           request.uri = uri + '.html';
           return request;
         }

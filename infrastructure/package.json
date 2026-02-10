@@ -1,8 +1,8 @@
 {
   "name": "eribertolopez-infrastructure",
   "version": "1.0.0",
-  "description": "AWS CDK infrastructure for Template Project application",
-  "author": "elopez@hsf.net",
+  "description": "AWS CDK infrastructure for Eriberto Lopez Portfolio",
+  "author": "elopez",
   "bin": {
     "infrastructure": "bin/infrastructure.js"
   },

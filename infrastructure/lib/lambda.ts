@@ -24,10 +24,10 @@ const DEFAULT_LOG_RETENTION = logs.RetentionDays.ONE_MONTH;
  * Information about a Lambda function for cross-stack references
  */
 export interface LambdaFunctionInfo {
-  /** Display name for alarms and dashboards (e.g., "Scholars") */
+  /** Display name for alarms and dashboards (e.g., "Api") */
   id: string;
   
-  /** Actual AWS function name (e.g., "TemplateProject-dev-Scholars") */
+  /** Actual AWS function name (e.g., "EribertoLopez-dev-Api") */
   functionName: string;
   
   /** Reference to the Lambda function construct */
@@ -131,7 +131,7 @@ export class LambdaStack extends cdk.Stack {
               vpcStack?.privateDataSubnet2,
             ],
           },
-          role: iamStack?.scholarsRole,
+          role: iamStack?.apiRole, // API handler role
           securityGroups: [vpcStack?.lambdaSecurityGroup],
           timeout: cdk.Duration.minutes(5), // Increased timeout for complex queries with larger datasets
           environmentEncryption: lambdaKmsKey,
@@ -172,7 +172,7 @@ export class LambdaStack extends cdk.Stack {
     // ensuring they exist before the Monitoring stack creates MetricFilters
     // ─────────────────────────────────────────────────────────────────
     const apiIntegrations = apiIntegrationsConfig.map((integration) => {
-      const lambdaId = integration.id.replace("Handler", ""); // "ScholarsHandler" → "Scholars"
+      const lambdaId = integration.id.replace("Handler", ""); // "ApiHandler" → "Api"
 
       const logGroup = new logs.LogGroup(this, `${lambdaId}LogGroup`, {
         logGroupName: `/aws/lambda/${lambdaNamePrefix}-${lambdaId}`,
@@ -229,7 +229,7 @@ export class LambdaStack extends cdk.Stack {
     api.apiLambdaFunctions.forEach((fn) => {
       if (fn.lambdaFunction) {
         this.lambdaFunctions.push({
-          id: fn.id.replace('Handler', ''),  // "ScholarsHandler" → "Scholars"
+          id: fn.id.replace('Handler', ''),  // "ApiHandler" → "Api"
           functionName: fn.lambdaFunction.functionName,
           lambdaFunction: fn.lambdaFunction,
           hasLogAlarms: true,  // API handlers get log-based alarms

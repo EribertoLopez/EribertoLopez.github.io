@@ -236,8 +236,8 @@ export class MonitoringStack extends cdk.Stack {
 
     // Create appropriate alarms based on Lambda function type
     switch (lambdaId) {
-      case "Scholars":
-        this.createScholarsLogAlarms({
+      case "Api":
+        this.createApiLogAlarms({
           lambdaName,
           lambdaId,
           logGroup,
@@ -250,7 +250,7 @@ export class MonitoringStack extends cdk.Stack {
     }
   }
 
-  private createScholarsLogAlarms({
+  private createApiLogAlarms({
     lambdaName,
     lambdaId,
     logGroup,
@@ -265,31 +265,15 @@ export class MonitoringStack extends cdk.Stack {
     generalErrorThreshold: number;
     evaluationPeriod: cdk.Duration;
   }) {
-    // Get scholar errors
+    // API errors
     this.createAlarm({
       lambdaName: lambdaId,
       logGroup,
-      filterPattern: "Error in getScholar",
-      description: "Alarm when get scholar cannot be processed",
+      filterPattern: "ERROR",
+      description: "Alarm when API errors are detected",
       metric: new cloudwatch.Metric({
         namespace: `${projectConfig.projectName}/${lambdaId}`,
-        metricName: "get-scholar-errors",
-        statistic: "Sum",
-        period: evaluationPeriod,
-      }),
-      threshold: generalErrorThreshold,
-      evaluationPeriods: 1,
-    });
-
-    // List scholars errors
-    this.createAlarm({
-      lambdaName: lambdaId,
-      logGroup,
-      filterPattern: "Error in listScholars",
-      description: "Alarm when list scholars cannot be processed",
-      metric: new cloudwatch.Metric({
-        namespace: `${projectConfig.projectName}/${lambdaId}`,
-        metricName: "list-scholars-errors",
+        metricName: "api-errors",
         statistic: "Sum",
         period: evaluationPeriod,
       }),
@@ -732,7 +716,7 @@ export class MonitoringStack extends cdk.Stack {
     // Create CloudWatch alarm for messages in the Dead Letter Queue
     const dlqAlarm = new cloudwatch.Alarm(this, "DeadLetterQueueAlarm", {
       alarmName: `sqs-dlq-messages-${queueName}`,
-      alarmDescription: `Messages detected in Dead Letter Queue ${queueName}. This indicates failed transaction processing and directly impacts donations. Immediate investigation required.`,
+      alarmDescription: `Messages detected in Dead Letter Queue ${queueName}. This indicates failed message processing. Investigation required.`,
       metric: new cloudwatch.Metric({
         namespace: "AWS/SQS",
         metricName: "ApproximateNumberOfMessagesVisible",

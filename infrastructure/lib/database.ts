@@ -3,9 +3,11 @@ import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import { internalAppsDBConfig, proxyConfig } from "../bin/env-config";
+import { ProjectConfig } from "../bin/project-config";
 
 export interface DatabaseStackProps extends cdk.StackProps {
   environment: string;
+  projectConfig: ProjectConfig;
   // VPC can be provided directly (when created in same app) or via IDs (when importing existing)
   vpc: ec2.IVpc;
   // Subnets can be provided directly or via IDs
@@ -46,7 +48,8 @@ export class DatabaseStack extends cdk.Stack {
       privateSubnet2: providedPrivateSubnet2,
       rdsSecurityGroup,
       existingDatabaseSecretArn,
-      lambdaSecurityGroup, // Add this parameter
+      lambdaSecurityGroup,
+      projectConfig,
     } = props;
 
     this.vpc = vpc;
@@ -116,8 +119,8 @@ export class DatabaseStack extends cdk.Stack {
       }
 
       this.databaseSecret = new secretsmanager.Secret(this, "DatabaseSecret", {
-        secretName: `fund-a-scholar-${environment}-db-credentials`,
-        description: "Credentials for the Fund-A-Scholar database",
+        secretName: `${projectConfig.projectSlug}-${environment}-db-credentials`,
+        description: `Credentials for the ${projectConfig.projectDisplayName} database`,
         secretStringValue: this.databasePassword
           ? cdk.SecretValue.unsafePlainText(secretString)
           : undefined,
@@ -181,7 +184,7 @@ export class DatabaseStack extends cdk.Stack {
     });
 
     // Add tags
-    cdk.Tags.of(this).add("Project", "Fund-A-Scholar");
+    cdk.Tags.of(this).add("Project", projectConfig.projectDisplayName);
     cdk.Tags.of(this).add("Environment", environment);
   }
 }
