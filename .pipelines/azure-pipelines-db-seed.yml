@@ -1,0 +1,54 @@
+# Reference from template-project — not active, kept for GitHub Actions migration reference
+name: "DB Seed for Fund A Scholar"
+
+trigger: none
+
+parameters:
+  - name: environment
+    displayName: Select the environment
+    type: string
+    default: test
+    values:
+      - prod
+      - dev
+      - test
+
+variables:
+  - ${{ if eq(parameters.environment, 'dev') }}:
+      - group: dev
+  - ${{ if eq(parameters.environment, 'prod') }}:
+      - group: prod
+  - ${{ if eq(parameters.environment, 'test') }}:
+      - group: test
+
+jobs:
+  - job: RunDbSeed
+    displayName: "Run DB Seed"
+    pool:
+      vmImage: "ubuntu-latest"
+    steps:
+      - script: |
+          set -e
+          echo "Selected environment: ${{ parameters.environment }}"
+          echo '{"seed": true}' > /tmp/lambda-payload.json
+          echo "Invoking migration Lambda: $MIGRATION_FUNCTION"
+          echo "Payload content:"
+          cat /tmp/lambda-payload.json
+          PAYLOAD_BASE64=$(base64 -i /tmp/lambda-payload.json)
+
+          aws lambda invoke \
+            --function-name FundAScholar-${{ parameters.environment }}-DbMigration \
+            --payload "$PAYLOAD_BASE64" \
+            output.json
+          rm -f /tmp/lambda-payload.json
+        env:
+          AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+          AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+          AWS_REGION: $(AWS_REGION)
+        displayName: "Start db seed"
+
+      - script: |
+          set -e
+          echo "Lambda output:"
+          cat output.json
+        displayName: "Display Lambda output"

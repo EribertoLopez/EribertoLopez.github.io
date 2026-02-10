@@ -1,0 +1,106 @@
+# Reference from template-project — not active, kept for GitHub Actions migration reference
+parameters:
+  awsAccessKeyId: ""
+  awsSecretAccessKey: ""
+  awsRegion: ""
+  environment: ""
+  stripePublishableKey: ""
+  hotjarSiteId: ""
+  gaId: ""
+  requiresAuth: ""
+  campaignStartDate: ""
+  campaignEndDate: ""
+  endOfCampaign: ""
+
+jobs:
+  - job: DeployFrontend
+    displayName: "Deploy Frontend Infrastructure Stacks"
+    pool:
+      vmImage: "ubuntu-latest"
+
+    steps:
+      - checkout: self
+      - task: UseNode@1
+        displayName: "Setup Node.js"
+        inputs:
+          version: 20
+
+      - script: |
+          set -e
+          npm run codegen
+        displayName: Generate codegen
+
+      - script: |
+          set -e
+          aws codeartifact login --tool npm --repository hsf --domain hsf --region us-west-2
+        displayName: Login to CodeArtifact
+
+      - script: |
+          set -e
+          npm install -g aws-cdk@2.1024.0
+        displayName: Install AWS CDK CLI
+
+      - script: |
+          set -e
+          cd infrastructure
+          npm install
+        displayName: Install Infrastructure Dependencies
+        env:
+          AWS_REGION: ${{ parameters.awsRegion }}
+          AWS_ACCESS_KEY_ID: ${{ parameters.awsAccessKeyId }}
+          AWS_SECRET_ACCESS_KEY: ${{ parameters.awsSecretAccessKey }}
+
+      - script: |
+          set -e
+          cd frontend
+          # echo the environment
+          echo "Environment: ${{ parameters.environment }}"
+          echo "AWS Region: ${{ parameters.awsRegion }}"
+          # get the api gw from ssm parameter store
+          API_GW_URL=$(aws ssm get-parameter --name /fund-a-scholar/${{ parameters.environment }}/api-endpoint --query Parameter.Value --output text --region ${{ parameters.awsRegion }})
+          # GA_ID=$(aws ssm get-parameter --name /fund-a-scholar/${{ parameters.environment }}/ga-id --query Parameter.Value --output text --region ${{ parameters.awsRegion }})
+          # remove the last /
+          API_GW_URL=$(echo "$API_GW_URL" | sed 's|/$||')
+          echo "API GW URL: $API_GW_URL"
+          # set the api gw url in the .env file
+          echo "NEXT_PUBLIC_API_URL=$API_GW_URL" > .env.production
+          echo "NEXT_PUBLIC_ENVIRONMENT=${{ parameters.environment }}" >> .env.production
+          echo "NEXT_PUBLIC_GA_ID=$gaId" >> .env.production
+          echo "NEXT_PUBLIC_HOTJAR_SITE_ID=$hotjarSiteId" >> .env.production
+          echo "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$STRIPE_PUBLISHABLE_KEY" >> .env.production
+          echo "NEXT_PUBLIC_REQUIRES_AUTH=${{ parameters.requiresAuth }}" >> .env.production
+          echo "NEXT_PUBLIC_END_OF_CAMPAIGN=${{ parameters.endOfCampaign }}" >> .env.production
+          echo "NEXT_PUBLIC_CAMPAIGN_START_DATE=${{ parameters.campaignStartDate }}" >> .env.production
+          echo "NEXT_PUBLIC_CAMPAIGN_END_DATE=${{ parameters.campaignEndDate }}" >> .env.production
+          echo "✅ API GW URL set in .env.production"
+          # print the .env file
+          cat .env.production
+          cd ..
+        env:
+          STRIPE_PUBLISHABLE_KEY: ${{ parameters.stripePublishableKey }}
+          AWS_REGION: ${{ parameters.awsRegion }}
+          AWS_ACCESS_KEY_ID: ${{ parameters.awsAccessKeyId }}
+          AWS_SECRET_ACCESS_KEY: ${{ parameters.awsSecretAccessKey }}
+
+      - script: |
+          set -e
+          cd frontend
+          cat .env.production
+          rm -rf package-lock.json
+          npm run preinstall
+          npm install
+          cd ..
+        displayName: Install Frontend Dependencies
+        env:
+          AWS_REGION: ${{ parameters.awsRegion }}
+          AWS_ACCESS_KEY_ID: ${{ parameters.awsAccessKeyId }}
+          AWS_SECRET_ACCESS_KEY: ${{ parameters.awsSecretAccessKey }}
+
+      - script: |
+          set -e
+          cat ./frontend/.env.production
+          npm run frontend:build
+          npm run deploy:frontend
+        displayName: "Deploy Frontend Infrastructure"
+        env:
+          ENVIRONMENT: ${{ parameters.environment }}

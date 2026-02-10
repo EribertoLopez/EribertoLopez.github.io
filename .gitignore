@@ -401,3 +401,18 @@ template/
 out/
 .DS_Store
 node_modules
+
+# === Monorepo patterns ===
+**/node_modules/
+**/dist/
+**/out/
+**/.next/
+**/build/
+tmp/
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+coverage/
+.turbo/
+.vercel/

@@ -1,0 +1,56 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:16.3
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=eribertolopez
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - localstack-network
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d eribertolopez"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=lambda,apigateway,s3,dynamodb,iam,cloudformation,sqs,sns,events,secretsmanager,ssm,logs,ec2,rds,cloudwatch
+      - DEBUG=1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - LAMBDA_EXECUTOR=docker
+      - LAMBDA_REMOTE_DOCKER=false
+      - PERSISTENCE=1
+      - S3_SKIP_SIGNATURE_VALIDATION=1
+      - SKIP_SSL_CERT_DOWNLOAD=1
+      - NODE_OPTIONS=--enable-source-maps
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./tmp/localstack:/var/lib/localstack"
+    networks:
+      - localstack-network
+
+  swagger-ui:
+    image: swaggerapi/swagger-ui:latest
+    ports:
+      - "8082:8080"
+    environment:
+      - SWAGGER_JSON=/openapi.yaml
+    volumes:
+      - ./codegen/openapi.yaml:/openapi.yaml:ro
+    networks:
+      - localstack-network
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+networks:
+  localstack-network:
