@@ -1,0 +1,99 @@
+# Reference from template-project — not active, kept for GitHub Actions migration reference
+parameters:
+  awsAccessKeyId: ""
+  awsSecretAccessKey: ""
+  awsRegion: ""
+  environment: ""
+  stripeSecretKey: ""
+  stripeWebhookSecret: ""
+  originDataAWSRegion: ""
+  originDataAWSAccessKeyId: ""
+  originDataAWSSecretAccessKey: ""
+  originDataS3BucketName: ""
+  hsfAdminPassword: ""
+  artilleryKey: ""
+  internalVpcConfig: ""
+  existingDatabaseSecretArn: ""
+  internalAppsProxyConfig: ""
+
+jobs:
+  - job: DeployBackend
+    displayName: "Deploy Backend Infrastructure Stacks"
+    pool:
+      vmImage: "ubuntu-latest"
+
+    steps:
+      - checkout: self
+      - task: UseNode@1
+        displayName: "Setup Node.js"
+        inputs:
+          version: 20
+
+      - script: |
+          set -e
+          npm run codegen
+        displayName: Generate codegen
+
+      - script: |
+          set -e
+          aws codeartifact login --tool npm --repository hsf --domain hsf --region us-west-2
+        displayName: Login to CodeArtifact
+        env:
+          AWS_REGION: us-west-2
+          AWS_ACCESS_KEY_ID: ${{ parameters.awsAccessKeyId }}
+          AWS_SECRET_ACCESS_KEY: ${{ parameters.awsSecretAccessKey }}
+
+      - script: |
+          set -e
+          cd backend
+          npm ci
+        displayName: Install Backend Dependencies
+        env:
+          AWS_REGION: ${{ parameters.awsRegion }}
+          AWS_ACCESS_KEY_ID: ${{ parameters.awsAccessKeyId }}
+          AWS_SECRET_ACCESS_KEY: ${{ parameters.awsSecretAccessKey }}
+
+      - script: |
+          set -e
+          npm install -g aws-cdk@2.1024.0
+        displayName: Install AWS CDK CLI
+
+      - script: |
+          set -e
+          cd infrastructure
+          npm install
+        displayName: Install Infrastructure Dependencies
+        env:
+          AWS_REGION: ${{ parameters.awsRegion }}
+          AWS_ACCESS_KEY_ID: ${{ parameters.awsAccessKeyId }}
+          AWS_SECRET_ACCESS_KEY: ${{ parameters.awsSecretAccessKey }}
+      
+      # use the aws cli to get the data in the secret manager and set the value as an environment variable
+      - script: |
+          set -e
+          SECRET_VALUE=$(aws secretsmanager get-secret-value --secret-id ${{ parameters.existingDatabaseSecretArn }} --query SecretString --output text)
+          echo "##vso[task.setvariable variable=INTERNAL_APPS_DATABASE_SECRET]$SECRET_VALUE"
+        displayName: Get Database Secret
+        env:
+          AWS_REGION: ${{ parameters.awsRegion }}
+          AWS_ACCESS_KEY_ID: ${{ parameters.awsAccessKeyId }}
+          AWS_SECRET_ACCESS_KEY: ${{ parameters.awsSecretAccessKey }}
+
+      - script: |
+          set -e
+          npm run deploy:backend
+        displayName: "Deploy Backend Infrastructure"
+        env:
+          ENVIRONMENT: ${{ parameters.environment }}
+          STRIPE_SECRET_KEY: ${{ parameters.stripeSecretKey }}
+          STRIPE_WEBHOOK_SECRET: ${{ parameters.stripeWebhookSecret }}
+          ORIGIN_DATA_AWS_REGION: ${{ parameters.originDataAWSRegion }}
+          ORIGIN_DATA_AWS_ACCESS_KEY_ID: ${{ parameters.originDataAWSAccessKeyId }}
+          ORIGIN_DATA_AWS_SECRET_ACCESS_KEY: ${{ parameters.originDataAWSSecretAccessKey }}
+          ORIGIN_DATA_S3_BUCKET_NAME: ${{ parameters.originDataS3BucketName }}
+          HSF_ADMIN_PASSWORD: ${{ parameters.hsfAdminPassword }}
+          ARTILLERY_KEY: ${{ parameters.artilleryKey }}
+          INTERNAL_VPC_CONFIG: ${{ parameters.internalVpcConfig }}
+          EXISTING_DATABASE_SECRET_ARN: ${{ parameters.existingDatabaseSecretArn }}
+          INTERNAL_APPS_DATABASE_SECRET: $(INTERNAL_APPS_DATABASE_SECRET)
+          INTERNAL_APPS_PROXY_CONFIG: ${{ parameters.internalAppsProxyConfig }}

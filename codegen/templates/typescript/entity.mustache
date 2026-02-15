@@ -1,0 +1,105 @@
+{{#models}}
+{{#model}}
+{{#vendorExtensions.x-entity}}
+/**
+ * TypeORM Entity for {{classname}}
+ * Auto-generated from OpenAPI specification - DO NOT EDIT
+ * 
+ * Note: This entity relies on SnakeNamingStrategy configured in DatabaseService.
+ * Table and column names are automatically converted to snake_case.
+ */
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+
+import { {{classname}} } from "../models/{{classname}}";
+{{#imports}}
+import { {{.}} } from "../models/{{.}}";
+{{/imports}}
+
+{{#vendorExtensions.x-table-name}}
+@Entity("{{.}}")
+{{/vendorExtensions.x-table-name}}
+{{^vendorExtensions.x-table-name}}
+@Entity("{{classname}}")
+{{/vendorExtensions.x-table-name}}
+export class {{classname}}Entity implements {{classname}} {
+{{#vars}}
+{{#vendorExtensions.x-primary-key}}
+{{#vendorExtensions.x-generated}}
+  @PrimaryGeneratedColumn("{{vendorExtensions.x-generated}}")
+{{/vendorExtensions.x-generated}}
+{{^vendorExtensions.x-generated}}
+  @PrimaryGeneratedColumn()
+{{/vendorExtensions.x-generated}}
+  {{name}}!: {{{dataType}}};
+
+{{/vendorExtensions.x-primary-key}}
+{{^vendorExtensions.x-primary-key}}
+  @Column({
+{{#vendorExtensions.x-column-type}}
+    type: "{{vendorExtensions.x-column-type}}",
+{{/vendorExtensions.x-column-type}}
+{{^vendorExtensions.x-column-type}}
+{{#isEnumRef}}
+    type: "enum",
+    enum: {{datatypeWithEnum}},
+{{/isEnumRef}}
+{{^isEnumRef}}
+{{#isDateTime}}
+    type: "timestamp",
+{{/isDateTime}}
+{{^isDateTime}}
+{{#isBoolean}}
+    type: "boolean",
+{{/isBoolean}}
+{{^isBoolean}}
+{{#isInteger}}
+    type: "integer",
+{{/isInteger}}
+{{^isInteger}}
+{{#isNumeric}}
+    type: "decimal",
+{{/isNumeric}}
+{{^isNumeric}}
+    type: "varchar",
+{{#vendorExtensions.x-column-length}}
+    length: {{vendorExtensions.x-column-length}},
+{{/vendorExtensions.x-column-length}}
+{{^vendorExtensions.x-column-length}}
+    length: 255,
+{{/vendorExtensions.x-column-length}}
+{{/isNumeric}}
+{{/isInteger}}
+{{/isBoolean}}
+{{/isDateTime}}
+{{/isEnumRef}}
+{{/vendorExtensions.x-column-type}}
+{{^required}}
+    nullable: true,
+{{/required}}
+{{#required}}
+    nullable: false,
+{{/required}}
+{{#vendorExtensions.x-default}}
+    default: {{vendorExtensions.x-default}},
+{{/vendorExtensions.x-default}}
+  })
+  {{name}}{{^required}}?{{/required}}{{#required}}!{{/required}}: {{{dataType}}};
+
+{{/vendorExtensions.x-primary-key}}
+{{/vars}}
+  constructor(data?: Partial<{{classname}}>) {
+    if (data) {
+      Object.assign(this, data);
+{{#vars}}
+{{#vendorExtensions.x-default-code}}
+      if (this.{{name}} === undefined) {
+        this.{{name}} = {{vendorExtensions.x-default-code}};
+      }
+{{/vendorExtensions.x-default-code}}
+{{/vars}}
+    }
+  }
+}
+{{/vendorExtensions.x-entity}}
+{{/model}}
+{{/models}}

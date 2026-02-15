@@ -1,0 +1,39 @@
+# https://github.com/OpenAPITools/openapi-generator/tree/master/modules/openapi-generator/src/main/resources/typescript-axios/
+templateDir: /local/codegen/templates/typescript
+additionalProperties:
+  # withInterfaces: true
+  withSeparateModelsAndApi: true
+#   modelPropertyNaming: camelCase
+  apiPackage: api
+  modelPackage: models
+  servicePackage: services
+
+files:
+  service.mustache:
+    folder: services
+    # templateType: [ModelDocs, APIDocs, APITests, ModelTests, Model, API, SupportingFiles]
+    templateType: API  
+    destinationFilename: .service.interface.ts
+  serviceImpl.mustache:
+    folder: services
+    templateType: API
+    destinationFilename: .service.ts
+  service.index.mustache:
+    folder: services
+    templateType: SupportingFiles
+    destinationFilename: index.ts
+
+  # Entity templates - generates TypeORM entities from schemas with x-entity: true
+  entity.mustache:
+    folder: entities
+    templateType: Model
+    destinationFilename: Entity.entity.ts
+  entity.index.mustache:
+    folder: entities
+    templateType: SupportingFiles
+    destinationFilename: index.ts
+
+#   index.mustache:
+#     folder: models
+#     templateType: SupportingFiles
+#     destinationFilename: index.ts

@@ -1,0 +1,39 @@
+/**
+ * {{{description}}}
+ * @package {{package}}
+ */
+{{#imports}}
+{{#-first}}
+// Model imports
+{{/-first}}
+{{/imports}}
+import type { {{#imports}}{{classname}}{{^-last}}, {{/-last}}{{/imports}} } from '../models';
+
+import { I{{classname}}Service } from './{{classFilename}}.service.interface';
+
+/**
+ * Default implementation of I{{classname}}Service
+ */
+{{#operations}}
+export class Base{{classname}}Service implements I{{classname}}Service {
+  {{#operation}}
+  /**
+   * {{{summary}}}
+   *
+   {{#allParams}}
+   * @param {{paramName}} - {{{description}}}
+   {{/allParams}}
+   * @throws {Error} When the request fails
+   * @returns {Promise<{{#returnType}}{{{.}}}{{/returnType}}{{^returnType}}void{{/returnType}}>}
+   */
+  async {{operationId}}(
+    {{#allParams}}
+      {{paramName}}{{^required}}?{{/required}}: {{{dataType}}},{{#hasMore}},{{/hasMore}}
+    {{/allParams}}
+  ): Promise<{{#returnType}}{{{.}}}{{/returnType}}{{^returnType}}void{{/returnType}}> {
+      throw new Error('Not implemented');
+  }
+  
+  {{/operation}}
+}
+{{/operations}}

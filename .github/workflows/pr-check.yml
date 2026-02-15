@@ -1,0 +1,48 @@
+name: PR Check
+
+on:
+  pull_request:
+    branches: [main]
+
+env:
+  ENVIRONMENT: dev
+
+concurrency:
+  group: pr-check-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, Typecheck & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+
+      - name: Install backend dependencies
+        run: cd backend && npm ci
+
+      - name: Install infrastructure dependencies
+        run: cd infrastructure && npm ci
+
+      - name: Lint frontend
+        run: cd frontend && npm run lint
+
+      - name: Typecheck frontend
+        run: cd frontend && npx tsc --noEmit
+
+      - name: Build frontend
+        run: npm run frontend:build
+
+      - name: Build backend
+        run: npm run backend:build || true

@@ -1,0 +1,34 @@
+{
+  "vpcConfig": {
+    "local": {
+      "vpcId": "vpc-PLACEHOLDER",
+      "vpcCidr": "10.0.0.0/21",
+      "vpcName": "local-vpc",
+      "availabilityZones": ["us-west-1a", "us-west-1c"],
+      "subnets": {
+        "public": {
+          "subnet1": { "id": "subnet-PLACEHOLDER-1", "az": "us-west-1a" },
+          "subnet2": { "id": "subnet-PLACEHOLDER-2", "az": "us-west-1c" }
+        },
+        "privateApp": {
+          "subnet1": { "id": "subnet-PLACEHOLDER-3", "az": "us-west-1a" },
+          "subnet2": { "id": "subnet-PLACEHOLDER-4", "az": "us-west-1c" }
+        },
+        "privateData": {
+          "subnet1": { "id": "subnet-PLACEHOLDER-5", "az": "us-west-1a" },
+          "subnet2": { "id": "subnet-PLACEHOLDER-6", "az": "us-west-1c" }
+        }
+      },
+      "securityGroups": {
+        "lambda": "sg-PLACEHOLDER-1",
+        "rds": "sg-PLACEHOLDER-2",
+        "alb": "sg-PLACEHOLDER-3",
+        "ecsEc2": "sg-PLACEHOLDER-4"
+      },
+      "natGateways": {
+        "natGw1": "nat-PLACEHOLDER-1",
+        "natGw2": "nat-PLACEHOLDER-2"
+      }
+    }
+  }
+}

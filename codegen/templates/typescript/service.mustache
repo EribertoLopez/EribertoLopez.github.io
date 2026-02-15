@@ -1,0 +1,35 @@
+/**
+ * {{{description}}}
+ * @package {{package}}
+ */
+
+// Model imports
+import type { {{#imports}}{{classname}}{{^-last}}, {{/-last}}{{/imports}} } from '../models';
+
+/**
+ * Service interface for {{{classname}}} operations
+ * @interface I{{classname}}Service
+ */
+export interface I{{classname}}Service {
+  {{#operations}}
+  {{#operation}}
+  /**
+   * {{{summary}}}
+   {{#notes}}
+   * {{{notes}}}
+   {{/notes}}
+   {{#allParams}}
+   * @param {{paramName}} - {{{description}}}
+   {{/allParams}}
+   * @throws {Error} When the request fails
+   * @returns {Promise<{{#returnType}}{{{.}}}{{/returnType}}{{^returnType}}void{{/returnType}}>}
+   */
+  {{operationId}}(
+    {{#allParams}}
+    {{paramName}}{{^required}}?{{/required}}: {{{dataType}}},{{#hasMore}},{{/hasMore}}
+    {{/allParams}}
+  ): Promise<{{#returnType}}{{{.}}}{{/returnType}}{{^returnType}}void{{/returnType}}>;
+
+  {{/operation}}
+  {{/operations}}
+}

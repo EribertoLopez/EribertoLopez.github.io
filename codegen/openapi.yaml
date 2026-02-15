@@ -1,0 +1,7 @@
+openapi: "3.0.3"
+info:
+  title: Eriberto Lopez Portfolio API
+  version: "0.1.0"
+paths: {}
+components:
+  schemas: {}
