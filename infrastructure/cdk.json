@@ -1,5 +1,5 @@
 {
-  "app": "npx tsx bin/infrastructure.ts",
+  "app": "npx tsx --tsconfig tsconfig.json bin/infrastructure.ts",
   "watch": {
     "include": ["**"],
     "exclude": [
