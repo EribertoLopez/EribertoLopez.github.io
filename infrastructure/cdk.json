@@ -1,5 +1,5 @@
 {
-  "app": "npx ts-node --transpile-only --script-mode bin/infrastructure.ts",
+  "app": "npx tsx bin/infrastructure.ts",
   "watch": {
     "include": ["**"],
     "exclude": [
