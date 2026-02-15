@@ -65,3 +65,5 @@ Deploy it to the cloud with [Vercel](https://vercel.com/new?utm_source=github&ut
 # Testing deployment
 # Deploy with tsx
 # Deploy with bin files
+
+# Designed with <3 by EribertoLopez
