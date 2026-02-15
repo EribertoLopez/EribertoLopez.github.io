@@ -33,7 +33,10 @@ jobs:
         run: npm ci
 
       - name: Install frontend dependencies
-        run: npm run frontend:install --if-present || (cd frontend && npm ci)
+        run: cd frontend && npm ci
+
+      - name: Install infrastructure dependencies
+        run: cd infrastructure && npm ci
 
       - name: Build frontend
         run: npm run frontend:build
@@ -43,9 +46,6 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-
-      - name: Install infrastructure dependencies
-        run: cd infrastructure && npm ci
 
       - name: CDK deploy frontend
         run: npm run deploy:frontend
