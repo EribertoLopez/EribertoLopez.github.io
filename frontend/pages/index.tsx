@@ -109,3 +109,4 @@ export const getStaticProps = async () => {
     props: { allPosts, allResumes, allProjects },
   }
 }
+// Updated
