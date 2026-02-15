@@ -49,6 +49,7 @@
     "swc-loader": "^0.2.6",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.2"
   },
   "dependencies": {
