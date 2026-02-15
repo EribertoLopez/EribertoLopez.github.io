@@ -1,63 +1,282 @@
-# A statically generated blog example using Next.js, Markdown, and TypeScript
+# Eriberto Lopez Portfolio
 
-This is the existing [blog-starter](https://github.com/vercel/next.js/tree/canary/examples/blog-starter) plus TypeScript.
+A full-stack portfolio website built with Next.js (frontend) and AWS Lambda (backend), deployed using AWS CDK.
 
-This example showcases Next.js's [Static Generation](https://nextjs.org/docs/basic-features/pages) feature using Markdown files as the data source.
+## Quick Start
 
-The blog posts are stored in `/_posts` as Markdown files with front matter support. Adding a new Markdown file in there will create a new blog post.
+### Prerequisites
+- Node.js 22+
+- AWS CLI configured with credentials
+- Docker (for local backend development)
 
-To create the blog posts we use [`remark`](https://github.com/remarkjs/remark) and [`remark-html`](https://github.com/remarkjs/remark-html) to convert the Markdown files into an HTML string, and then send it down as a prop to the page. The metadata of every post is handled by [`gray-matter`](https://github.com/jonschlinkert/gray-matter) and also sent in props to the page.
+### Local Development
 
-## Demo
+\`\`\`bash
+# Install dependencies
+npm install
+cd frontend && npm install
+cd ../backend && npm install
+cd ../infrastructure && npm install
 
-[https://next-blog-starter.vercel.app/](https://next-blog-starter.vercel.app/)
+# Start frontend (development mode)
+npm run frontend:dev
+# Visit http://localhost:3000
 
-## Deploy your own
+# Start backend locally (with LocalStack)
+docker-compose up -d
+npm run dev
 
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=next-example) or preview live with [StackBlitz](https://stackblitz.com/github/vercel/next.js/tree/canary/examples/blog-starter)
+# Build for production
+npm run build
+\`\`\`
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/vercel/next.js/tree/canary/examples/blog-starter&project-name=blog-starter&repository-name=blog-starter)
+### Deploy to AWS
 
-### Related examples
+\`\`\`bash
+# Deploy frontend to S3 + CloudFront
+npm run deploy:frontend
 
-- [WordPress](/examples/cms-wordpress)
-- [DatoCMS](/examples/cms-datocms)
-- [Sanity](/examples/cms-sanity)
-- [TakeShape](/examples/cms-takeshape)
-- [Prismic](/examples/cms-prismic)
-- [Contentful](/examples/cms-contentful)
-- [Strapi](/examples/cms-strapi)
-- [Agility CMS](/examples/cms-agilitycms)
-- [Cosmic](/examples/cms-cosmic)
-- [ButterCMS](/examples/cms-buttercms)
-- [Storyblok](/examples/cms-storyblok)
-- [GraphCMS](/examples/cms-graphcms)
-- [Kontent](/examples/cms-kontent)
-- [Umbraco Heartcore](/examples/cms-umbraco-heartcore)
-- [Builder.io](/examples/cms-builder-io)
-- [TinaCMS](/examples/cms-tina/)
-- [Enterspeed](/examples/cms-enterspeed)
+# Deploy backend Lambda functions
+npm run deploy:backend
 
-## How to use
+# Deploy all infrastructure
+npm run deploy
+\`\`\`
 
-Execute [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [npm](https://docs.npmjs.com/cli/init), [Yarn](https://yarnpkg.com/lang/en/docs/cli/create/), or [pnpm](https://pnpm.io) to bootstrap the example:
+## Architecture Overview
 
-```bash
-npx create-next-app --example blog-starter blog-starter-app
-```
+This is a **monorepo** containing three main components:
 
-```bash
-yarn create next-app --example blog-starter blog-starter-app
-```
+\`\`\`
+├── frontend/          # Next.js static site
+├── backend/           # Lambda functions (Node.js + TypeScript)
+├── infrastructure/    # AWS CDK infrastructure definitions
+└── .github/workflows/ # CI/CD pipelines
+\`\`\`
 
-```bash
-pnpm create next-app --example blog-starter blog-starter-app
-```
+### Frontend Architecture
 
-Your blog should be up and running on [http://localhost:3000](http://localhost:3000)! If it doesn't work, post on [GitHub discussions](https://github.com/vercel/next.js/discussions).
+**Technology Stack:**
+- **Framework:** Next.js 14.2.21 with static export (\`output: "export"\`)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS v3.0
+- **Content:** Markdown files with frontmatter (posts, projects, resumes)
+- **Deployment:** AWS S3 + CloudFront (CDN)
 
-Deploy it to the cloud with [Vercel](https://vercel.com/new?utm_source=github&utm_medium=readme&utm_campaign=next-example) ([Documentation](https://nextjs.org/docs/deployment)).
+**Key Features:**
+- Static site generation (SSG)
+- Markdown-based content management
+- Responsive design with Tailwind CSS
+- Blog posts, project portfolio, and resume sections
 
-# Notes
+**Content Structure:**
+\`\`\`
+frontend/content/
+├── _posts/     # Blog posts
+├── _projects/  # Portfolio projects
+└── _resumes/   # Resume versions
+\`\`\`
 
-`blog-starter` uses [Tailwind CSS](https://tailwindcss.com) [(v3.0)](https://tailwindcss.com/blog/tailwindcss-v3).
+### Backend Architecture
+
+**Technology Stack:**
+- **Runtime:** Node.js 22 on AWS Lambda
+- **Language:** TypeScript
+- **Framework:** Custom service factory pattern
+- **Database:** PostgreSQL (Aurora Serverless)
+- **API Gateway:** REST API with OpenAPI spec
+- **Build Tool:** Rspack
+
+**Infrastructure Components:**
+- **VPC:** Private subnets for RDS/Lambda
+- **Database:** Aurora PostgreSQL with RDS Proxy
+- **Lambda:** API functions with VPC integration
+- **API Gateway:** REST endpoints
+- **IAM:** Least-privilege roles and policies
+
+**Optional Components** (configurable):
+- **ElastiCache:** Redis for caching
+- **SQS:** Event queues
+- **ECS Fargate:** Data pipeline containers
+- **ECR:** Container registry
+- **CloudWatch:** Monitoring and alarms
+
+### Infrastructure as Code (CDK)
+
+**Technology Stack:**
+- **Framework:** AWS CDK 2.x
+- **Language:** TypeScript
+- **Execution:** tsx (modern ts-node alternative)
+
+**CDK Stacks:**
+\`\`\`
+infrastructure/lib/
+├── frontend.ts     # S3 + CloudFront
+├── vpc.ts          # Network infrastructure
+├── database.ts     # Aurora PostgreSQL
+├── lambda.ts       # API functions
+├── iam.ts          # Roles and policies
+├── cache.ts        # ElastiCache (optional)
+├── sqs.ts          # Message queues (optional)
+├── ecr.ts          # Container registry (optional)
+├── ecs.ts          # Fargate services (optional)
+└── monitoring.ts   # CloudWatch alarms
+\`\`\`
+
+**Configuration:**
+- Stack toggles via \`infrastructure/bin/project-config.ts\`
+- Environment configs: \`local\`, \`dev\`, \`prod\`
+- VPC configs per environment in \`infrastructure/bin/\`
+
+### CI/CD Pipeline
+
+**GitHub Actions Workflows:**
+
+1. **PR Check** (\`pr-check.yml\`)
+   - Triggers: PRs to \`main\`
+   - Actions: Lint, typecheck, build all components
+
+2. **Deploy Frontend** (\`deploy-frontend.yml\`)
+   - Triggers: Push to \`main\` with \`frontend/**\` changes
+   - Actions: Build Next.js → Deploy to S3/CloudFront
+   - Environment: Production (\`ENVIRONMENT=prod\`)
+
+3. **Deploy Backend** (\`deploy-backend.yml\`)
+   - Triggers: Push to \`main\` with \`backend/**\` changes
+   - Actions: Build Lambda → Deploy via CDK
+
+4. **Deploy Infrastructure** (\`deploy-infrastructure.yml\`)
+   - Triggers: Push to \`main\` with \`infrastructure/**\` changes
+   - Actions: CDK diff → CDK deploy
+
+**Required GitHub Secrets:**
+- \`AWS_ACCESS_KEY_ID\`
+- \`AWS_SECRET_ACCESS_KEY\`
+- \`AWS_REGION\` (us-east-1)
+
+### Development Workflow
+
+1. **Create feature branch** from \`main\`
+   \`\`\`bash
+   git checkout -b feature/my-feature
+   \`\`\`
+
+2. **Make changes** in relevant directory:
+   - Frontend: \`frontend/\`
+   - Backend: \`backend/\`
+   - Infrastructure: \`infrastructure/\`
+
+3. **Test locally**
+   \`\`\`bash
+   # Frontend
+   npm run frontend:dev
+
+   # Backend (requires Docker)
+   docker-compose up -d
+   npm run dev
+   \`\`\`
+
+4. **Create PR** to \`main\`
+   - PR checks run automatically
+   - Lint, typecheck, and build validation
+
+5. **Merge to main**
+   - Automatic deployment to AWS (production)
+   - Only deploys changed components
+
+### Project Configuration
+
+**Stack Toggles** (\`infrastructure/bin/project-config.ts\`):
+\`\`\`typescript
+{
+  projectName: "eribertolopez",
+  projectDisplayName: "Eriberto-Lopez-Portfolio",
+  stacks: {
+    cache: false,      // ElastiCache Redis
+    sqs: false,        // SQS queues
+    ecs: false,        // ECS Fargate
+    ecr: false,        // Container registry
+    monitoring: true   // CloudWatch (always on)
+  }
+}
+\`\`\`
+
+**Environment Variables:**
+- \`ENVIRONMENT\`: \`local\` | \`dev\` | \`prod\`
+- \`AWS_REGION\`: \`us-east-1\` (production)
+
+### Key Technical Decisions
+
+1. **tsx over ts-node**: Faster, more reliable TypeScript execution for CDK
+2. **Static Export**: Next.js generates pure HTML/CSS/JS (no Node.js server)
+3. **Monorepo**: Single repository for easier development and deployment
+4. **CDK over CloudFormation**: Type-safe infrastructure as code
+5. **GitHub Actions**: Native CI/CD integration
+
+### Deployment Regions
+
+- **Production**: \`us-east-1\` (optimal for CloudFront)
+- **Local Development**: LocalStack simulation
+
+### Monitoring & Observability
+
+- **CloudWatch Logs**: Lambda execution logs
+- **CloudWatch Alarms**: Error rate, latency, database metrics
+- **CDK Diff**: Preview infrastructure changes before deployment
+
+## Common Commands
+
+\`\`\`bash
+# Development
+npm run frontend:dev              # Start frontend dev server
+npm run dev                       # Start full-stack (requires Docker)
+
+# Building
+npm run frontend:build            # Build frontend static site
+npm run backend:build             # Build backend Lambda bundles
+npm run build                     # Build all
+
+# Deployment
+npm run deploy:frontend           # Deploy frontend only
+npm run deploy:backend            # Deploy backend only
+npm run deploy                    # Deploy all
+
+# Infrastructure
+cd infrastructure
+npx cdk synth                     # Preview CloudFormation
+npx cdk diff                      # Show infrastructure changes
+npx cdk deploy --all              # Deploy all stacks
+\`\`\`
+
+## Troubleshooting
+
+**Frontend not building:**
+- Check Node.js version (requires 22+)
+- Verify \`frontend/out/\` is generated
+- Check for path resolution errors in content loading
+
+**Backend deployment fails:**
+- Verify AWS credentials are configured
+- Check CDK bootstrap: \`npx cdk bootstrap\`
+- Review CloudFormation events in AWS Console
+
+**tsx/ts-node errors:**
+- Infrastructure uses \`tsx\` for faster execution
+- Ensure \`tsx\` is installed: \`cd infrastructure && npm install\`
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a PR to \`main\`
+5. Ensure all CI checks pass
+
+## License
+
+Private portfolio project - All rights reserved.
+
+---
+
+**Maintained by:** Eriberto Lopez  
+**Last Updated:** February 2026
