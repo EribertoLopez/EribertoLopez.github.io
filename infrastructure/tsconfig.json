@@ -29,6 +29,12 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "lib"
   },
+  "ts-node": {
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  },
   "include": [
     "bin/**/*",
     "lib/**/*"
