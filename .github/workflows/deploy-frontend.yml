@@ -2,12 +2,16 @@ name: Deploy Frontend
 
 on:
   push:
-    branches: [main]
+    branches: [dev]
     paths:
       - "frontend/**"
+  pull_request:
+    types: [closed]
+    branches: [dev]
 
 env:
   ENVIRONMENT: dev
+  AWS_REGION: us-east-1
 
 concurrency:
   group: deploy-frontend-${{ github.ref }}
@@ -38,7 +42,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: us-east-1
 
       - name: Install infrastructure dependencies
         run: cd infrastructure && npm ci
