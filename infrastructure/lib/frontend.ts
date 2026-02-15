@@ -113,6 +113,7 @@ export class FrontendStack extends cdk.Stack {
       ],
       prune: false,
       exclude: ["*.html", "**/*.html", "*.txt", "**/*.txt"], // exclude all HTML/TXT
+      memoryLimit: 3008, // Increase memory (and timeout) for large deployments
     });
 
     // 2b) HTML (no-cache so refresh picks up new content)
@@ -124,6 +125,7 @@ export class FrontendStack extends cdk.Stack {
       cacheControl: [CacheControl.noCache()],
       prune: true,
       include: ["*.html", "**/*.html", "*.txt", "**/*.txt"],
+      memoryLimit: 3008, // Increase memory (and timeout) for large deployments
     });
   }
 }
