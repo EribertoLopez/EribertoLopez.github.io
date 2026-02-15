@@ -64,3 +64,4 @@ Deploy it to the cloud with [Vercel](https://vercel.com/new?utm_source=github&ut
 # Trigger deployment
 # Testing deployment
 # Deploy with tsx
+# Deploy with bin files
