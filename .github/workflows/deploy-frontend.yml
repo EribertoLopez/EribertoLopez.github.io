@@ -7,7 +7,7 @@ on:
       - "frontend/**"
 
 env:
-  ENVIRONMENT: dev
+  ENVIRONMENT: prod
   AWS_REGION: us-east-1
 
 concurrency:
