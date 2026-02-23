@@ -11,7 +11,7 @@ import { SQSStack } from "../lib/sqs";
 import { MonitoringStack } from "../lib/monitoring";
 import { ECRStack } from "../lib/ecr";
 import { ECSStack } from "../lib/ecs";
-import { ChatApiStack } from "../lib/chat-api-stack";
+
 import { cacheConfig, unifiedVPCConfig } from "./env-config";
 import { loadProjectConfig } from "./project-config";
 import { NamingConvention } from "./naming";
@@ -292,20 +292,5 @@ if (deployFrontend) {
     tags: naming.tags(),
   });
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// CHAT API STACK (standalone — no VPC/DB needed)
-// ═══════════════════════════════════════════════════════════════════════════
-
-new ChatApiStack(app, "ChatApiStack", {
-  env,
-  allowedOrigins: [
-    "https://eribertolopez.com",
-    "https://www.eribertolopez.com",
-    "https://d3flqn9a3eglfg.cloudfront.net",
-    "http://localhost:3000",
-  ],
-  bedrockRegion: "us-east-1",
-});
 
 app.synth();

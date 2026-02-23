@@ -18,6 +18,7 @@ export class IamStack extends cdk.Stack {
   public readonly transactionsRole: iam.Role;
   public readonly webhookProcessorRole: iam.Role;
   public readonly loginRole: iam.Role;
+  public readonly chatRole: iam.Role;
   public readonly databaseMigrationRole: iam.Role;
   public readonly transactionEventsRole: iam.Role;
   public readonly lambdaKmsKey: kms.Key;
@@ -230,6 +231,46 @@ export class IamStack extends cdk.Stack {
       inlinePolicies: loginPolicies,
     });
 
+    // Chat role — Bedrock + S3 only (no VPC, no DB)
+    this.chatRole = new iam.Role(this, "ChatRole", {
+      roleName: `${projectConfig.projectSlug}-${environment}-chat-role`,
+      assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName(
+          "service-role/AWSLambdaBasicExecutionRole"
+        ),
+      ],
+      inlinePolicies: {
+        KmsPolicy: createKmsPolicy(),
+        BedrockPolicy: new iam.PolicyDocument({
+          statements: [
+            new iam.PolicyStatement({
+              actions: [
+                "bedrock:InvokeModel",
+                "bedrock:InvokeModelWithResponseStream",
+              ],
+              resources: [
+                `arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-haiku-20240307-v1:0`,
+                `arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-embed-text-v2:0`,
+              ],
+            }),
+          ],
+        }),
+        S3Policy: new iam.PolicyDocument({
+          statements: [
+            new iam.PolicyStatement({
+              actions: ["s3:GetObject", "s3:PutObject"],
+              resources: [`arn:aws:s3:::eribertolopez-chat-embeddings-*/*`],
+            }),
+            new iam.PolicyStatement({
+              actions: ["s3:ListBucket"],
+              resources: [`arn:aws:s3:::eribertolopez-chat-embeddings-*`],
+            }),
+          ],
+        }),
+      },
+    });
+
     const dbMigrationPolicies: { [name: string]: iam.PolicyDocument } = {
       RDSProxyPolicy: createRdsProxyPolicy(),
       ElastiCachePolicy: createElastiCachePolicy(),
@@ -328,6 +369,12 @@ export class IamStack extends cdk.Stack {
       value: this.loginRole.roleArn,
       description: "IAM role ARN for Login Lambda function",
       exportName: `${this.stackName}-LoginRoleArn`,
+    });
+
+    new cdk.CfnOutput(this, "ChatRoleArn", {
+      value: this.chatRole.roleArn,
+      description: "IAM role ARN for Chat Lambda function",
+      exportName: `${this.stackName}-ChatRoleArn`,
     });
 
     new cdk.CfnOutput(this, "DatabaseMigrationRoleArn", {

@@ -4,7 +4,7 @@ name: Deploy Infrastructure
 on:
   push:
     branches: [main]
-    paths: ["infrastructure/**", "backend/src/functions/chat-api/**"]
+    paths: ["infrastructure/**", "backend/**", "codegen/openapi.yaml"]
   workflow_dispatch:
 
 concurrency:
@@ -31,66 +31,28 @@ jobs:
           role-to-assume: ${{ secrets.AWS_CDK_DEPLOY_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
 
-      - name: Install infrastructure dependencies
-        run: cd infrastructure && npm install
+      - name: Install dependencies
+        run: npm ci && cd backend && npm ci && cd ../infrastructure && npm ci
 
-      # Pre-bundle Lambda (CDK stack references dist/lambda/)
-      - name: Bundle Lambda
-        run: |
-          npx esbuild backend/src/functions/chat-api/index.ts \
-            --bundle \
-            --platform=node \
-            --target=node22 \
-            --outfile=dist/lambda/handler.js \
-            --minify \
-            --sourcemap \
-            --external:@aws-sdk/*
+      - name: Build backend
+        run: npm run backend:build
 
       - name: CDK diff
-        run: cd infrastructure && npx cdk diff ChatApiStack 2>&1 || true
+        run: cd infrastructure && npx cdk diff --all 2>&1 || true
 
       - name: CDK deploy
-        run: cd infrastructure && npx cdk deploy ChatApiStack --require-approval never --outputs-file cdk-outputs.json
+        run: cd infrastructure && npx cdk deploy --all --require-approval never --outputs-file cdk-outputs.json
 
       - name: Store outputs in SSM
         run: |
-          API_URL=$(cat infrastructure/cdk-outputs.json | python3 -c "
-          import json, sys
-          outputs = json.load(sys.stdin)
-          for stack in outputs.values():
-            for key, val in stack.items():
-              if 'ChatApiUrl' in key:
-                print(val)
-                sys.exit(0)
-          " 2>/dev/null || echo "")
+          FUNCTION_NAME="${{ vars.LAMBDA_NAME_PREFIX || 'EribertoLopez-production' }}-Chat"
 
-          FUNCTION_NAME=$(cat infrastructure/cdk-outputs.json | python3 -c "
-          import json, sys
-          outputs = json.load(sys.stdin)
-          for stack in outputs.values():
-            for key, val in stack.items():
-              if 'ChatFunctionArn' in key:
-                print(val.split(':')[-1])
-                sys.exit(0)
-          " 2>/dev/null || echo "")
-
-          if [ -n "$API_URL" ]; then
-            aws ssm put-parameter \
-              --name "${{ vars.SSM_PREFIX || '/eribertolopez' }}/chat-api-url" \
-              --value "$API_URL" \
-              --type String \
-              --overwrite
-            echo "✅ Stored Chat API URL: $API_URL"
-          fi
-
-          if [ -n "$FUNCTION_NAME" ]; then
-            aws ssm put-parameter \
-              --name "${{ vars.SSM_PREFIX || '/eribertolopez' }}/chat-function-name" \
-              --value "$FUNCTION_NAME" \
-              --type String \
-              --overwrite
-            echo "✅ Stored Function Name: $FUNCTION_NAME"
-          fi
+          aws ssm put-parameter \
+            --name "${{ vars.SSM_PREFIX || '/eribertolopez' }}/chat-function-name" \
+            --value "$FUNCTION_NAME" \
+            --type String \
+            --overwrite
+          echo "Stored Function Name: $FUNCTION_NAME"
 
       - name: Trigger site deploy
         if: success()
