@@ -32,7 +32,11 @@ jobs:
           aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
 
       - name: Install CDK dependencies
-        run: cd infra && npm ci
+        run: cd infra && npm install
+
+      # Also install frontend deps (Lambda bundling needs them)
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
 
       - name: CDK diff
         run: cd infra && npx cdk diff --all 2>&1 || true

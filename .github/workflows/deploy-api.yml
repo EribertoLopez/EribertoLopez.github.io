@@ -1,5 +1,5 @@
 # Deploy Chat API Lambda
-# Triggers on lambda/ changes or manual dispatch
+# Triggers on lambda/ or frontend/lib/ changes or manual dispatch
 name: Deploy API
 
 on:
@@ -25,16 +25,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
-      - run: npm ci
+      # Install frontend deps (Lambda imports from frontend/lib/)
+      - name: Install dependencies
+        run: cd frontend && npm ci
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_LAMBDA_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
 
-      # Bundle Lambda with esbuild (same as CDK NodejsFunction does)
+      # Bundle Lambda with esbuild — resolve from frontend/node_modules
       - name: Bundle Lambda
         run: |
           npx esbuild lambda/handler.ts \
@@ -44,7 +45,8 @@ jobs:
             --outfile=dist/lambda/handler.js \
             --minify \
             --sourcemap \
-            --external:@aws-sdk/*
+            --external:@aws-sdk/* \
+            --node-paths=frontend/node_modules
 
       - name: Package and deploy
         run: |

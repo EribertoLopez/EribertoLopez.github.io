@@ -100,6 +100,7 @@ export class ChatApiStack extends cdk.Stack {
         minify: true,
         sourceMap: true,
         externalModules: ["@aws-sdk/*"],
+        nodePaths: ["../../frontend/node_modules"],
       },
     });
 
