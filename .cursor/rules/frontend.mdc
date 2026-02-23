@@ -1,0 +1,32 @@
+---
+description: Frontend development — Next.js, generated API client, Pistachio
+globs: frontend/**
+alwaysApply: false
+---
+
+# Frontend Development Rules
+
+## Context
+
+Before making frontend changes, read:
+
+- `codegen/openapi.yaml` for API contract and types
+- `frontend/generated/` for generated client usage patterns
+- `scripts/auto-set-api-url.sh` for how the API URL is set in local dev
+
+## Constraints
+
+**CRITICAL:**
+
+- Do not edit files under `frontend/generated/` — they are generated
+- Do not hardcode API base URLs; use `NEXT_PUBLIC_API_URL` (set by `scripts/auto-set-api-url.sh` when using `npm run start:local`)
+
+**IMPORTANT:**
+
+- Use the generated API client and models from `frontend/generated/` for backend calls
+- Use ShadCN/Radix UI components where available (Button, Dialog, Input, etc., as in `frontend/components/`)
+
+**PREFERRED:**
+
+- Next.js App Router under `frontend/app/`; env vars for the browser must be `NEXT_PUBLIC_*`
+- Run the frontend after `start:local` has set the API URL

@@ -1,0 +1,14 @@
+---
+alwaysApply: true
+description: Use project knowledge base before answering; follow safety and conventions
+---
+
+# Project knowledge
+
+Before answering any question about this project:
+
+1. **Read** [`.cursor/knowledge/expertise.yaml`](.cursor/knowledge/expertise.yaml) — it is updated by the Knowledge Improvement pipeline on merges to `main` and reflects current patterns and known issues.
+2. **Follow** all `safety_protocols` and `core_implementation.key_conventions` defined there (e.g. OpenAPI-driven development, no secrets, no force-push to shared branches).
+3. **Prefer** documented `best_practices`, `patterns`, and `key_operations` over generic suggestions; consider `known_issues` and workarounds when relevant.
+
+This project is a personal portfolio with serverless backend: OpenAPI and Mustache drive codegen and TypeORM entities; GitHub Actions handle CI/CD for deploy and CDK. The expertise file is maintained by an agentic pipeline and used by code review — favor project-specific patterns from the knowledge base.

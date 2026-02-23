@@ -1,0 +1,125 @@
+# Knowledge Improvement Pipeline
+# Analyzes recent commits and updates expertise.yaml via Claude API
+name: Knowledge Improve
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - ".cursor/knowledge/expertise.yaml"
+  workflow_dispatch:
+
+concurrency:
+  group: knowledge-improve
+  cancel-in-progress: true
+
+jobs:
+  improve:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for loop prevention
+        id: loop-check
+        run: |
+          LAST_MSG=$(git log -1 --pretty=%s)
+          if [[ "$LAST_MSG" == chore\(knowledge\)* ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "⏭️ Skipping — last commit is a knowledge update"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Gather recent changes
+        if: steps.loop-check.outputs.skip != 'true'
+        run: |
+          # Get commits since last knowledge update (or last 10 commits)
+          LAST_KNOWLEDGE_SHA=$(git log --all --grep="^chore(knowledge)" -1 --pretty=%H 2>/dev/null || echo "")
+          if [ -n "$LAST_KNOWLEDGE_SHA" ]; then
+            git log --stat --diff-filter=ACDMR "${LAST_KNOWLEDGE_SHA}..HEAD" > /tmp/recent-changes.txt
+            git diff "${LAST_KNOWLEDGE_SHA}..HEAD" -- '*.ts' '*.tsx' '*.yaml' '*.yml' '*.json' '*.md' > /tmp/recent-diffs.txt
+          else
+            git log --stat --diff-filter=ACDMR -10 > /tmp/recent-changes.txt
+            git diff HEAD~10..HEAD -- '*.ts' '*.tsx' '*.yaml' '*.yml' '*.json' '*.md' > /tmp/recent-diffs.txt 2>/dev/null || true
+          fi
+
+      - name: Analyze with Claude
+        if: steps.loop-check.outputs.skip != 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          PROMPT=$(cat .pipelines/improve-agent-prompt.md)
+          EXPERTISE=$(cat .cursor/knowledge/expertise.yaml)
+          CHANGES=$(head -c 50000 /tmp/recent-changes.txt)
+          DIFFS=$(head -c 50000 /tmp/recent-diffs.txt)
+
+          # Build request payload
+          jq -n \
+            --arg prompt "$PROMPT" \
+            --arg expertise "$EXPERTISE" \
+            --arg changes "$CHANGES" \
+            --arg diffs "$DIFFS" \
+            '{
+              model: "claude-sonnet-4-5-20250929",
+              max_tokens: 8192,
+              messages: [{
+                role: "user",
+                content: ($prompt + "\n\n## Current expertise.yaml\n\n```yaml\n" + $expertise + "\n```\n\n## Recent Git Log\n\n```\n" + $changes + "\n```\n\n## Recent Diffs\n\n```\n" + $diffs + "\n```")
+              }]
+            }' > /tmp/request.json
+
+          curl -s https://api.anthropic.com/v1/messages \
+            -H "Content-Type: application/json" \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -d @/tmp/request.json \
+            -o /tmp/response.json
+
+          # Extract YAML from response
+          python3 -c "
+          import json, re, sys
+          resp = json.load(open('/tmp/response.json'))
+          text = resp.get('content', [{}])[0].get('text', '')
+          # Try to extract from code block
+          m = re.search(r'\`\`\`ya?ml\n(.*?)\n\`\`\`', text, re.DOTALL)
+          if m:
+              print(m.group(1))
+          else:
+              print(text)
+          " > /tmp/new-expertise.yaml
+
+          # Validate YAML
+          python3 -c "import yaml; yaml.safe_load(open('/tmp/new-expertise.yaml'))" 2>/dev/null
+          if [ $? -eq 0 ]; then
+            cp /tmp/new-expertise.yaml .cursor/knowledge/expertise.yaml
+            echo "✅ Updated expertise.yaml"
+          else
+            echo "❌ Invalid YAML output — skipping update"
+            exit 0
+          fi
+
+      - name: Check for size warning
+        if: steps.loop-check.outputs.skip != 'true'
+        run: |
+          LINES=$(wc -l < .cursor/knowledge/expertise.yaml)
+          if [ "$LINES" -gt 500 ]; then
+            echo "⚠️ expertise.yaml is $LINES lines — consider splitting into per-layer domains"
+          fi
+
+      - name: Commit and push
+        if: steps.loop-check.outputs.skip != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .cursor/knowledge/expertise.yaml
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(knowledge): update expertise from recent commits"
+            git push
+          fi

@@ -1,0 +1,31 @@
+---
+description: Infrastructure — CDK, project-config, stack toggles
+globs: infrastructure/**
+alwaysApply: false
+---
+
+# Infrastructure Development Rules
+
+## Context
+
+Before making infrastructure changes, read:
+
+- `infrastructure/bin/project-config.ts` — single source for projectName, projectSlug, projectDisplayName, and stack toggles
+- `infrastructure/README.md` for architecture and scripts
+
+## Constraints
+
+**CRITICAL:**
+
+- Use `project-config.ts` as the single source for project naming and stack toggles
+- Do not duplicate naming logic; reference config for stack IDs, S3 bucket names, SSM parameters
+
+**IMPORTANT:**
+
+- Optional stacks (cache, sqs, ecs) are toggled in `project-config.ts`; CDK conditionally creates stacks from these toggles
+- When forking, update projectName, projectSlug, and projectDisplayName together with openapi and docker-compose
+
+**PREFERRED:**
+
+- Keep CDK stacks aligned with the structure in the repo
+- Use the naming utility from config for consistent AWS resource names

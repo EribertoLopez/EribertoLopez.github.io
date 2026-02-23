@@ -1,0 +1,34 @@
+---
+description: Backend development — Lambda, TypeORM, rspack, generated code
+globs: backend/**
+alwaysApply: false
+---
+
+# Backend Development Rules
+
+## Context
+
+Before making backend changes, read:
+
+- `codegen/openapi.yaml` for API contract
+- `infrastructure/bin/project-config.ts` for naming (if referencing AWS resources)
+- `backend/README.md` for architecture and patterns
+
+## Constraints
+
+**CRITICAL:**
+
+- Do not edit files under `backend/src/generated/` — they are generated; add custom logic in `backend/src/services/` or after generation
+- Run `npm run codegen` after any change to `codegen/openapi.yaml`
+- Use TypeORM repository/entity pattern for database access; put migrations in `backend/src/migrations/`
+
+**IMPORTANT:**
+
+- Follow the existing Lambda entry pattern in `backend/src/functions/*/index.ts`: handler receives `APIGatewayProxyEvent`, uses `serviceFactory` (e.g. `getLoginService()`), returns `APIGatewayProxyResult`
+- Use `addCorsHeaders` from `backend/src/utils/corsUtils.ts` for CORS responses
+- Implement service logic by extending generated `*ApiServiceBase` in `backend/src/services/`
+
+**PREFERRED:**
+
+- Keep handler logic thin (request/response only); delegate to services
+- One Lambda per directory under `backend/src/functions/` (rspack auto-discovery)

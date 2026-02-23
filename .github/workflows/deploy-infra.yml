@@ -4,7 +4,7 @@ name: Deploy Infrastructure
 on:
   push:
     branches: [main]
-    paths: ["infra/**", "lambda/**", "frontend/lib/**"]
+    paths: ["infrastructure/**", "backend/src/functions/chat-api/**"]
   workflow_dispatch:
 
 concurrency:
@@ -31,16 +31,13 @@ jobs:
           role-to-assume: ${{ secrets.AWS_CDK_DEPLOY_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
 
-      - name: Install frontend dependencies
-        run: cd frontend && npm ci
-
-      - name: Install CDK dependencies
-        run: cd infra && npm install
+      - name: Install infrastructure dependencies
+        run: cd infrastructure && npm install
 
       # Pre-bundle Lambda (CDK stack references dist/lambda/)
       - name: Bundle Lambda
         run: |
-          NODE_PATH=frontend/node_modules npx esbuild lambda/handler.ts \
+          npx esbuild backend/src/functions/chat-api/index.ts \
             --bundle \
             --platform=node \
             --target=node22 \
@@ -50,14 +47,14 @@ jobs:
             --external:@aws-sdk/*
 
       - name: CDK diff
-        run: cd infra && npx cdk diff --all 2>&1 || true
+        run: cd infrastructure && npx cdk diff ChatApiStack 2>&1 || true
 
       - name: CDK deploy
-        run: cd infra && npx cdk deploy --all --require-approval never --outputs-file cdk-outputs.json
+        run: cd infrastructure && npx cdk deploy ChatApiStack --require-approval never --outputs-file cdk-outputs.json
 
       - name: Store outputs in SSM
         run: |
-          API_URL=$(cat infra/cdk-outputs.json | python3 -c "
+          API_URL=$(cat infrastructure/cdk-outputs.json | python3 -c "
           import json, sys
           outputs = json.load(sys.stdin)
           for stack in outputs.values():
@@ -67,7 +64,7 @@ jobs:
                 sys.exit(0)
           " 2>/dev/null || echo "")
 
-          FUNCTION_NAME=$(cat infra/cdk-outputs.json | python3 -c "
+          FUNCTION_NAME=$(cat infrastructure/cdk-outputs.json | python3 -c "
           import json, sys
           outputs = json.load(sys.stdin)
           for stack in outputs.values():

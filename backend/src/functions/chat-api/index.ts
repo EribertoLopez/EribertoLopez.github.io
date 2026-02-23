@@ -1,4 +1,4 @@
-// lambda/handler.ts — Fully self-contained Chat API Lambda Handler
+// backend/src/functions/chat-api/index.ts — Fully self-contained Chat API Lambda Handler
 // NO imports from frontend/lib/ — all logic inline to avoid any transitive deps
 
 import * as crypto from "crypto";
