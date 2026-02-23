@@ -40,7 +40,7 @@ jobs:
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_SITE_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
 
       # Fetch Chat API URL from SSM or vars
       - name: Resolve Chat API URL
@@ -59,13 +59,13 @@ jobs:
 
       - name: Deploy to S3
         run: |
-          aws s3 sync frontend/out/ s3://${{ vars.S3_BUCKET_NAME }}/ \
+          aws s3 sync frontend/out/ s3://${{ secrets.S3_BUCKET_NAME }}/ \
             --delete \
             --cache-control "public, max-age=31536000, immutable" \
             --exclude "*.html" \
             --exclude "*.json"
           # HTML and JSON get shorter cache
-          aws s3 sync frontend/out/ s3://${{ vars.S3_BUCKET_NAME }}/ \
+          aws s3 sync frontend/out/ s3://${{ secrets.S3_BUCKET_NAME }}/ \
             --cache-control "public, max-age=60, s-maxage=600" \
             --include "*.html" \
             --include "*.json" \
@@ -74,12 +74,12 @@ jobs:
       - name: Invalidate CloudFront
         run: |
           INVALIDATION_ID=$(aws cloudfront create-invalidation \
-            --distribution-id ${{ vars.CF_DISTRIBUTION_ID }} \
+            --distribution-id ${{ secrets.CF_DISTRIBUTION_ID }} \
             --paths "/*" \
             --query 'Invalidation.Id' --output text)
           echo "Invalidation: $INVALIDATION_ID"
           aws cloudfront wait invalidation-completed \
-            --distribution-id ${{ vars.CF_DISTRIBUTION_ID }} \
+            --distribution-id ${{ secrets.CF_DISTRIBUTION_ID }} \
             --id "$INVALIDATION_ID"
 
       - name: Smoke test
