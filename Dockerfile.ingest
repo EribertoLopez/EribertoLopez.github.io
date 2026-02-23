@@ -1,0 +1,33 @@
+# Dockerfile.ingest
+# Ingestion pipeline container for AWS ECS Fargate
+
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json ./
+RUN npm ci --production=false
+
+# Copy source
+COPY lib/ ./lib/
+COPY scripts/ ./scripts/
+COPY documents/ ./documents/
+COPY tsconfig.json ./
+
+# ---
+
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+# Copy built dependencies and source
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/lib ./lib
+COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/documents ./documents
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/tsconfig.json ./
+
+# Run ingestion pipeline
+CMD ["npx", "tsx", "scripts/ingest.ts"]
