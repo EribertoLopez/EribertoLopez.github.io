@@ -2,6 +2,7 @@
 // Lambda + HTTP API Gateway + S3 (embeddings) + Bedrock (AI)
 // No database required — embeddings stored as JSON in S3, searched in-memory.
 
+import * as path from "path";
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
@@ -80,7 +81,7 @@ export class ChatApiStack extends cdk.Stack {
     // Lambda Function
     // ─────────────────────────────────────────────────────
     const chatFn = new lambdaNode.NodejsFunction(this, "ChatHandler", {
-      entry: "../../lambda/handler.ts",
+      entry: path.join(__dirname, "..", "..", "lambda", "handler.ts"),
       handler: "handler",
       runtime: lambda.Runtime.NODEJS_22_X,
       memorySize: 512,
@@ -104,8 +105,8 @@ export class ChatApiStack extends cdk.Stack {
           "process.env.NODE_ENV": JSON.stringify("production"),
         },
         commandHooks: {
-          beforeBundling(inputDir: string, outputDir: string): string[] {
-            return [`cd ${inputDir}/../../frontend && npm ci --ignore-scripts`];
+          beforeBundling(inputDir: string, _outputDir: string): string[] {
+            return [`cd ${inputDir}/../frontend && npm ci --ignore-scripts`];
           },
           afterBundling(): string[] { return []; },
           beforeInstall(): string[] { return []; },
