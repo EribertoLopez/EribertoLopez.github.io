@@ -35,7 +35,7 @@ jobs:
           ls -la frontend/content/_resumes/ frontend/content/_posts/ frontend/content/_projects/
 
       - name: Run ingestion
-        run: python scripts/ingest.py
+        run: python -u scripts/ingest.py
         timeout-minutes: 10
         env:
           BEDROCK_EMBED_MODEL_ID: amazon.titan-embed-text-v2:0

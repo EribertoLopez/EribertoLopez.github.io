@@ -87,10 +87,13 @@ def main():
         print(f"❌ No .md files in {CONTENT_DIR}", file=sys.stderr)
         sys.exit(1)
     print(f"📁 Found {len(files)} markdown files")
+    for f in files:
+        print(f"  - {f} ({f.stat().st_size} bytes)")
 
     # Parse + chunk
     all_chunks = []
     base = Path(CONTENT_DIR).resolve().parent.parent  # repo root
+    print("\nChunking files...")
     for fp in files:
         rel = str(fp.relative_to(base))
         content = fp.read_text()
