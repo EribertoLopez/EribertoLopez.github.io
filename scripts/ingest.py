@@ -1,137 +1,75 @@
 #!/usr/bin/env python3
 """
-Standalone document ingestion: markdown → Bedrock Titan embeddings → S3 JSON.
+Upload markdown content to S3, then invoke Lambda to embed + store.
+Keeps computation on Lambda (has AWS SDK + Bedrock access natively).
 """
 
-import json, os, re, hashlib, sys
+import json, os, sys, base64, io, zipfile
 from pathlib import Path
-
-# Force unbuffered output so GHA shows logs in real time
-sys.stdout.reconfigure(line_buffering=True)
-sys.stderr.reconfigure(line_buffering=True)
-
 import boto3
 
 CONTENT_DIR = os.environ.get("CONTENT_DIR", str(Path(__file__).resolve().parent.parent / "frontend" / "content"))
-EMBED_MODEL = os.environ.get("BEDROCK_EMBED_MODEL_ID", "amazon.titan-embed-text-v2:0")
-S3_BUCKET   = os.environ.get("EMBEDDINGS_S3_BUCKET", "")
-S3_KEY      = os.environ.get("EMBEDDINGS_S3_KEY", "chat/embeddings.json")
-REGION      = os.environ.get("AWS_REGION", "us-east-1")
-CHUNK_SIZE  = 800
-CHUNK_OVERLAP = 200
-
-
-def find_md_files(d):
-    return sorted(Path(d).rglob("*.md"))
-
-
-def parse_frontmatter(text):
-    m = re.match(r"^---\n(.*?)\n---\n(.*)$", text, re.DOTALL)
-    if not m:
-        return {}, text
-    meta = {}
-    for line in m.group(1).splitlines():
-        idx = line.find(":")
-        if idx > 0:
-            k = line[:idx].strip()
-            v = line[idx+1:].strip().strip("'\"")
-            if k and v:
-                meta[k] = v
-    return meta, m.group(2)
-
-
-def chunk_text(text, size=CHUNK_SIZE, overlap=CHUNK_OVERLAP):
-    text = re.sub(r"\n{3,}", "\n\n", text).strip()
-    chunks, start = [], 0
-    while start < len(text):
-        end = min(start + size, len(text))
-        if end < len(text):
-            sl = text[start:end]
-            for sep in ["\n\n", ". ", "\n"]:
-                pos = sl.rfind(sep)
-                if pos > size * 0.5:
-                    end = start + pos + len(sep)
-                    break
-        chunk = text[start:end].strip()
-        if len(chunk) > 50:
-            chunks.append(chunk)
-        start = end - overlap
-        if start >= len(text):
-            break
-    return chunks
-
-
-def chunk_id(source, idx):
-    h = hashlib.sha256(f"{source}:{idx}".encode()).hexdigest()[:12]
-    return f"{Path(source).stem}-{idx}-{h}"
-
-
-def embed(bedrock, text):
-    resp = bedrock.invoke_model(
-        modelId=EMBED_MODEL,
-        contentType="application/json",
-        accept="application/json",
-        body=json.dumps({"inputText": text}),
-    )
-    return json.loads(resp["body"].read())["embedding"]
+S3_BUCKET = os.environ.get("EMBEDDINGS_S3_BUCKET", "")
+FUNCTION_NAME = os.environ.get("CHAT_FUNCTION_NAME", "")
+REGION = os.environ.get("AWS_REGION", "us-east-1")
 
 
 def main():
     if not S3_BUCKET:
         print("❌ EMBEDDINGS_S3_BUCKET not set", file=sys.stderr)
         sys.exit(1)
+    if not FUNCTION_NAME:
+        print("❌ CHAT_FUNCTION_NAME not set", file=sys.stderr)
+        sys.exit(1)
 
-    print("🔄 Starting document ingestion pipeline...\n")
-    files = find_md_files(CONTENT_DIR)
+    # Collect all markdown files
+    content_dir = Path(CONTENT_DIR)
+    files = sorted(content_dir.rglob("*.md"))
     if not files:
         print(f"❌ No .md files in {CONTENT_DIR}", file=sys.stderr)
         sys.exit(1)
+
     print(f"📁 Found {len(files)} markdown files")
-    for f in files:
-        print(f"  - {f} ({f.stat().st_size} bytes)")
 
-    # Parse + chunk
-    all_chunks = []
-    base = Path(CONTENT_DIR).resolve().parent.parent  # repo root
-    print("\nChunking files...", flush=True)
+    # Build payload with file contents
+    documents = []
+    base = content_dir.resolve().parent.parent
     for fp in files:
-        print(f"  Reading {fp.name}...", flush=True)
         rel = str(fp.relative_to(base))
-        content = fp.read_text()
-        meta, body = parse_frontmatter(content)
-        stype = ("resume" if "_resumes" in rel
-                 else "project" if "_projects" in rel
-                 else "post" if "_posts" in rel
-                 else "document")
-        title = meta.get("title") or meta.get("name") or fp.stem
-        chunks = chunk_text(body)
-        for i, c in enumerate(chunks):
-            all_chunks.append({
-                "id": chunk_id(rel, i),
-                "text": f"[{stype}: {title}] {c}",
-                "metadata": {**meta, "source": rel, "sourceType": stype, "chunkIndex": str(i)},
-            })
-        print(f"  📄 {fp.name} → {len(chunks)} chunks ({stype})")
+        documents.append({"path": rel, "content": fp.read_text()})
+        print(f"  📄 {fp.name} ({fp.stat().st_size} bytes)")
 
-    print(f"\n📊 Total: {len(all_chunks)} chunks\n")
+    total_size = sum(len(d["content"]) for d in documents)
+    print(f"\n📊 Total: {len(documents)} files, {total_size // 1024} KB")
 
-    # Embed
-    bedrock = boto3.client("bedrock-runtime", region_name=REGION)
-    print(f"🧠 Embedding with Bedrock ({EMBED_MODEL})...")
+    # Invoke Lambda with ingest payload
+    print(f"\n🚀 Invoking Lambda ({FUNCTION_NAME})...")
+    lam = boto3.client("lambda", region_name=REGION)
 
-    stored = []
-    for i, ch in enumerate(all_chunks):
-        vec = embed(bedrock, ch["text"])
-        stored.append({**ch, "embedding": vec})
-        if (i + 1) % 5 == 0 or i == len(all_chunks) - 1:
-            print(f"  ✅ Embedded {i+1}/{len(all_chunks)}")
+    # Build a fake API Gateway event for POST /ingest
+    event = {
+        "routeKey": "POST /ingest",
+        "headers": {"content-type": "application/json"},
+        "body": json.dumps({"documents": documents}),
+        "requestContext": {"http": {"method": "POST", "sourceIp": "github-actions"}},
+    }
 
-    # Upload
-    payload = json.dumps({"chunks": stored, "createdAt": __import__("datetime").datetime.utcnow().isoformat(), "count": len(stored)})
-    s3 = boto3.client("s3", region_name=REGION)
-    print(f"\n💾 Uploading to s3://{S3_BUCKET}/{S3_KEY} ({len(payload)//1024} KB)...")
-    s3.put_object(Bucket=S3_BUCKET, Key=S3_KEY, Body=payload, ContentType="application/json")
-    print(f"\n✅ Done! {len(stored)} chunks uploaded.")
+    resp = lam.invoke(
+        FunctionName=FUNCTION_NAME,
+        InvocationType="RequestResponse",
+        Payload=json.dumps(event),
+    )
+
+    result = json.loads(resp["Payload"].read())
+    status = result.get("statusCode", 0)
+    body = json.loads(result.get("body", "{}"))
+
+    if status == 200:
+        print(f"\n✅ {body.get('message', 'Done!')}")
+        print(f"   Chunks: {body.get('chunks', '?')}, Size: {body.get('sizeKB', '?')} KB")
+    else:
+        print(f"\n❌ Lambda returned {status}: {body}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 # Run Document Ingestion Pipeline
+# Sends markdown content to Lambda for embedding + S3 storage
 name: Ingest Documents
 
 on:
@@ -27,20 +28,11 @@ jobs:
       - name: Install boto3
         run: pip install boto3
 
-      - name: Debug info
-        run: |
-          python --version
-          python -c "import boto3; print('boto3', boto3.__version__)"
-          echo "Memory: $(free -m | head -2)"
-          ls -la frontend/content/_resumes/ frontend/content/_posts/ frontend/content/_projects/
-
-      - name: Run ingestion
+      - name: Run ingestion via Lambda
         run: python -u scripts/ingest.py
-        timeout-minutes: 10
         env:
-          BEDROCK_EMBED_MODEL_ID: amazon.titan-embed-text-v2:0
           EMBEDDINGS_S3_BUCKET: ${{ secrets.EMBEDDINGS_S3_BUCKET }}
-          EMBEDDINGS_S3_KEY: chat/embeddings.json
+          CHAT_FUNCTION_NAME: ${{ secrets.CHAT_FUNCTION_NAME }}
 
       - name: Verify
         run: |

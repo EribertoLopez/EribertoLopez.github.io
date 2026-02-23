@@ -87,7 +87,7 @@ export class ChatApiStack extends cdk.Stack {
       handler: "handler.handler",
       runtime: lambda.Runtime.NODEJS_22_X,
       memorySize: 512,
-      timeout: cdk.Duration.seconds(60),
+      timeout: cdk.Duration.seconds(120),
       role: lambdaRole,
       environment: {
         EMBEDDING_PROVIDER: "bedrock",
@@ -138,6 +138,12 @@ export class ChatApiStack extends cdk.Stack {
     httpApi.addRoutes({
       path: "/health",
       methods: [apigwv2.HttpMethod.GET],
+      integration: lambdaIntegration,
+    });
+
+    httpApi.addRoutes({
+      path: "/ingest",
+      methods: [apigwv2.HttpMethod.POST],
       integration: lambdaIntegration,
     });
 
