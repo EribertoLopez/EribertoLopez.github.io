@@ -12,9 +12,8 @@ import { generateChatResponse, generateChatResponseStream } from "../frontend/li
 import { isRateLimited, getRemainingRequests } from "../frontend/lib/rateLimit";
 import { pipelineConfig } from "../frontend/lib/config";
 import { ChatError } from "../frontend/lib/errors";
-import { createEmbeddingProvider } from "../frontend/lib/embeddings/index";
-import { createVectorStore } from "../frontend/lib/vectorStore/index";
-import type { ChunkRecord } from "../frontend/lib/types";
+import { BedrockEmbedding } from "../frontend/lib/embeddings/bedrock";
+import { S3MemoryVectorStore } from "../frontend/lib/vectorStore/s3Memory";
 
 // --- Types ---
 interface ChatRequest {
@@ -187,8 +186,8 @@ export async function handler(
 
       console.log(`Total: ${allChunks.length} chunks. Embedding...`);
 
-      const embedder = createEmbeddingProvider();
-      const chunkRecords: ChunkRecord[] = [];
+      const embedder = new BedrockEmbedding();
+      const chunkRecords: Array<{ id: string; text: string; metadata: Record<string, string>; embedding: number[] }> = [];
 
       // Embed in batches of 5
       for (let i = 0; i < allChunks.length; i += 5) {
@@ -201,7 +200,7 @@ export async function handler(
       }
 
       // Store
-      const store = createVectorStore();
+      const store = new S3MemoryVectorStore();
       await store.upsert(chunkRecords);
 
       console.log(`✅ Stored ${chunkRecords.length} chunks`);
