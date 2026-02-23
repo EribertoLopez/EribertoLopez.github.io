@@ -39,15 +39,14 @@ jobs:
       # Pre-bundle Lambda (CDK stack references dist/lambda/)
       - name: Bundle Lambda
         run: |
-          npx esbuild lambda/handler.ts \
+          NODE_PATH=frontend/node_modules npx esbuild lambda/handler.ts \
             --bundle \
             --platform=node \
             --target=node22 \
             --outfile=dist/lambda/handler.js \
             --minify \
             --sourcemap \
-            --external:@aws-sdk/* \
-            --node-paths=frontend/node_modules
+            --external:@aws-sdk/*
 
       - name: CDK diff
         run: cd infra && npx cdk diff --all 2>&1 || true
