@@ -19,41 +19,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_INGESTION_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
 
-      - name: Install dependencies
-        run: |
-          mkdir -p /tmp/ingest-work
-          cd /tmp/ingest-work
-          npm init -y > /dev/null 2>&1
-          npm install @aws-sdk/client-bedrock-runtime @aws-sdk/client-s3 esbuild
-
-      - name: Bundle ingest script
-        run: |
-          cd /tmp/ingest-work
-          npx esbuild $GITHUB_WORKSPACE/scripts/ingest.ts \
-            --bundle --platform=node --target=node22 \
-            --outfile=ingest.js \
-            --external:@aws-sdk/*
+      - name: Install boto3
+        run: pip install boto3
 
       - name: Run ingestion
-        working-directory: /tmp/ingest-work
-        run: |
-          export NODE_PATH=/tmp/ingest-work/node_modules
-          node ingest.js
+        run: python scripts/ingest.py
         env:
-          CONTENT_DIR: ${{ github.workspace }}/frontend/content
           BEDROCK_EMBED_MODEL_ID: amazon.titan-embed-text-v2:0
           EMBEDDINGS_S3_BUCKET: ${{ secrets.EMBEDDINGS_S3_BUCKET }}
           EMBEDDINGS_S3_KEY: chat/embeddings.json
-          FORCE_REINGEST: ${{ inputs.force_reingest }}
 
       - name: Verify
         run: |
