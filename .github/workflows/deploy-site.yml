@@ -1,0 +1,93 @@
+# Build and Deploy Static Site to S3/CloudFront
+name: Deploy Site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "components/**"
+      - "lib/**"
+      - "pages/**"
+      - "public/**"
+      - "styles/**"
+      - "next.config.*"
+      - "package.json"
+      - "tailwind.config.*"
+  workflow_dispatch:
+  workflow_call:
+
+concurrency:
+  group: deploy-site
+  cancel-in-progress: false
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_SITE_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+      # Fetch Chat API URL from SSM or vars
+      - name: Resolve Chat API URL
+        id: api-url
+        run: |
+          API_URL=$(aws ssm get-parameter \
+            --name "${{ vars.SSM_PREFIX || '/eribertolopez' }}/chat-api-url" \
+            --query 'Parameter.Value' --output text 2>/dev/null \
+            || echo "${{ vars.CHAT_API_URL }}")
+          echo "url=$API_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Build static site
+        run: npm run build
+        env:
+          NEXT_PUBLIC_CHAT_API_URL: ${{ steps.api-url.outputs.url }}
+
+      - name: Deploy to S3
+        run: |
+          aws s3 sync out/ s3://${{ vars.S3_BUCKET_NAME }}/ \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable" \
+            --exclude "*.html" \
+            --exclude "*.json"
+          # HTML and JSON get shorter cache
+          aws s3 sync out/ s3://${{ vars.S3_BUCKET_NAME }}/ \
+            --cache-control "public, max-age=60, s-maxage=600" \
+            --include "*.html" \
+            --include "*.json" \
+            --exclude "_next/*"
+
+      - name: Invalidate CloudFront
+        run: |
+          INVALIDATION_ID=$(aws cloudfront create-invalidation \
+            --distribution-id ${{ vars.CF_DISTRIBUTION_ID }} \
+            --paths "/*" \
+            --query 'Invalidation.Id' --output text)
+          echo "Invalidation: $INVALIDATION_ID"
+          aws cloudfront wait invalidation-completed \
+            --distribution-id ${{ vars.CF_DISTRIBUTION_ID }} \
+            --id "$INVALIDATION_ID"
+
+      - name: Smoke test
+        run: |
+          sleep 5
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://eribertolopez.com)
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "❌ Smoke test failed: HTTP $HTTP_STATUS"
+            exit 1
+          fi
+          echo "✅ Site is live"

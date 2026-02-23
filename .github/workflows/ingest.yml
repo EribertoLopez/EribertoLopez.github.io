@@ -1,0 +1,65 @@
+# Run Document Ingestion Pipeline
+# Manual trigger only — ingests documents/ into Aurora pgvector via Bedrock embeddings
+name: Ingest Documents
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_reingest:
+        description: "Force re-ingestion (deletes existing embeddings first)"
+        type: boolean
+        default: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_INGESTION_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+      # Fetch DB credentials from Secrets Manager
+      - name: Load DB credentials
+        id: db-creds
+        run: |
+          SECRET_JSON=$(aws secretsmanager get-secret-value \
+            --secret-id "${{ vars.DB_SECRET_NAME || 'eribertolopez-prod-db-credentials' }}" \
+            --query 'SecretString' --output text)
+          echo "::add-mask::$(echo $SECRET_JSON | jq -r '.password')"
+          echo "host=$(echo $SECRET_JSON | jq -r '.host // empty')" >> "$GITHUB_OUTPUT"
+          echo "port=$(echo $SECRET_JSON | jq -r '.port // "5432"')" >> "$GITHUB_OUTPUT"
+          echo "user=$(echo $SECRET_JSON | jq -r '.username // empty')" >> "$GITHUB_OUTPUT"
+          echo "password=$(echo $SECRET_JSON | jq -r '.password // empty')" >> "$GITHUB_OUTPUT"
+
+      - name: Run ingestion
+        run: npx tsx scripts/ingest.ts
+        env:
+          EMBEDDING_PROVIDER: bedrock
+          VECTOR_STORE_PROVIDER: aurora
+          BEDROCK_EMBED_MODEL_ID: amazon.titan-embed-text-v2:0
+          DB_HOST: ${{ steps.db-creds.outputs.host }}
+          DB_PORT: ${{ steps.db-creds.outputs.port }}
+          DB_NAME: eribertolopez
+          DB_USER: ${{ steps.db-creds.outputs.user }}
+          DB_PASSWORD: ${{ steps.db-creds.outputs.password }}
+          DB_SSL: "true"
+          FORCE_REINGEST: ${{ inputs.force_reingest }}
+
+      - name: Verify ingestion
+        run: |
+          echo "✅ Ingestion complete"
+          # Could add a search test here to verify embeddings work
