@@ -23,9 +23,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
-      - run: npm ci
+      - name: Install dependencies
+        run: cd frontend && npm ci
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -33,7 +33,7 @@ jobs:
           aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
 
       - name: Run ingestion
-        run: npx tsx scripts/ingest.ts
+        run: NODE_PATH=frontend/node_modules npx tsx scripts/ingest.ts
         env:
           EMBEDDING_PROVIDER: bedrock
           VECTOR_STORE_PROVIDER: s3
