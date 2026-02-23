@@ -100,7 +100,16 @@ export class ChatApiStack extends cdk.Stack {
         minify: true,
         sourceMap: true,
         externalModules: ["@aws-sdk/*"],
-        nodePaths: ["../../frontend/node_modules"],
+        define: {
+          "process.env.NODE_ENV": JSON.stringify("production"),
+        },
+        commandHooks: {
+          beforeBundling(inputDir: string, outputDir: string): string[] {
+            return [`cd ${inputDir}/../../frontend && npm ci --ignore-scripts`];
+          },
+          afterBundling(): string[] { return []; },
+          beforeInstall(): string[] { return []; },
+        },
       },
     });
 
@@ -126,10 +135,6 @@ export class ChatApiStack extends cdk.Stack {
         ],
         allowHeaders: ["Content-Type"],
         maxAge: cdk.Duration.days(1),
-      },
-      throttle: {
-        burstLimit: 100,
-        rateLimit: 50,
       },
     });
 
