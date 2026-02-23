@@ -19,7 +19,7 @@ import {
 } from "@aws-sdk/client-s3";
 
 // ─── Config ───────────────────────────────────────────────
-const CONTENT_DIR = path.resolve(__dirname, "..", "frontend", "content");
+const CONTENT_DIR = process.env.CONTENT_DIR || path.resolve(__dirname, "..", "frontend", "content");
 const CHUNK_SIZE = 800;
 const CHUNK_OVERLAP = 200;
 const EMBED_MODEL = process.env.BEDROCK_EMBED_MODEL_ID || "amazon.titan-embed-text-v2:0";
