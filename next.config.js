@@ -3,11 +3,10 @@
  */
 const nextConfig = {
   images: { unoptimized: true },
-  // Static export for S3/CloudFront deployment
-  // API routes (pages/api/*) are excluded automatically in static export.
+  // Static export for S3/CloudFront deployment (production builds only).
+  // In local dev, API routes (pages/api/*) are available at /api/chat.
   // In production, ChatWidget uses NEXT_PUBLIC_CHAT_API_URL (API Gateway).
-  // In local dev, run `npm run dev` (not `next export`) to use /api/chat.
-  output: "export",
+  ...(process.env.NODE_ENV === "production" && { output: "export" }),
 };
 
 module.exports = nextConfig;
