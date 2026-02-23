@@ -47,7 +47,7 @@ export const pipelineConfig = {
   },
   get vectorStore() {
     return {
-      provider: env("VECTOR_STORE_PROVIDER", "s3") as "s3" | "supabase" | "aurora",
+      provider: env("VECTOR_STORE_PROVIDER", "supabase") as "supabase" | "aurora",
       url: () => envRequired("SUPABASE_URL"),
       key: () => envRequired("SUPABASE_SERVICE_ROLE_KEY"),
       batchSize: env("UPSERT_BATCH_SIZE", 100),

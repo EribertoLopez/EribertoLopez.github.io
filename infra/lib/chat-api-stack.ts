@@ -1,12 +1,11 @@
 // infra/lib/chat-api-stack.ts — Chat API Stack
-// Lambda + HTTP API Gateway + S3 (embeddings) + Bedrock (AI)
-// No database required — embeddings stored as JSON in S3, searched in-memory.
+// Lambda + HTTP API Gateway + IAM for RAG-powered chat
+// See docs/AWS_MIGRATION_PLAN.md "Phase 2"
 
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as iam from "aws-cdk-lib/aws-iam";
-import * as s3 from "aws-cdk-lib/aws-s3";
 import * as apigwv2 from "aws-cdk-lib/aws-apigatewayv2";
 import * as apigwv2Integrations from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import * as logs from "aws-cdk-lib/aws-logs";
@@ -15,6 +14,16 @@ import { Construct } from "constructs";
 export interface ChatApiStackProps extends cdk.StackProps {
   /** Origins allowed for CORS (e.g. ["https://eribertolopez.com"]) */
   allowedOrigins: string[];
+  /** Database connection details */
+  dbHost: string;
+  dbPort: string;
+  dbName: string;
+  dbUser: string;
+  dbPassword: string;
+  /** Optional: VPC + security group for RDS access */
+  vpc?: cdk.aws_ec2.IVpc;
+  vpcSubnets?: cdk.aws_ec2.SubnetSelection;
+  securityGroups?: cdk.aws_ec2.ISecurityGroup[];
   /** AWS region for Bedrock */
   bedrockRegion?: string;
   /** Bedrock model IDs */
@@ -25,7 +34,6 @@ export interface ChatApiStackProps extends cdk.StackProps {
 export class ChatApiStack extends cdk.Stack {
   public readonly apiUrl: string;
   public readonly chatFunction: lambda.IFunction;
-  public readonly embeddingsBucket: s3.IBucket;
 
   constructor(scope: Construct, id: string, props: ChatApiStackProps) {
     super(scope, id, props);
@@ -37,24 +45,17 @@ export class ChatApiStack extends cdk.Stack {
       props.bedrockEmbedModelId ?? "amazon.titan-embed-text-v2:0";
 
     // ─────────────────────────────────────────────────────
-    // S3 Bucket for embeddings JSON
-    // ─────────────────────────────────────────────────────
-    const embeddingsBucket = new s3.Bucket(this, "EmbeddingsBucket", {
-      bucketName: `eribertolopez-chat-embeddings-${this.account}`,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-      encryption: s3.BucketEncryption.S3_MANAGED,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-    });
-    this.embeddingsBucket = embeddingsBucket;
-
-    // ─────────────────────────────────────────────────────
-    // IAM Role — Bedrock + S3 access (no VPC/DB needed)
+    // IAM Role — least-privilege Bedrock + RDS access
     // ─────────────────────────────────────────────────────
     const lambdaRole = new iam.Role(this, "ChatLambdaRole", {
       assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName(
           "service-role/AWSLambdaBasicExecutionRole"
+        ),
+        // VPC access for RDS
+        iam.ManagedPolicy.fromAwsManagedPolicyName(
+          "service-role/AWSLambdaVPCAccessExecutionRole"
         ),
       ],
     });
@@ -73,11 +74,8 @@ export class ChatApiStack extends cdk.Stack {
       })
     );
 
-    // S3 read access for embeddings
-    embeddingsBucket.grantRead(lambdaRole);
-
     // ─────────────────────────────────────────────────────
-    // Lambda Function
+    // Lambda Function — bundled from lambda/ directory
     // ─────────────────────────────────────────────────────
     const chatFn = new lambdaNode.NodejsFunction(this, "ChatHandler", {
       entry: "../lambda/handler.ts",
@@ -89,22 +87,33 @@ export class ChatApiStack extends cdk.Stack {
       environment: {
         EMBEDDING_PROVIDER: "bedrock",
         CHAT_PROVIDER: "bedrock",
-        VECTOR_STORE_PROVIDER: "s3",
+        VECTOR_STORE_PROVIDER: "aurora",
         BEDROCK_CHAT_MODEL_ID: chatModelId,
         BEDROCK_EMBED_MODEL_ID: embedModelId,
-        EMBEDDINGS_S3_BUCKET: embeddingsBucket.bucketName,
-        EMBEDDINGS_S3_KEY: "chat/embeddings.json",
+        AWS_REGION: bedrockRegion,
+        DB_HOST: props.dbHost,
+        DB_PORT: props.dbPort,
+        DB_NAME: props.dbName,
+        DB_USER: props.dbUser,
+        DB_PASSWORD: props.dbPassword,
+        DB_SSL: "true",
         ALLOWED_ORIGINS: props.allowedOrigins.join(","),
       },
+      ...(props.vpc && {
+        vpc: props.vpc,
+        vpcSubnets: props.vpcSubnets,
+        securityGroups: props.securityGroups,
+      }),
       bundling: {
         minify: true,
         sourceMap: true,
-        externalModules: ["@aws-sdk/*"],
+        externalModules: ["@aws-sdk/*"], // SDK v3 is included in Lambda runtime
       },
     });
 
     this.chatFunction = chatFn;
 
+    // Log group with retention
     new logs.LogGroup(this, "ChatLogGroup", {
       logGroupName: `/aws/lambda/${chatFn.functionName}`,
       retention: logs.RetentionDays.ONE_MONTH,
@@ -126,6 +135,7 @@ export class ChatApiStack extends cdk.Stack {
         allowHeaders: ["Content-Type"],
         maxAge: cdk.Duration.days(1),
       },
+      // Default stage with throttling
       throttle: {
         burstLimit: 100,
         rateLimit: 50,
@@ -133,7 +143,10 @@ export class ChatApiStack extends cdk.Stack {
     });
 
     const lambdaIntegration =
-      new apigwv2Integrations.HttpLambdaIntegration("ChatIntegration", chatFn);
+      new apigwv2Integrations.HttpLambdaIntegration(
+        "ChatIntegration",
+        chatFn
+      );
 
     httpApi.addRoutes({
       path: "/chat",
@@ -161,11 +174,6 @@ export class ChatApiStack extends cdk.Stack {
     new cdk.CfnOutput(this, "ChatFunctionArn", {
       value: chatFn.functionArn,
       description: "Chat Lambda function ARN",
-    });
-
-    new cdk.CfnOutput(this, "EmbeddingsBucketName", {
-      value: embeddingsBucket.bucketName,
-      description: "S3 bucket for embeddings",
     });
   }
 }
