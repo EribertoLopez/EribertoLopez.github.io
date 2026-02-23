@@ -14,6 +14,10 @@ const STORAGE_KEY = "chat-widget-messages";
 const MAX_HISTORY = 20; // Sliding window for API calls
 const MAX_MESSAGE_LENGTH = 2000;
 
+// Chat API URL — uses API Gateway in production, local Next.js API route in dev
+const CHAT_API_URL =
+  process.env.NEXT_PUBLIC_CHAT_API_URL || "/api/chat";
+
 function loadMessages(): Message[] {
   if (typeof window === "undefined") return [];
   try {
@@ -98,7 +102,7 @@ export default function ChatWidget() {
       // Sliding window: only send last MAX_HISTORY messages to API
       const historyToSend = newMessages.slice(1).slice(-MAX_HISTORY);
 
-      const response = await fetch("/api/chat", {
+      const response = await fetch(CHAT_API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
