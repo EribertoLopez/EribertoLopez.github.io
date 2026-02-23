@@ -1,0 +1,51 @@
+# Run Document Ingestion Pipeline
+# Loads documents, embeds via Bedrock Titan, stores as JSON in S3
+name: Ingest Documents
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_reingest:
+        description: "Force re-ingestion (replaces existing embeddings)"
+        type: boolean
+        default: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_INGESTION_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+      - name: Run ingestion
+        run: npx tsx scripts/ingest.ts
+        env:
+          EMBEDDING_PROVIDER: bedrock
+          VECTOR_STORE_PROVIDER: s3
+          BEDROCK_EMBED_MODEL_ID: amazon.titan-embed-text-v2:0
+          EMBEDDINGS_S3_BUCKET: ${{ vars.EMBEDDINGS_S3_BUCKET }}
+          EMBEDDINGS_S3_KEY: chat/embeddings.json
+          FORCE_REINGEST: ${{ inputs.force_reingest }}
+
+      - name: Verify
+        run: |
+          SIZE=$(aws s3api head-object \
+            --bucket "${{ vars.EMBEDDINGS_S3_BUCKET }}" \
+            --key "chat/embeddings.json" \
+            --query 'ContentLength' --output text)
+          echo "✅ Embeddings uploaded: ${SIZE} bytes"

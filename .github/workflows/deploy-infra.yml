@@ -1,0 +1,76 @@
+# Deploy Infrastructure via CDK
+name: Deploy Infrastructure
+
+on:
+  push:
+    branches: [main]
+    paths: ["infra/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-infra
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_CDK_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+      - name: Install CDK dependencies
+        run: cd infra && npm ci
+
+      - name: CDK diff
+        run: cd infra && npx cdk diff --all 2>&1 || true
+
+      - name: CDK deploy
+        run: cd infra && npx cdk deploy --all --require-approval never --outputs-file cdk-outputs.json
+
+      - name: Store outputs in SSM
+        run: |
+          # Extract Chat API URL from CDK outputs and store in SSM for other workflows
+          API_URL=$(cat infra/cdk-outputs.json | python3 -c "
+          import json, sys
+          outputs = json.load(sys.stdin)
+          for stack in outputs.values():
+            for key, val in stack.items():
+              if 'ChatApiUrl' in key:
+                print(val)
+                sys.exit(0)
+          " 2>/dev/null || echo "")
+
+          if [ -n "$API_URL" ]; then
+            aws ssm put-parameter \
+              --name "${{ vars.SSM_PREFIX || '/eribertolopez' }}/chat-api-url" \
+              --value "$API_URL" \
+              --type String \
+              --overwrite
+            echo "✅ Stored Chat API URL: $API_URL"
+          fi
+
+      # Trigger site redeploy if API URL changed (new build with updated NEXT_PUBLIC_CHAT_API_URL)
+      - name: Trigger site deploy
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy-site.yml',
+              ref: 'main'
+            })

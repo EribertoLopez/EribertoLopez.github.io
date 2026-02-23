@@ -1,0 +1,81 @@
+# Deploy Chat API Lambda
+# Triggers on lambda/ changes or manual dispatch
+name: Deploy API
+
+on:
+  push:
+    branches: [main]
+    paths: ["lambda/**", "frontend/lib/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_LAMBDA_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+      # Bundle Lambda with esbuild (same as CDK NodejsFunction does)
+      - name: Bundle Lambda
+        run: |
+          npx esbuild lambda/handler.ts \
+            --bundle \
+            --platform=node \
+            --target=node22 \
+            --outfile=dist/lambda/handler.js \
+            --minify \
+            --sourcemap \
+            --external:@aws-sdk/*
+
+      - name: Package and deploy
+        run: |
+          cd dist/lambda
+          zip -r ../../function.zip .
+          cd ../..
+          FUNCTION_NAME=$(aws ssm get-parameter \
+            --name "${{ vars.SSM_PREFIX || '/eribertolopez' }}/chat-function-name" \
+            --query 'Parameter.Value' --output text 2>/dev/null \
+            || echo "${{ vars.CHAT_FUNCTION_NAME }}")
+          aws lambda update-function-code \
+            --function-name "$FUNCTION_NAME" \
+            --zip-file fileb://function.zip
+
+      - name: Wait for update
+        run: |
+          FUNCTION_NAME=$(aws ssm get-parameter \
+            --name "${{ vars.SSM_PREFIX || '/eribertolopez' }}/chat-function-name" \
+            --query 'Parameter.Value' --output text 2>/dev/null \
+            || echo "${{ vars.CHAT_FUNCTION_NAME }}")
+          aws lambda wait function-updated --function-name "$FUNCTION_NAME"
+
+      - name: Smoke test
+        run: |
+          API_URL=$(aws ssm get-parameter \
+            --name "${{ vars.SSM_PREFIX || '/eribertolopez' }}/chat-api-url" \
+            --query 'Parameter.Value' --output text 2>/dev/null \
+            || echo "${{ vars.CHAT_API_URL }}")
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/health")
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "❌ Health check failed: HTTP $HTTP_STATUS"
+            exit 1
+          fi
+          echo "✅ Health check passed"
