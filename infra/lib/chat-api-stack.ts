@@ -86,7 +86,7 @@ export class ChatApiStack extends cdk.Stack {
       ),
       handler: "handler.handler",
       runtime: lambda.Runtime.NODEJS_22_X,
-      memorySize: 1024,
+      memorySize: 512,
       timeout: cdk.Duration.seconds(120),
       role: lambdaRole,
       environment: {
