@@ -38,8 +38,7 @@ jobs:
             --bundle \
             --platform=node \
             --target=node22 \
-            --outfile=dist/ingest.js \
-            --external:@aws-sdk/*
+            --outfile=dist/ingest.js
 
       - name: Run ingestion
         run: node dist/ingest.js
