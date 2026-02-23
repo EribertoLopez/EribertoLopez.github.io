@@ -74,7 +74,7 @@ export class ChatApiStack extends cdk.Stack {
     );
 
     // S3 read access for embeddings
-    embeddingsBucket.grantRead(lambdaRole);
+    embeddingsBucket.grantReadWrite(lambdaRole);
 
     // ─────────────────────────────────────────────────────
     // Lambda Function — pre-bundled code from dist/lambda/
