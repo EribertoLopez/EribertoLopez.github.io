@@ -5,7 +5,6 @@
 import * as path from "path";
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as lambdaNode from "aws-cdk-lib/aws-lambda-nodejs";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as apigwv2 from "aws-cdk-lib/aws-apigatewayv2";
@@ -78,11 +77,14 @@ export class ChatApiStack extends cdk.Stack {
     embeddingsBucket.grantRead(lambdaRole);
 
     // ─────────────────────────────────────────────────────
-    // Lambda Function
+    // Lambda Function — pre-bundled code from dist/lambda/
+    // The deploy-infra workflow bundles with esbuild before cdk deploy
     // ─────────────────────────────────────────────────────
-    const chatFn = new lambdaNode.NodejsFunction(this, "ChatHandler", {
-      entry: path.join(__dirname, "..", "..", "lambda", "handler.ts"),
-      handler: "handler",
+    const chatFn = new lambda.Function(this, "ChatHandler", {
+      code: lambda.Code.fromAsset(
+        path.join(__dirname, "..", "..", "dist", "lambda")
+      ),
+      handler: "handler.handler",
       runtime: lambda.Runtime.NODEJS_22_X,
       memorySize: 512,
       timeout: cdk.Duration.seconds(60),
@@ -97,21 +99,6 @@ export class ChatApiStack extends cdk.Stack {
         EMBEDDINGS_S3_KEY: "chat/embeddings.json",
         ALLOWED_ORIGINS: props.allowedOrigins.join(","),
       },
-      bundling: {
-        minify: true,
-        sourceMap: true,
-        externalModules: ["@aws-sdk/*"],
-        define: {
-          "process.env.NODE_ENV": JSON.stringify("production"),
-        },
-        commandHooks: {
-          beforeBundling(inputDir: string, _outputDir: string): string[] {
-            return [`cd ${inputDir}/../frontend && npm ci --ignore-scripts`];
-          },
-          afterBundling(): string[] { return []; },
-          beforeInstall(): string[] { return []; },
-        },
-      },
     });
 
     this.chatFunction = chatFn;
@@ -123,7 +110,7 @@ export class ChatApiStack extends cdk.Stack {
     });
 
     // ─────────────────────────────────────────────────────
-    // HTTP API Gateway with CORS + throttling
+    // HTTP API Gateway with CORS
     // ─────────────────────────────────────────────────────
     const httpApi = new apigwv2.HttpApi(this, "ChatHttpApi", {
       apiName: "portfolio-chat-api",

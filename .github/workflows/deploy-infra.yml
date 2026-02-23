@@ -4,7 +4,7 @@ name: Deploy Infrastructure
 on:
   push:
     branches: [main]
-    paths: ["infra/**"]
+    paths: ["infra/**", "lambda/**", "frontend/lib/**"]
   workflow_dispatch:
 
 concurrency:
@@ -24,19 +24,30 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_CDK_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
 
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+
       - name: Install CDK dependencies
         run: cd infra && npm install
 
-      # Also install frontend deps (Lambda bundling needs them)
-      - name: Install frontend dependencies
-        run: cd frontend && npm ci
+      # Pre-bundle Lambda (CDK stack references dist/lambda/)
+      - name: Bundle Lambda
+        run: |
+          npx esbuild lambda/handler.ts \
+            --bundle \
+            --platform=node \
+            --target=node22 \
+            --outfile=dist/lambda/handler.js \
+            --minify \
+            --sourcemap \
+            --external:@aws-sdk/* \
+            --node-paths=frontend/node_modules
 
       - name: CDK diff
         run: cd infra && npx cdk diff --all 2>&1 || true
@@ -46,7 +57,6 @@ jobs:
 
       - name: Store outputs in SSM
         run: |
-          # Extract Chat API URL from CDK outputs and store in SSM for other workflows
           API_URL=$(cat infra/cdk-outputs.json | python3 -c "
           import json, sys
           outputs = json.load(sys.stdin)
@@ -54,6 +64,16 @@ jobs:
             for key, val in stack.items():
               if 'ChatApiUrl' in key:
                 print(val)
+                sys.exit(0)
+          " 2>/dev/null || echo "")
+
+          FUNCTION_NAME=$(cat infra/cdk-outputs.json | python3 -c "
+          import json, sys
+          outputs = json.load(sys.stdin)
+          for stack in outputs.values():
+            for key, val in stack.items():
+              if 'ChatFunctionArn' in key:
+                print(val.split(':')[-1])
                 sys.exit(0)
           " 2>/dev/null || echo "")
 
@@ -66,7 +86,15 @@ jobs:
             echo "✅ Stored Chat API URL: $API_URL"
           fi
 
-      # Trigger site redeploy if API URL changed (new build with updated NEXT_PUBLIC_CHAT_API_URL)
+          if [ -n "$FUNCTION_NAME" ]; then
+            aws ssm put-parameter \
+              --name "${{ vars.SSM_PREFIX || '/eribertolopez' }}/chat-function-name" \
+              --value "$FUNCTION_NAME" \
+              --type String \
+              --overwrite
+            echo "✅ Stored Function Name: $FUNCTION_NAME"
+          fi
+
       - name: Trigger site deploy
         if: success()
         uses: actions/github-script@v7
