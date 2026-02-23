@@ -93,8 +93,9 @@ def main():
     # Parse + chunk
     all_chunks = []
     base = Path(CONTENT_DIR).resolve().parent.parent  # repo root
-    print("\nChunking files...")
+    print("\nChunking files...", flush=True)
     for fp in files:
+        print(f"  Reading {fp.name}...", flush=True)
         rel = str(fp.relative_to(base))
         content = fp.read_text()
         meta, body = parse_frontmatter(content)
