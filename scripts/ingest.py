@@ -6,6 +6,10 @@ Standalone document ingestion: markdown → Bedrock Titan embeddings → S3 JSON
 import json, os, re, hashlib, sys
 from pathlib import Path
 
+# Force unbuffered output so GHA shows logs in real time
+sys.stdout.reconfigure(line_buffering=True)
+sys.stderr.reconfigure(line_buffering=True)
+
 import boto3
 
 CONTENT_DIR = os.environ.get("CONTENT_DIR", str(Path(__file__).resolve().parent.parent / "frontend" / "content"))
