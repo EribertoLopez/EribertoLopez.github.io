@@ -3,10 +3,10 @@ const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
   images: { unoptimized: true },
-  // Explicitly inline NEXT_PUBLIC_* env vars into the client bundle.
+  // Explicitly inline env vars into the client bundle.
   // Required for static export (output: "export") where process.env isn't available at runtime.
   env: {
-    NEXT_PUBLIC_CHAT_API_URL: process.env.NEXT_PUBLIC_CHAT_API_URL || "",
+    NEXT_PUBLIC_CHAT_API_URL: process.env.NEXT_PUBLIC_CHAT_API_URL || "https://grtne76mp9.execute-api.us-east-1.amazonaws.com",
   },
   // Static export for S3/CloudFront deployment (production builds only).
   // In local dev, API routes (pages/api/*) are available at /api/chat.
