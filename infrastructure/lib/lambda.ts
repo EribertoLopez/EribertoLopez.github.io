@@ -164,6 +164,29 @@ export class LambdaStack extends cdk.Stack {
           },
         },
       },
+      // Chat API handler (no VPC — Bedrock + S3 only)
+      {
+        id: "ChatHandler",
+        lambdaFunctionProps: {
+          functionName: `${lambdaNamePrefix}-Chat`,
+          runtime: lambda.Runtime.NODEJS_22_X,
+          handler: "chat-api.handler",
+          code: lambda.Code.fromAsset(path.resolve("../backend/dist")),
+          memorySize: 1024,
+          timeout: cdk.Duration.seconds(120),
+          role: iamStack?.chatRole,
+          environmentEncryption: lambdaKmsKey,
+          environment: {
+            BEDROCK_CHAT_MODEL_ID: "anthropic.claude-3-haiku-20240307-v1:0",
+            BEDROCK_EMBED_MODEL_ID: "amazon.titan-embed-text-v2:0",
+            EMBEDDINGS_S3_BUCKET: `eribertolopez-chat-embeddings-${process.env.CDK_DEFAULT_ACCOUNT || ""}`,
+            EMBEDDINGS_S3_KEY: "chat/embeddings.json",
+            ALLOWED_ORIGINS: "https://eribertolopez.com,https://www.eribertolopez.com,https://d3flqn9a3eglfg.cloudfront.net,http://localhost:3000",
+            TOP_K: "5",
+            CHAT_MAX_TOKENS: "1024",
+          },
+        },
+      },
     ];
 
     // ─────────────────────────────────────────────────────────────────

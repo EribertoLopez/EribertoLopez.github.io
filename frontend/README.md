@@ -1,69 +1,188 @@
-# A statically generated blog example using Next.js, Markdown, and TypeScript
+# Frontend
 
-This is the existing [blog-starter](https://github.com/vercel/next.js/tree/canary/examples/blog-starter) plus TypeScript.
+[Back to root](../README.md)
 
-This example showcases Next.js's [Static Generation](https://nextjs.org/docs/basic-features/pages) feature using Markdown files as the data source.
+Next.js static site using **Pages Router** with auto-generated API clients from OpenAPI specification.
 
-The blog posts are stored in `/_posts` as Markdown files with front matter support. Adding a new Markdown file in there will create a new blog post.
+## Architecture
 
-To create the blog posts we use [`remark`](https://github.com/remarkjs/remark) and [`remark-html`](https://github.com/remarkjs/remark-html) to convert the Markdown files into an HTML string, and then send it down as a prop to the page. The metadata of every post is handled by [`gray-matter`](https://github.com/jonschlinkert/gray-matter) and also sent in props to the page.
-
-## Demo
-
-[https://next-blog-starter.vercel.app/](https://next-blog-starter.vercel.app/)
-
-## Deploy your own
-
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=next-example) or preview live with [StackBlitz](https://stackblitz.com/github/vercel/next.js/tree/canary/examples/blog-starter)
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/vercel/next.js/tree/canary/examples/blog-starter&project-name=blog-starter&repository-name=blog-starter)
-
-### Related examples
-
-- [WordPress](/examples/cms-wordpress)
-- [DatoCMS](/examples/cms-datocms)
-- [Sanity](/examples/cms-sanity)
-- [TakeShape](/examples/cms-takeshape)
-- [Prismic](/examples/cms-prismic)
-- [Contentful](/examples/cms-contentful)
-- [Strapi](/examples/cms-strapi)
-- [Agility CMS](/examples/cms-agilitycms)
-- [Cosmic](/examples/cms-cosmic)
-- [ButterCMS](/examples/cms-buttercms)
-- [Storyblok](/examples/cms-storyblok)
-- [GraphCMS](/examples/cms-graphcms)
-- [Kontent](/examples/cms-kontent)
-- [Umbraco Heartcore](/examples/cms-umbraco-heartcore)
-- [Builder.io](/examples/cms-builder-io)
-- [TinaCMS](/examples/cms-tina/)
-- [Enterspeed](/examples/cms-enterspeed)
-
-## How to use
-
-Execute [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [npm](https://docs.npmjs.com/cli/init), [Yarn](https://yarnpkg.com/lang/en/docs/cli/create/), or [pnpm](https://pnpm.io) to bootstrap the example:
-
-```bash
-npx create-next-app --example blog-starter blog-starter-app
+```
+frontend/
+├── pages/                  # Next.js Pages Router
+│   ├── _app.tsx            # App wrapper (ChatWidget, global providers)
+│   ├── _document.tsx       # Document customization
+│   ├── index.tsx           # Home page
+│   ├── contact/            # Contact page
+│   ├── latest/             # Blog posts (index + [slug])
+│   ├── mscs/               # MSCS program page
+│   ├── projects/           # Projects (index + [slug])
+│   ├── resume/             # Resume (index + [slug])
+│   └── api/                # API routes (chat proxy)
+├── components/             # React components
+│   ├── common/             # Shared components
+│   └── admin/              # Admin-specific components
+├── generated/              # Auto-generated from OpenAPI (do not edit)
+│   ├── apis/               # API client classes
+│   ├── models/             # TypeScript interfaces
+│   ├── services/           # Service layer
+│   └── runtime.ts          # API runtime configuration
+├── hooks/                  # Custom React hooks
+├── lib/                    # Utilities and analytics
+├── providers/              # React context providers
+├── public/                 # Static assets
+├── styles/                 # Global CSS
+└── out/                    # Static export output
 ```
 
-```bash
-yarn create next-app --example blog-starter blog-starter-app
-```
+## Quick Start
+
+### 1. Install Dependencies
 
 ```bash
-pnpm create next-app --example blog-starter blog-starter-app
+npm install
 ```
 
-Your blog should be up and running on [http://localhost:3000](http://localhost:3000)! If it doesn't work, post on [GitHub discussions](https://github.com/vercel/next.js/discussions).
+### 2. Configure Environment
 
-Deploy it to the cloud with [Vercel](https://vercel.com/new?utm_source=github&utm_medium=readme&utm_campaign=next-example) ([Documentation](https://nextjs.org/docs/deployment)).
+Copy `env.example` to `.env.local` and configure:
 
-# Notes
+```bash
+cp env.example .env.local
+```
 
-`blog-starter` uses [Tailwind CSS](https://tailwindcss.com) [(v3.0)](https://tailwindcss.com/blog/tailwindcss-v3).
-# Trigger deployment
-# Testing deployment
-# Deploy with tsx
-# Deploy with bin files
+### 3. Run Development Server
 
-# Designed with <3 by EribertoLopez
+```bash
+npm run dev
+```
+
+Or from the project root:
+
+```bash
+npm run frontend:dev
+```
+
+## Environment Variables
+
+All environment variables must be prefixed with `NEXT_PUBLIC_` to be available in the browser.
+
+### API Configuration
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `NEXT_PUBLIC_API_URL` | Yes | Backend API endpoint | `http://localhost:4566/local` |
+| `NEXT_PUBLIC_ENVIRONMENT` | Yes | Environment name | `local`, `dev`, `prod` |
+| `NEXT_PUBLIC_REQUIRES_AUTH` | No | Enable authentication | `true` |
+
+### Analytics
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_HOTJAR_SITE_ID` | No | Hotjar tracking ID |
+| `NEXT_PUBLIC_GA_ID` | No | Google Analytics ID |
+
+
+### Example `.env.local` for Local Development
+
+```bash
+NEXT_PUBLIC_API_URL=http://5a1vweafmy.execute-api.localhost.localstack.cloud:4566/local
+NEXT_PUBLIC_ENVIRONMENT=local
+NEXT_PUBLIC_REQUIRES_AUTH=true
+
+# Analytics (optional for local)
+NEXT_PUBLIC_HOTJAR_SITE_ID=
+NEXT_PUBLIC_GA_ID=
+```
+
+## Generated API Clients
+
+The `generated/` directory contains TypeScript code auto-generated from the OpenAPI specification. **Do not edit these files directly** - they are overwritten when running code generation.
+
+### Regenerating Clients
+
+From the project root:
+
+```bash
+npm run codegen
+```
+
+This regenerates both frontend and backend code from `codegen/openapi.yaml`.
+
+### Using Generated APIs
+
+```typescript
+import { Configuration } from "@/generated";
+
+// Configure the API client
+const config = new Configuration({
+  basePath: process.env.NEXT_PUBLIC_API_URL,
+});
+
+// Use generated API clients with the configuration
+```
+
+### Generated Structure
+
+| Directory | Contents |
+|-----------|----------|
+| `generated/apis/` | API client classes (one per OpenAPI tag) |
+| `generated/models/` | TypeScript interfaces for request/response objects |
+| `generated/services/` | Service interfaces for dependency injection |
+| `generated/runtime.ts` | Base configuration and fetch wrapper |
+
+## Static Export
+
+The frontend is configured for static export to S3/CloudFront:
+
+```bash
+npm run build
+```
+
+This generates static HTML/CSS/JS in the `out/` directory.
+
+### Build Output
+
+```
+out/
+├── _next/           # Next.js chunks and assets
+├── index.html       # Home page
+├── contact.html     # Contact page
+├── latest.html      # Blog posts listing
+├── mscs.html        # MSCS program
+├── projects.html    # Projects listing
+├── resume.html      # Resume listing
+└── *.png, *.jpg     # Static images
+```
+
+## Development Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server with hot reload |
+| `npm run build` | Build static export |
+| `npm run start` | Start production server (for testing) |
+| `npm run lint` | Run ESLint |
+
+## Styling
+
+- **Tailwind CSS** for utility-first styling
+- **CSS Variables** for theming (see `styles/globals.css`)
+- **shadcn/ui** components (configured in `components.json`)
+
+## Authentication
+
+Authentication is handled via the `use-admin-auth` hook and `AuthProvider`. See [`docs/AUTH-README.md`](docs/AUTH-README.md) for details.
+
+## Deployment
+
+The frontend is deployed to AWS S3 + CloudFront via CDK:
+
+```bash
+# From project root
+npm run deploy:frontend
+```
+
+This:
+1. Builds the static export
+2. Uploads to S3
+3. Invalidates CloudFront cache

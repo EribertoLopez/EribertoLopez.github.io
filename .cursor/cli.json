@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(.pipelines/**)",
+      "Read(AGENTS.md)",
+      "Read(.cursor/rules/**)",
+      "Read(.cursor/knowledge/**)",
+      "Read(docs/**)",
+      "Read(**/CONTRIBUTING.md)",
+      "Read(diff.txt)",
+      "Read(review_output.txt)",
+      "Read(review_comment.txt)",
+      "Read(improve_output.txt)",
+      "Write(.cursor/knowledge/expertise.yaml)",
+      "Shell(cat .pipelines/cursor-code-review-prompt.md)",
+      "Shell(cat .pipelines/improve-agent-prompt.md)",
+      "Shell(cat diff.txt)",
+      "Shell(git diff .pipelines/azure-pipelines-cursor-code-review.yml)",
+      "Shell(git diff HEAD~10..HEAD --stat)",
+      "Shell(git log --oneline -20)",
+      "Shell(git log --format=\"%h %s\" -20)"
+    ],
+    "deny": [
+      "Shell(git push *)",
+      "Shell(gh pr create *)"
+    ]
+  }
+}

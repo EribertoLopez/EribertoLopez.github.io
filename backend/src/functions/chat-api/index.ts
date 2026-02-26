@@ -1,4 +1,4 @@
-// lambda/handler.ts — Fully self-contained Chat API Lambda Handler
+// backend/src/functions/chat-api/index.ts — Fully self-contained Chat API Lambda Handler
 // NO imports from frontend/lib/ — all logic inline to avoid any transitive deps
 
 import * as crypto from "crypto";
@@ -16,9 +16,15 @@ import {
 // --- Types ---
 interface APIGatewayEvent {
   routeKey?: string;
+  httpMethod?: string;
+  resource?: string;
+  rawPath?: string;
   headers?: Record<string, string>;
   body?: string;
-  requestContext?: { http?: { method?: string; sourceIp?: string } };
+  requestContext?: {
+    http?: { method?: string; sourceIp?: string };
+    identity?: { sourceIp?: string };
+  };
 }
 
 interface ChatMessage {
@@ -207,21 +213,23 @@ function chunkText(text: string, size: number, overlap: number): string[] {
 
 // --- Handler ---
 export async function handler(event: APIGatewayEvent) {
-  const origin = event.headers?.origin;
+  // Support both HTTP API v2 (routeKey) and REST API (httpMethod + resource)
+  const routeKey = event.routeKey || `${event.requestContext?.http?.method || event.httpMethod} ${event.resource || event.rawPath || ""}`;
+  const origin = event.headers?.origin || event.headers?.Origin;
 
   try {
-    if (event.requestContext?.http?.method === "OPTIONS") {
+    if (event.requestContext?.http?.method === "OPTIONS" || event.httpMethod === "OPTIONS") {
       return { statusCode: 204, headers: { ...corsHeaders(origin), "Access-Control-Max-Age": "86400" }, body: "" };
     }
 
     // Health
-    if (event.routeKey === "GET /health") {
+    if (routeKey === "GET /health") {
       return respond(200, { status: "ok", provider: "bedrock" }, origin);
     }
 
     // Chat
-    if (event.routeKey === "POST /chat") {
-      const ip = event.requestContext?.http?.sourceIp || "unknown";
+    if (routeKey === "POST /chat") {
+      const ip = event.requestContext?.http?.sourceIp || event.requestContext?.identity?.sourceIp || "unknown";
       if (isRateLimited(ip)) {
         return respond(429, { error: "Too many requests." }, origin);
       }
@@ -241,7 +249,7 @@ export async function handler(event: APIGatewayEvent) {
     }
 
     // Ingest
-    if (event.routeKey === "POST /ingest") {
+    if (routeKey === "POST /ingest") {
       const parsed = JSON.parse(event.body || "{}");
       const docs: Array<{ path: string; content: string }> = parsed.documents;
       if (!docs?.length) return respond(400, { error: "No documents" }, origin);

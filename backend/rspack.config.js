@@ -113,13 +113,13 @@ module.exports = {
     ],
   },
 
-  externals: {
+  externals: [
     // Exclude AWS SDK v2; it's in the Lambda runtime already
-    "aws-sdk": "commonjs2 aws-sdk",
-    // Exclude AWS SDK v3 client packages (optional - uncomment if needed)
-    // '@aws-sdk/client-dynamodb': 'commonjs2 @aws-sdk/client-dynamodb',
-    // '@aws-sdk/client-s3': 'commonjs2 @aws-sdk/client-s3',
-  },
+    { "aws-sdk": "commonjs2 aws-sdk" },
+    // Exclude AWS SDK v3 — available in Lambda Node.js 22 runtime
+    /^@aws-sdk\/.*/,
+    /^@smithy\/.*/,
+  ],
 
   devtool: "source-map",
 

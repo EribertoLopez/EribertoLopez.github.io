@@ -1,0 +1,321 @@
+# Project Expertise — EribertoLopez.github.io
+# Structured knowledge base for the personal portfolio with serverless backend.
+# Mutable sections: best_practices, known_issues, potential_enhancements,
+#   *.examples, *.real_examples, decision_trees.*.observed_usage
+# Stable sections: overview, core_implementation, key_operations (structure),
+#   patterns (structure), safety_protocols
+# Last updated: 2026-02-23
+
+overview:
+  description: |
+    Personal portfolio and blog with serverless backend (RAG chat, auth, blog).
+    OpenAPI-driven code generation, AWS CDK infrastructure, and GitHub Pages frontend.
+  scope: |
+    Covers backend (Lambda + TypeORM), frontend (Next.js Pages Router), infrastructure (CDK),
+    code generation (OpenAPI + Mustache), CI/CD (GitHub Actions),
+    and RAG chat system (Bedrock + S3 embeddings). Excludes template-specific
+    patterns that do not apply to this project.
+  rationale: |
+    A unified knowledge base captures cross-cutting patterns that emerge from
+    the interplay between layers (e.g., OpenAPI schema driving both frontend
+    clients and backend entities). Splitting into per-layer domains would miss
+    these integration insights.
+
+core_implementation:
+  primary_directories:
+    - path: backend/
+      purpose: Serverless Lambda functions with rspack bundling and TypeORM
+    - path: frontend/
+      purpose: Next.js static site (Pages Router) with generated API clients
+    - path: infrastructure/
+      purpose: AWS CDK stacks with configurable toggles and naming conventions
+    - path: codegen/
+      purpose: OpenAPI spec and Mustache templates for code generation
+    - path: scripts/
+      purpose: Shell/Python scripts for automation (env vars, DB seed, API URL, ingestion)
+    - path: .pipelines/
+      purpose: Agent prompts for knowledge improvement and question answering
+    - path: .cursor/
+      purpose: Cursor IDE configuration, rules, and knowledge base
+
+  key_conventions:
+    - name: OpenAPI-Driven Development
+      summary: Define API once in codegen/openapi.yaml; generate TypeScript models, TypeORM entities, and service interfaces
+    - name: Centralized Project Config
+      summary: infrastructure/bin/project-config.ts defines projectName, projectSlug, and stack toggles (cache, sqs, ecs)
+    - name: Consistent Naming
+      summary: Centralized naming convention utility ensures consistent AWS resource names across all stacks
+    - name: Conventional Commits
+      summary: "Commit messages use format: <type>(<scope>): <description>"
+    - name: GitHub Actions CI/CD
+      summary: Separate workflows for deploy-site, deploy-api, deploy-infra, deploy-frontend, deploy-backend, deploy-infrastructure, ingest, and pr-check
+
+key_operations:
+  local_development:
+    name: Start Local Environment
+    description: One-command local setup with Docker, build, deploy, and watch
+    when_to_use: Beginning a development session
+    approach: |
+      1. npm run install:all (installs root, backend, infrastructure deps)
+      2. npm run start:local (Docker + rspack build + CDK deploy to LocalStack + watchers)
+      3. npm run frontend:dev (separate terminal for Next.js)
+    services:
+      - name: LocalStack
+        url: http://localhost:4566
+      - name: PostgreSQL
+        url: localhost:5432
+      - name: Swagger UI
+        url: http://localhost:8082
+      - name: Frontend
+        url: http://localhost:3000
+    pitfalls:
+      - what: Running frontend:dev before start:local completes
+        why: API URL is set dynamically by start:local; frontend needs it
+        instead: Wait for start:local to finish, then open a new terminal for frontend:dev
+
+  code_generation:
+    name: Regenerate TypeScript from OpenAPI
+    description: Generate models, entities, and service interfaces from the OpenAPI spec
+    when_to_use: After modifying codegen/openapi.yaml
+    approach: |
+      1. Edit codegen/openapi.yaml (add/modify endpoints, schemas)
+      2. Use x-entity: true extension for schemas that need TypeORM entities
+      3. Run npm run codegen
+      4. Review generated files in backend and frontend
+    pitfalls:
+      - what: Forgetting to run codegen after schema changes
+        why: Frontend and backend will be out of sync with the API contract
+        instead: Always run npm run codegen after any openapi.yaml change
+
+  deployment:
+    name: Deploy to AWS
+    description: Deploy full stack or individual layers to AWS environments
+    when_to_use: Releasing to production
+    approach: |
+      Full stack: npm run deploy
+      Frontend only: npm run deploy:frontend
+      Backend only: npm run deploy:backend
+    examples:
+      - command: npm run deploy
+        note: Full stack deployment to configured AWS environment
+
+  database_operations:
+    name: Database Migrations and Seeding
+    description: Run TypeORM migrations and seed data
+    when_to_use: Schema changes or initializing test data
+    approach: |
+      Migrations: npm run exec:migration
+      Seeding: npm run exec:seed
+    examples:
+      - command: npm run exec:migration
+        note: Run TypeORM migrations against the target database
+
+decision_trees:
+  stack_toggle_selection:
+    name: Infrastructure Stack Toggle Selection
+    entry_point: What infrastructure does this project need beyond the base?
+    branches:
+      - condition: Needs caching layer (session data, API response caching)
+        action: "Enable cache: true in project-config.ts"
+      - condition: Needs async job processing (email, background tasks)
+        action: "Enable sqs: true in project-config.ts"
+      - condition: Needs long-running processes (data pipelines, scheduled jobs)
+        action: "Enable ecs: true in project-config.ts"
+      - condition: Base API + database is sufficient
+        action: Leave all toggles at default
+    timestamp: 2026-02-20
+
+patterns:
+  openapi_driven_fullstack:
+    name: OpenAPI-Driven Full-Stack Development
+    context: Single source of truth for API contracts across all layers
+    implementation: |
+      1. Define schemas and endpoints in codegen/openapi.yaml
+      2. Mark entity schemas with x-entity: true for TypeORM generation
+      3. Run npm run codegen to generate TypeScript types and entities
+      4. Frontend uses generated API client; backend implements generated interfaces
+      5. Swagger UI auto-serves the spec for documentation
+    trade_offs:
+      - advantage: Single source of truth eliminates contract drift between layers
+        cost: Schema changes require codegen step and regeneration
+      - advantage: TypeORM entities auto-generated from schema
+        cost: Custom entity logic must be added after generation
+
+  localstack_development:
+    name: LocalStack Local Development
+    context: Full AWS emulation for local development without cloud costs
+    implementation: |
+      1. docker-compose.yaml defines LocalStack with all required AWS services
+      2. CDK deploys stacks to LocalStack endpoint (localhost:4566)
+      3. rspack watch + CDK hotswap for instant Lambda updates
+      4. PostgreSQL runs alongside in Docker for database layer
+    trade_offs:
+      - advantage: No AWS costs during development
+        cost: LocalStack may not perfectly replicate all AWS service behaviors
+      - advantage: Fast iteration with hot-reload
+        cost: Initial start:local takes time to bootstrap all services
+
+  configurable_infrastructure:
+    name: Configurable Infrastructure Stacks
+    context: Toggle optional infrastructure components per project needs
+    implementation: |
+      1. project-config.ts defines stack toggles (cache, sqs, ecs)
+      2. CDK app conditionally creates stacks based on toggle values
+      3. Environment variables can override config for per-env customization
+    trade_offs:
+      - advantage: Template works for simple and complex projects alike
+        cost: Toggle logic adds conditional complexity to CDK code
+
+  rag_chat_system:
+    name: RAG Chat System
+    context: AI-powered chat about portfolio content using Bedrock and S3 embeddings
+    implementation: |
+      1. Ingest pipeline reads markdown content, chunks text, generates embeddings via Bedrock Titan
+      2. Embeddings stored as JSON in S3 (no vector database needed)
+      3. Chat handler embeds user query, performs cosine similarity search against stored embeddings
+      4. Top-K relevant chunks form the system prompt for Claude via Bedrock
+      5. Lambda handles /chat, /health, and /ingest routes via HTTP API Gateway
+    trade_offs:
+      - advantage: Simple architecture — no vector database, just S3 JSON
+        cost: In-memory search limits scale (fine for portfolio-sized content)
+      - advantage: Self-contained Lambda with no external dependencies beyond AWS SDKs
+        cost: Cold start time with 1024MB memory allocation
+
+safety_protocols:
+  - protocol: Never Commit Secrets
+    description: Do not commit API keys, credentials, .env files, or any sensitive data
+    rationale: Secrets in git history are permanent and cannot be fully removed
+    exception: None
+    timestamp: 2026-02-20
+
+  - protocol: Never Force Push to Shared Branches
+    description: Do not use git push --force on dev or main without explicit team approval
+    rationale: Rewrites history, breaks collaborators' local repos
+    exception: User explicitly requests it for a known reason on a personal branch
+    timestamp: 2026-02-20
+
+  - protocol: Run Build Before Deploy
+    description: Always run npm run build and verify no errors before deploying
+    rationale: Deploying broken builds wastes time and can impact shared environments
+    exception: CDK hotswap during local development (already handles rebuilds)
+    timestamp: 2026-02-20
+
+  - protocol: Test Database Migrations Locally First
+    description: Run migrations against local PostgreSQL before applying to shared environments
+    rationale: Migration failures on shared databases can block the entire team
+    exception: None
+    timestamp: 2026-02-20
+
+# --- MUTABLE SECTIONS BELOW ---
+# The improve-agent updates these sections using PRESERVE/APPEND/DATE/REMOVE rules.
+
+best_practices:
+  - category: Code Generation
+    practices:
+      - practice: Run codegen immediately after any openapi.yaml change
+        evidence: Prevents frontend/backend contract drift
+        timestamp: 2026-02-20
+      - practice: Review generated files before committing
+        evidence: Catch unexpected changes from schema modifications
+        timestamp: 2026-02-20
+
+  - category: Local Development
+    practices:
+      - practice: Use npm run start:local for the full local environment
+        evidence: Orchestrates Docker, build, deploy, and watchers in correct order
+        timestamp: 2026-02-20
+      - practice: Keep Docker Desktop running before starting local dev
+        evidence: LocalStack and PostgreSQL containers require Docker
+        timestamp: 2026-02-20
+
+  - category: Infrastructure
+    practices:
+      - practice: Use project-config.ts as the single source for project naming
+        evidence: Prevents naming mismatches across CDK stacks, S3 buckets, and SSM parameters
+        timestamp: 2026-02-20
+      - practice: Toggle unused stacks off to reduce local startup time
+        evidence: Fewer stacks = faster CDK bootstrap and deploy
+        timestamp: 2026-02-20
+
+  - category: CI/CD
+    practices:
+      - practice: Use Conventional Commits format for all commit messages
+        evidence: Enables automated changelog generation and consistent history
+        timestamp: 2026-02-20
+      - practice: Use GitHub Actions workflows in .github/workflows/ with descriptive names
+        evidence: Centralized workflow location with clear naming aids discoverability
+        timestamp: 2026-02-23
+      - practice: Use loop prevention for self-modifying CI pipelines
+        evidence: Knowledge-improve pipeline checks if last commit matches ^chore(knowledge) and skips to prevent infinite trigger loops
+        timestamp: 2026-02-21
+      - practice: Include project-specific context in code review prompts
+        evidence: Read expertise.yaml and openapi.yaml before reviewing to catch project-specific anti-patterns
+        timestamp: 2026-02-21
+      - practice: Add automated size checks for growing configuration files
+        evidence: Pipeline step warns when expertise.yaml exceeds 500 lines, signaling when to split into per-layer domains
+        timestamp: 2026-02-21
+      - practice: Keep CI pipelines platform-portable by separating prompts from pipeline YAML
+        evidence: improve-agent-prompt.md is reused by workflows without modification
+        timestamp: 2026-02-22
+
+  - category: Environment Management
+    practices:
+      - practice: Validate environment variables with Zod schemas at startup instead of accessing process.env directly
+        evidence: Fail fast on missing/invalid vars, replacing scattered process.env access
+        timestamp: 2026-02-21
+
+  - category: Cursor Configuration
+    practices:
+      - practice: Define per-layer .mdc rules with glob-based activation for directory-specific AI guidance
+        evidence: backend.mdc, frontend.mdc, infrastructure.mdc, codegen.mdc scoped to their respective directories
+        timestamp: 2026-02-21
+      - practice: Use read-only permission configs for query-only Cursor agents
+        evidence: cli-question.json with Read-only permissions, denying Write and Shell for safe codebase querying
+        timestamp: 2026-02-21
+
+  - category: RAG Chat
+    practices:
+      - practice: Keep the chat Lambda self-contained with no external imports from frontend/lib
+        evidence: Prevents transitive dependency bloat and Lambda OOM; all logic inline in handler
+        timestamp: 2026-02-23
+      - practice: Embed documents one at a time to minimize Lambda memory usage
+        evidence: 50 embeddings x 1024d needs ~200MB working memory; sequential processing avoids OOM
+        timestamp: 2026-02-23
+
+known_issues:
+  - issue: Question agent prompt has no automated invocation path
+    workaround: "Invoke manually: cursor agent --config .cursor/cli-question.json < .pipelines/question-agent-prompt.md"
+    status: open
+    evidence: ".pipelines/question-agent-prompt.md and .cursor/cli-question.json exist but no pipeline YAML or automated trigger invokes the question agent. Invocation remains manual."
+    timestamp: 2026-02-21
+
+potential_enhancements:
+  - enhancement: Deploy onto shared VPC and Aurora DB instance
+    rationale: Production-grade infrastructure with shared networking
+    effort: high
+    impact: Required for production deployment pattern
+    timestamp: 2026-02-20
+
+  - enhancement: Automated documentation generation via Cursor CLI
+    rationale: Keep docs in sync with code changes automatically
+    effort: medium
+    impact: Reduces documentation drift
+    timestamp: 2026-02-20
+
+  - enhancement: Split into per-layer expertise domains as knowledge base grows
+    rationale: Focused domains evolve independently and stay within context window limits
+    effort: low
+    impact: Enables deeper per-layer knowledge accumulation
+    timestamp: 2026-02-20
+
+  - enhancement: Consolidate duplicate GitHub Actions workflows
+    rationale: "deploy-frontend vs deploy-site, deploy-backend vs deploy-api, deploy-infrastructure vs deploy-infra — consolidate into single workflows per layer"
+    effort: low
+    impact: Reduces CI/CD maintenance burden
+    timestamp: 2026-02-23
+
+  - enhancement: Add streaming response support for chat API
+    rationale: Better UX with incremental response display instead of waiting for full response
+    effort: medium
+    impact: Improved user experience for chat widget
+    timestamp: 2026-02-23

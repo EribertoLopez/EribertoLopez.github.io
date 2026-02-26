@@ -1,0 +1,33 @@
+---
+description: Code generation — OpenAPI, x-entity, codegen workflow
+globs: codegen/**
+alwaysApply: false
+---
+
+# Code Generation Rules
+
+## Context
+
+Before making codegen changes, read:
+
+- `codegen/README.md` for x-* extensions and workflow
+- `codegen/openapi.yaml` for the API spec
+- `codegen/config.yaml` for OpenAPI Generator configuration
+
+## Constraints
+
+**CRITICAL:**
+
+- After any change to `codegen/openapi.yaml`, run `npm run codegen` (from repo root)
+- Entity schemas must use `x-entity: true`; the primary key property must use `x-primary-key: true`
+- Do not edit generated output in `backend/src/generated/` or `frontend/generated/` — change the spec and regenerate
+
+**IMPORTANT:**
+
+- Output locations: backend → `backend/src/generated/`, frontend → `frontend/generated/`
+- Use `x-table-name`, `x-column-type`, `x-generated` etc. as documented in `codegen/README.md` when needed
+
+**PREFERRED:**
+
+- Prefer minimal x-* usage; the template auto-detects enums and types
+- Review generated files after schema changes before committing
