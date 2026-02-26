@@ -15,8 +15,8 @@ const MAX_HISTORY = 20; // Sliding window for API calls
 const MAX_MESSAGE_LENGTH = 2000;
 
 // Chat API URL — uses API Gateway in production, local Next.js API route in dev
-const CHAT_API_URL =
-  process.env.NEXT_PUBLIC_CHAT_API_URL || "/api/chat";
+const CHAT_API_BASE = process.env.NEXT_PUBLIC_CHAT_API_URL || "";
+const CHAT_API_URL = CHAT_API_BASE ? `${CHAT_API_BASE}/chat` : "/api/chat";
 
 function loadMessages(): Message[] {
   if (typeof window === "undefined") return [];
