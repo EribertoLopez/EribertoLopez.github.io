@@ -416,3 +416,4 @@ tmp/
 coverage/
 .turbo/
 .vercel/
+dist/

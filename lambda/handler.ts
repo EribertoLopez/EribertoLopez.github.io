@@ -271,6 +271,7 @@ export async function handler(event: APIGatewayEvent) {
       for (const doc of docs) {
         const { metadata, body } = parseFrontmatter(doc.content);
         const sourceType = doc.path.includes("_resumes") ? "resume"
+          : doc.path.includes("_cover_letters") ? "cover_letter"
           : doc.path.includes("_projects") ? "project"
           : doc.path.includes("_posts") ? "post" : "document";
         const title = metadata.title || doc.path.split("/").pop()?.replace(".md", "") || "untitled";
