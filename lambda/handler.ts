@@ -111,6 +111,8 @@ function sanitizeHistory(history: ChatMessage[]): ChatMessage[] {
   }
   // Must start with "user" if non-empty
   if (out.length > 0 && out[0].role !== "user") out.shift();
+  // Must end with "assistant" (since we'll append a new "user" message)
+  while (out.length > 0 && out[out.length - 1].role === "user") out.pop();
   return out;
 }
 
