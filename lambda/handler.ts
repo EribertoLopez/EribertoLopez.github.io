@@ -98,7 +98,24 @@ async function embed(text: string): Promise<number[]> {
   return parsed.embedding;
 }
 
+/** Ensure messages alternate user/assistant — Claude requires strict alternation. */
+function sanitizeHistory(history: ChatMessage[]): ChatMessage[] {
+  const out: ChatMessage[] = [];
+  for (const msg of history) {
+    if (out.length > 0 && out[out.length - 1].role === msg.role) {
+      // Merge consecutive same-role messages
+      out[out.length - 1] = { ...out[out.length - 1], content: out[out.length - 1].content + "\n" + msg.content };
+    } else {
+      out.push({ ...msg });
+    }
+  }
+  // Must start with "user" if non-empty
+  if (out.length > 0 && out[0].role !== "user") out.shift();
+  return out;
+}
+
 async function chat(system: string, history: ChatMessage[], userMsg: string): Promise<string> {
+  const cleanHistory = sanitizeHistory(history);
   const cmd = new InvokeModelCommand({
     modelId: CHAT_MODEL,
     contentType: "application/json",
@@ -107,7 +124,7 @@ async function chat(system: string, history: ChatMessage[], userMsg: string): Pr
       anthropic_version: "bedrock-2023-05-31",
       max_tokens: MAX_TOKENS,
       system,
-      messages: [...history, { role: "user", content: userMsg }],
+      messages: [...cleanHistory, { role: "user", content: userMsg }],
     }),
   });
   const resp = await bedrock().send(cmd);
