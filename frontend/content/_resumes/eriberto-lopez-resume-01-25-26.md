@@ -2,6 +2,7 @@
 title: 'Resume'
 sourceType: 'resume'
 date: '2026-01-25'
+coverImage: '/assets/images/me_infront_of_HPC_20180129_163043.jpg'
 author:
   name: 'Eriberto Lopez'
 ---
