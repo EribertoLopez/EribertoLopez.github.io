@@ -13,6 +13,16 @@ S3_BUCKET = os.environ.get("EMBEDDINGS_S3_BUCKET", "")
 FUNCTION_NAME = os.environ.get("CHAT_FUNCTION_NAME", "")
 REGION = os.environ.get("AWS_REGION", "us-east-1")
 
+# ─── Allowlist (curated content only) ─────────────────────
+# Only these files get ingested. All paths relative to CONTENT_DIR.
+# Decision: Option A allowlist approach, approved 2026-02-27.
+INGEST_ALLOWLIST = [
+    "_resumes/eriberto-lopez-resume-01-25-26.md",   # Latest resume (Jan 2026)
+    "_projects/acrylic-pour-painting.md",            # Real project with content
+    "_posts/MBS_1.md",                               # Mind, Body, and Soul — personal blog post
+    "CAREER_CATALOG.md",                             # Comprehensive career catalog
+]
+
 
 def main():
     if not S3_BUCKET:
@@ -22,14 +32,18 @@ def main():
         print("❌ CHAT_FUNCTION_NAME not set", file=sys.stderr)
         sys.exit(1)
 
-    # Collect all markdown files
+    # Collect markdown files (filtered by allowlist)
     content_dir = Path(CONTENT_DIR)
-    files = sorted(content_dir.rglob("*.md"))
-    if not files:
+    all_files = sorted(content_dir.rglob("*.md"))
+    if not all_files:
         print(f"❌ No .md files in {CONTENT_DIR}", file=sys.stderr)
         sys.exit(1)
 
-    print(f"📁 Found {len(files)} markdown files")
+    files = [f for f in all_files if str(f.relative_to(content_dir)) in INGEST_ALLOWLIST]
+    print(f"📁 Found {len(all_files)} total markdown files, {len(files)} on allowlist")
+    if not files:
+        print("❌ No allowlisted files found. Check INGEST_ALLOWLIST.", file=sys.stderr)
+        sys.exit(1)
 
     # Build payload with file contents
     documents = []

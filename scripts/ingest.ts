@@ -22,6 +22,16 @@ import {
 const CONTENT_DIR = process.env.CONTENT_DIR || path.resolve(__dirname, "..", "frontend", "content");
 const CHUNK_SIZE = 800;
 const CHUNK_OVERLAP = 200;
+
+// ─── Allowlist (curated content only) ─────────────────────
+// Only these files get ingested. All paths relative to CONTENT_DIR.
+// Decision: Option A allowlist approach, approved 2026-02-27.
+const INGEST_ALLOWLIST: string[] = [
+  "_resumes/eriberto-lopez-resume-01-25-26.md",   // Latest resume (Jan 2026)
+  "_projects/acrylic-pour-painting.md",            // Real project with content
+  "_posts/MBS_1.md",                               // Mind, Body, and Soul — personal blog post
+  "CAREER_CATALOG.md",                              // Comprehensive career catalog
+];
 const EMBED_MODEL = process.env.BEDROCK_EMBED_MODEL_ID || "amazon.titan-embed-text-v2:0";
 const S3_BUCKET = process.env.EMBEDDINGS_S3_BUCKET || "";
 const S3_KEY = process.env.EMBEDDINGS_S3_KEY || "chat/embeddings.json";
@@ -109,12 +119,23 @@ async function main() {
 
   console.log("🔄 Starting document ingestion pipeline...\n");
 
-  const files = findMarkdownFiles(CONTENT_DIR);
-  if (!files.length) {
+  const allFiles = findMarkdownFiles(CONTENT_DIR);
+  if (!allFiles.length) {
     console.error(`❌ No markdown files in ${CONTENT_DIR}`);
     process.exit(1);
   }
-  console.log(`📁 Found ${files.length} markdown files`);
+
+  // Filter to allowlist
+  const files = allFiles.filter((f) => {
+    const rel = path.relative(CONTENT_DIR, f).replace(/\\/g, "/");
+    return INGEST_ALLOWLIST.includes(rel);
+  });
+
+  console.log(`📁 Found ${allFiles.length} total markdown files, ${files.length} on allowlist`);
+  if (!files.length) {
+    console.error(`❌ No allowlisted files found. Check INGEST_ALLOWLIST in ingest.ts`);
+    process.exit(1);
+  }
 
   // Parse and chunk
   const allChunks: Array<{ id: string; text: string; metadata: Record<string, string> }> = [];
