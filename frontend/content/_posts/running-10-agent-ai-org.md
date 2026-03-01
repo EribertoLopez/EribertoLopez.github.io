@@ -1,6 +1,6 @@
 ---
-title: 'Running a 10-Agent AI Org: What Actually Works (and What Doesn't)'
-excerpt: 'I replaced my team with 10 AI agents — a Chief of Staff, engineers, researchers, content creators, and ops. Here is what I learned about orchestrating an agentic organization that actually ships.'
+title: "Running a 10-Agent AI Org: What Actually Works (and What Doesn't)"
+excerpt: "I replaced my team with 10 AI agents — a Chief of Staff, engineers, researchers, content creators, and ops. Here is what I learned about orchestrating an agentic organization that actually ships."
 coverImage: '/assets/blog/agentic-engineering/cover.png'
 date: '2026-03-01T12:00:00.000Z'
 author:
