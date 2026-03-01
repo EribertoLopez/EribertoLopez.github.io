@@ -113,6 +113,12 @@ export function getAllPosts(fields: string[] = []) {
   return posts
 }
 
+export function getPostsByCategory(category: string, fields: string[] = []) {
+  const allFields = fields.includes('category') ? fields : [...fields, 'category']
+  const posts = getAllPosts(allFields)
+  return posts.filter((post) => post.category === category)
+}
+
 export function getAllResumes(fields: string[] = []) {
   const slugs = getResumeSlugs()
   const posts = slugs
