@@ -9,6 +9,7 @@ author:
 ogImage:
   url: '/assets/blog/agentic-engineering/cover.png'
 isPublished: true
+category: 'agentic-engineering'
 ---
 
 ## The Experiment Nobody Asked For
