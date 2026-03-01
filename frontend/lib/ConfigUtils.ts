@@ -1,6 +1,7 @@
 // some sections must align with app router ie: directories in /pages
 export enum Sections {
     Posts = 'Latest',
+    AI = 'AI',
     Projects = 'Projects',
     Home = 'About',
     // Blog = 'Blog',
@@ -15,6 +16,7 @@ export enum Sections {
 export const themes: {[key in Sections]: string }= {
 [Sections.Home]: '/assets/images/me_infront_of_HPC_20180129_163043.jpg',
 [Sections.Posts]: '/assets/images/20170108_123337.jpg',
+[Sections.AI]: '/assets/blog/agentic-engineering/cover.png',
 [Sections.Projects]: '/assets/images/20170108_123337.jpg',
 // [Sections.Contact]: '/assets/images/20170108_123337.jpg',
 [Sections.Resume]: '/assets/images/20170108_123337.jpg',
