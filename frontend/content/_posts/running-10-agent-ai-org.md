@@ -79,7 +79,7 @@ Every significant decision gets tagged with `[DECISION]` in conversation. The li
 ```
 [DECISION] Reef tech stack: Next.js 14 + TypeScript + Tailwind + Supabase
 [DECISION] [revisit:2026-04-01] Holding off on Notion integration until Q2
-[DECISION] [permanent] All pods use template-project as base infrastructure
+[DECISION] [permanent] All pods use unified infrastructure
 ```
 
 This is organizational memory that survives context window resets. Without it, agents rediscover the same decisions every session, wasting tokens and sometimes contradicting past choices.
