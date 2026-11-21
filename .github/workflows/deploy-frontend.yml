@@ -1,13 +1,22 @@
 name: Deploy Frontend
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
       - "frontend/**"
+      - "infrastructure/lib/frontend.ts"
+      - "infrastructure/lib/config/cloudfront-config.ts"
+      - "infrastructure/lib/cloudfront-functions/**"
+      - ".github/workflows/deploy-frontend.yml"
 
 env:
   ENVIRONMENT: prod
+  # configure-aws-credentials exports AWS_REGION. The CDK CLI copies it to
+  # CDK_DEFAULT_REGION, so this job updates EribertoLopez-Frontend-Stack in
+  # us-east-1. bin/infrastructure.ts falls back to us-west-2 only when that
+  # variable is unset. The imported ACM certificate must also be us-east-1.
   AWS_REGION: us-east-1
 
 concurrency:
@@ -45,4 +54,12 @@ jobs:
           aws-region: us-east-1
 
       - name: CDK deploy frontend
-        run: npm run deploy:frontend
+        env:
+          CLOUDFRONT_CERTIFICATE_ARN: ${{ secrets.CLOUDFRONT_CERTIFICATE_ARN }}
+        run: |
+          if [ -n "$CLOUDFRONT_CERTIFICATE_ARN" ]; then
+            echo "CLOUDFRONT_CERTIFICATE_ARN is set. eribertolopez.com and www will be attached."
+          else
+            echo "CLOUDFRONT_CERTIFICATE_ARN is unset. Deploying without alternate domain names."
+          fi
+          npm run deploy:frontend
