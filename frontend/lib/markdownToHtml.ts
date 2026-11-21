@@ -2,6 +2,7 @@ import remarkGfm from 'remark-gfm'
 import remarkHtml from 'remark-html'
 import { unified } from 'unified'
 import remarkParse from 'remark-parse'
+import remarkMermaid from './remarkMermaid'
 // TODO: put into css module
 const markdownLinkStyles = `      
   .markdown-content a {
@@ -50,6 +51,20 @@ const markdownTableStyles = `
       .markdown-content tr:hover {
         background-color: #333333;
       }
+
+      .markdown-content pre.mermaid {
+        background: transparent;
+        border: 0;
+        overflow-x: auto;
+        margin: 1.5rem 0;
+        display: flex;
+        justify-content: center;
+      }
+
+      .markdown-content pre.mermaid svg {
+        max-width: 100%;
+        height: auto;
+      }
   `
 export default async function markdownToHtml(markdown: string) {
   // Define CSS styles for hover effect - able to override stylings of tags when rendered in the markdown-content parent div
@@ -65,6 +80,7 @@ export default async function markdownToHtml(markdown: string) {
   const processor = unified()
     .use(remarkParse) // Add parser first
     .use(remarkGfm)   // Then GFM support
+    .use(remarkMermaid) // Emit mermaid fences as <pre class="mermaid">
     .use(remarkHtml, {
       sanitize: false,
     })
