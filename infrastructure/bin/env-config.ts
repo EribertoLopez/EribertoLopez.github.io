@@ -107,7 +107,7 @@ export const unifiedVPCConfig = (environment: string) => {
                 throw new Error("Invalid INTERNAL_VPC_CONFIG format. Must be valid JSON.");
             }
         } else {
-            console.log(`[CI/CD] No INTERNAL_VPC_CONFIG environment variable found, will create new VPC`);
+            console.log("[CI/CD] No INTERNAL_VPC_CONFIG environment variable found.");
         }
     }
     return {

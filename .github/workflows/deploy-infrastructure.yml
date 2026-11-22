@@ -37,8 +37,30 @@ jobs:
       - name: Install infrastructure dependencies
         run: cd infrastructure && npm ci
 
-      - name: CDK diff
-        run: cd infrastructure && npx cdk diff
-
-      - name: CDK deploy all
-        run: npm run deploy
+      # Backend stacks import a VPC. This job used to run `cdk diff` with no
+      # target, which also synthesizes EribertoLopez-Frontend-Stack (the same
+      # stack Deploy Frontend updates in prod). Stack ids do not include the
+      # environment, so a dev deploy here would change that prod stack.
+      # Skip until the owner sets the repository variable. Do not deploy.
+      - name: CDK diff and deploy backend
+        env:
+          INTERNAL_VPC_CONFIG: ${{ vars.INTERNAL_VPC_CONFIG }}
+        run: |
+          set -euo pipefail
+          if [ -z "${INTERNAL_VPC_CONFIG}" ]; then
+            echo "Skipping backend CDK. INTERNAL_VPC_CONFIG is not set."
+            echo "Deployed environments import an existing VPC and do not create one."
+            echo "Deploy Frontend is a separate workflow and is not run here."
+            echo "To deploy backend stacks later, add a repository Actions variable named INTERNAL_VPC_CONFIG."
+            echo "Value: JSON {\"vpcConfig\":{\"dev\":{...}}} matching infrastructure/bin/vpc-dev-config.json, with real ids instead of PLACEHOLDER."
+            echo "It must be a repository variable. This workflow does not use a GitHub environment, so an environment-scoped variable is not visible."
+            exit 0
+          fi
+          cd infrastructure
+          # cdk diff exits 1 when a difference exists. Fail only on a real error.
+          diff_status=0
+          npx cdk diff -c target=backend || diff_status=$?
+          if [ "$diff_status" -gt 1 ]; then
+            exit "$diff_status"
+          fi
+          npx cdk deploy --all -c target=backend --require-approval never
