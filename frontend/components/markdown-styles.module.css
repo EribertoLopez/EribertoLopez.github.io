@@ -9,6 +9,16 @@
   @apply my-6;
 }
 
+/* Tailwind's preflight sets list-style: none and padding: 0 on every ol. */
+.markdown ol {
+  list-style: decimal;
+  padding-left: 1.5rem;
+}
+
+.markdown ol > li {
+  display: list-item;
+}
+
 .markdown h2 {
   @apply text-3xl mt-12 mb-4 leading-snug;
 }
