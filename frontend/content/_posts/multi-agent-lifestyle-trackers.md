@@ -23,6 +23,17 @@ I already knew this from running a multi-agent org: one mega-agent that tries to
 
 Meals, workouts, sleep, and everyday habits don't belong in a single overloaded conversation. Each area has its own language, its own hard moments, and its own idea of what a useful nudge looks like. So I didn't build one tracker. I built a small system: one reusable template, one specialist bot per life area, and one orchestrator I actually talk to.
 
+The template I started from is public: [Lifestyle Tracker by Eriberto](https://x.ai/bot/vfRCxatSj3q6uZu6sfEcK).
+
+<a class="bot-card" href="https://x.ai/bot/vfRCxatSj3q6uZu6sfEcK" target="_blank" rel="noopener">
+<img src="/assets/blog/multi-agent-lifestyle-trackers/lifestyle-tracker-bot-og.png" alt="Meet my Bot: Lifestyle Tracker on Grok Bot">
+<span class="bot-card-body">
+<span class="bot-card-title">Lifestyle Tracker by Eriberto</span>
+<span class="bot-card-desc">A friendly, shame-free coach that logs anything you want to measure about your lifestyle, like meals, sleep, workouts, mood, or habits, in a spreadsheet, nudges you at your tough moments, and points out patterns once there's enough data.</span>
+<span class="bot-card-cta">Try the bot on x.ai</span>
+</span>
+</a>
+
 This isn't a medical tool, and it isn't trying to be precise. Everything is a rough estimate. Patterns only show up after at least five days of logs, so nobody draws conclusions from a noisy couple of entries.
 
 ## The Building Block: the Lifestyle Tracker Template
@@ -141,6 +152,24 @@ A few design choices are doing most of the work:
 * **It extends easily.** A new life area is one more template bot and one more workbook in the folder. The Habit tracker is the simplest example of that: one more specialist, same contract, and readers can see how a new area plugs in.
 
 That's the whole trick: reuse the same getting-started template, keep each specialist narrow, and put a thin orchestrator in front so the data can still be compared.
+
+## Try it yourself
+
+You can start from the same template and spin up your own specialists, plus an orchestrator in front of them.
+
+<a class="bot-card" href="https://x.ai/bot/vfRCxatSj3q6uZu6sfEcK" target="_blank" rel="noopener">
+<img src="/assets/blog/multi-agent-lifestyle-trackers/lifestyle-tracker-bot-og.png" alt="Meet my Bot: Lifestyle Tracker on Grok Bot">
+<span class="bot-card-body">
+<span class="bot-card-title">Lifestyle Tracker by Eriberto</span>
+<span class="bot-card-desc">A friendly, shame-free coach that logs anything you want to measure about your lifestyle, like meals, sleep, workouts, mood, or habits, in a spreadsheet, nudges you at your tough moments, and points out patterns once there's enough data.</span>
+<span class="bot-card-cta">Try the bot on x.ai</span>
+</span>
+</a>
+
+1. Open [Lifestyle Tracker by Eriberto](https://x.ai/bot/vfRCxatSj3q6uZu6sfEcK) and start a bot from the template.
+2. Create one bot per thing you track. I use one for diet, one for workouts, and a habit tracker for reading, water, screen time, and meditation.
+3. Add an orchestrator from the same template. I tell it to route each entry to the right specialist and write the weekly roll-up.
+4. From then on I log through the orchestrator. When something doesn't fit, I start another specialist from the template.
 
 ---
 
