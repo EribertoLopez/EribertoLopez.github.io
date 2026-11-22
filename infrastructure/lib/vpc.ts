@@ -31,9 +31,20 @@ export class VpcStack extends cdk.Stack {
 
     if (isLocalEnvironment) {
       this.createLocalResources(projectName, environment);
-    } else {
-      this.createDeployedResources(projectName, environment, vpcConfig!);
+      return;
     }
+
+    if (!vpcConfig) {
+      throw new Error(
+        "INTERNAL_VPC_CONFIG is unset, so there is no VPC to import for " +
+          `'${environment}'. Deployed environments import an existing VPC and do not create one. ` +
+          "Set the GitHub Actions repository variable INTERNAL_VPC_CONFIG to JSON of the form " +
+          '{"vpcConfig":{"<environment>":{"vpcId","vpcCidr","vpcName","availabilityZones","subnets","securityGroups","natGateways"}}}. ' +
+          "The dev key must match ENVIRONMENT. See infrastructure/bin/vpc-dev-config.json for the shape; replace every PLACEHOLDER before saving it."
+      );
+    }
+
+    this.createDeployedResources(projectName, environment, vpcConfig);
   }
 
   /**
