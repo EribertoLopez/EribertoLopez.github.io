@@ -284,6 +284,30 @@ const markdownDetailsStyles = `
         }
       }
   `
+const markdownMermaidStyles = `
+      .markdown-content .mermaid {
+        margin: 1.25em 0 1.5em;
+        overflow-x: auto;
+        background: #111827;
+        border: 1px solid #333333;
+        border-radius: 10px;
+        padding: 0.75em 0.5em;
+      }
+      .markdown-content .mermaid svg {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        margin: 0 auto;
+      }
+`
+
+function mermaidBlocksToDivs(html: string): string {
+  return html.replace(
+    /<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g,
+    (_match, source: string) => `<div class="mermaid">${source.trim()}</div>`
+  )
+}
+
 export default async function markdownToHtml(markdown: string) {
   // Define CSS styles for hover effect - able to override stylings of tags when rendered in the markdown-content parent div
   
@@ -292,6 +316,7 @@ export default async function markdownToHtml(markdown: string) {
       ${markdownLinkStyles}
       ${markdownTableStyles}
       ${markdownDetailsStyles}
+      ${markdownMermaidStyles}
     </style>
   `
 
@@ -308,7 +333,8 @@ const processedContent = await processor.process(markdown)
     .toString()
     .replace(/<table>/g, '<div class="table-scroll"><table>')
     .replace(/<\/table>/g, '</table></div>')
+  const withDiagrams = mermaidBlocksToDivs(html)
 
   // Wrap the content in a div with our class and add styles
-  return `${styles}<div class="markdown-content">${html}</div>`
+  return `${styles}<div class="markdown-content">${withDiagrams}</div>`
 }
