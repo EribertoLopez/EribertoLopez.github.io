@@ -44,4 +44,15 @@ jobs:
         run: cd infrastructure && npm ci
 
       - name: CDK deploy backend
-        run: npm run deploy:backend
+        env:
+          INTERNAL_VPC_CONFIG: ${{ vars.INTERNAL_VPC_CONFIG }}
+        run: |
+          set -euo pipefail
+          if [ -z "${INTERNAL_VPC_CONFIG}" ]; then
+            echo "Skipping backend CDK. INTERNAL_VPC_CONFIG is not set."
+            echo "Deployed environments import an existing VPC and do not create one."
+            echo "Set the repository Actions variable INTERNAL_VPC_CONFIG to JSON {\"vpcConfig\":{\"dev\":{...}}} before this job can deploy."
+            echo "Use real VPC, subnet, and security group ids. infrastructure/bin/vpc-dev-config.json shows the shape only."
+            exit 0
+          fi
+          npm run deploy:backend

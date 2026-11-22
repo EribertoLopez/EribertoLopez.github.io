@@ -1,119 +1,196 @@
 /**
- * CloudFront Distribution Configuration
- * 
- * Environment-specific CloudFront configurations.
- * Sensitive values (like certificate ARNs) should be set via environment variables.
+ * CloudFront distribution configuration.
+ *
+ * The portfolio domain is registered at Namecheap. DNS validation CNAMEs and
+ * the website ALIAS/CNAME records are added in Namecheap Advanced DNS.
+ * This stack does not create a hosted zone or DNS records.
+ *
+ * CloudFront accepts only us-east-1 certificates. Prod creates a DNS-validated
+ * certificate in this stack and attaches both names. The first deploy waits
+ * until the Namecheap validation CNAMEs exist. Pass CDK context
+ * `-c customDomain=false` to leave the names off for a local synth.
+ * CLOUDFRONT_CERTIFICATE_ARN imports an existing us-east-1 certificate and
+ * skips creation.
  */
 
+export const SITE_APEX_DOMAIN = "eribertolopez.com";
+export const SITE_WWW_DOMAIN = "www.eribertolopez.com";
+export const SITE_DOMAINS = [SITE_APEX_DOMAIN, SITE_WWW_DOMAIN] as const;
+
+const US_EAST_1_CERT_ARN =
+  /^arn:aws:acm:us-east-1:\d{12}:certificate\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export interface CloudFrontEnvironmentConfig {
-  customDomain?: string;
+  /** Alternate domain names. Empty means the distribution stays on its cloudfront.net hostname. */
+  customDomains: string[];
+  /** us-east-1 ACM certificate ARN. Required before customDomains are attached. */
   certificateArn?: string;
-  priceClass: 'PriceClass_100' | 'PriceClass_200' | 'PriceClass_All';
+  priceClass: "PriceClass_100" | "PriceClass_200" | "PriceClass_All";
   enableIPv6: boolean;
   enableCompression: boolean;
-  httpVersion: 'http2' | 'http2and3';
+  httpVersion: "http2" | "http2and3";
   cachePolicyId?: string;
   connectionTimeout: number;
   connectionAttempts: number;
   minimumProtocolVersion: string;
-  sslSupportMethod: 'sni-only' | 'vip';
+  sslSupportMethod: "sni-only" | "vip";
   bucketRegion?: string;
   enableLogging: boolean;
   webAclArn?: string;
 }
 
+export type CertificateAttachment = "attached" | "pending-certificate" | "not-configured";
+
+/** How the distribution gets its certificate. `create` is the path that waits on DNS. */
+export type CertificatePlan = "import" | "create" | "pending" | "none";
+
+const sharedEdge: Pick<
+  CloudFrontEnvironmentConfig,
+  | "priceClass"
+  | "enableIPv6"
+  | "enableCompression"
+  | "httpVersion"
+  | "connectionTimeout"
+  | "connectionAttempts"
+  | "minimumProtocolVersion"
+  | "sslSupportMethod"
+  | "customDomains"
+> = {
+  priceClass: "PriceClass_100",
+  enableIPv6: false,
+  enableCompression: true,
+  httpVersion: "http2",
+  connectionTimeout: 10,
+  connectionAttempts: 3,
+  minimumProtocolVersion: "TLSv1.2_2021",
+  sslSupportMethod: "sni-only",
+  customDomains: [],
+};
+
 /**
- * Environment-specific CloudFront configurations
- * Custom domains and certificate ARNs should be provided via environment variables.
+ * Environment-specific CloudFront configurations.
+ * The certificate ARN is never stored here.
  */
 export const cloudFrontConfigurations: Record<string, CloudFrontEnvironmentConfig> = {
   local: {
-    priceClass: 'PriceClass_100',
-    enableIPv6: false,
-    enableCompression: true,
-    httpVersion: 'http2',
-    connectionTimeout: 10,
-    connectionAttempts: 3,
-    minimumProtocolVersion: 'TLSv1.2_2021',
-    sslSupportMethod: 'sni-only',
+    ...sharedEdge,
     enableLogging: false,
   },
-  
+
   dev: {
-    priceClass: 'PriceClass_100',
-    enableIPv6: false,
-    enableCompression: true,
-    httpVersion: 'http2',
-    cachePolicyId: '658327ea-f89d-4fab-a63d-7e88639e58f6',
-    connectionTimeout: 10,
-    connectionAttempts: 3,
-    minimumProtocolVersion: 'TLSv1.2_2021',
-    sslSupportMethod: 'sni-only',
+    ...sharedEdge,
+    cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
     enableLogging: false,
   },
 
   staging: {
-    priceClass: 'PriceClass_100',
-    enableIPv6: false,
-    enableCompression: true,
-    httpVersion: 'http2',
-    cachePolicyId: '658327ea-f89d-4fab-a63d-7e88639e58f6',
-    connectionTimeout: 10,
-    connectionAttempts: 3,
-    minimumProtocolVersion: 'TLSv1.2_2021',
-    sslSupportMethod: 'sni-only',
+    ...sharedEdge,
+    cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
     enableLogging: true,
   },
-  
+
   prod: {
-    priceClass: 'PriceClass_100',
-    enableIPv6: false,
-    enableCompression: true,
-    httpVersion: 'http2',
-    cachePolicyId: '658327ea-f89d-4fab-a63d-7e88639e58f6',
-    connectionTimeout: 10,
-    connectionAttempts: 3,
-    minimumProtocolVersion: 'TLSv1.2_2021',
-    sslSupportMethod: 'sni-only',
+    ...sharedEdge,
+    customDomains: [...SITE_DOMAINS],
+    cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
     enableLogging: true,
   },
 
   production: {
-    priceClass: 'PriceClass_100',
-    enableIPv6: false,
-    enableCompression: true,
-    httpVersion: 'http2',
-    cachePolicyId: '658327ea-f89d-4fab-a63d-7e88639e58f6',
-    connectionTimeout: 10,
-    connectionAttempts: 3,
-    minimumProtocolVersion: 'TLSv1.2_2021',
-    sslSupportMethod: 'sni-only',
+    ...sharedEdge,
+    customDomains: [...SITE_DOMAINS],
+    cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6",
     enableLogging: true,
   },
 };
 
+function blankToUndefined(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
 export function getCloudFrontConfig(environment: string): CloudFrontEnvironmentConfig {
   const baseConfig = cloudFrontConfigurations[environment] || cloudFrontConfigurations.local;
-  
+  const envDomain = blankToUndefined(process.env.CLOUDFRONT_CUSTOM_DOMAIN);
+  // Prod domains are fixed in code. The env override only applies to environments
+  // that do not already list alternate domain names.
+  const customDomains = baseConfig.customDomains.length
+    ? [...baseConfig.customDomains]
+    : envDomain
+      ? [envDomain]
+      : [];
+
   return {
     ...baseConfig,
-    customDomain: process.env.CLOUDFRONT_CUSTOM_DOMAIN || baseConfig.customDomain,
-    certificateArn: process.env.CLOUDFRONT_CERTIFICATE_ARN || baseConfig.certificateArn,
-    cachePolicyId: process.env.CLOUDFRONT_CACHE_POLICY_ID || baseConfig.cachePolicyId,
-    webAclArn: process.env.CLOUDFRONT_WEB_ACL_ARN || baseConfig.webAclArn,
-    bucketRegion: process.env.CLOUDFRONT_BUCKET_REGION || baseConfig.bucketRegion,
+    customDomains,
+    certificateArn: blankToUndefined(process.env.CLOUDFRONT_CERTIFICATE_ARN),
+    cachePolicyId: blankToUndefined(process.env.CLOUDFRONT_CACHE_POLICY_ID) || baseConfig.cachePolicyId,
+    webAclArn: blankToUndefined(process.env.CLOUDFRONT_WEB_ACL_ARN) || baseConfig.webAclArn,
+    bucketRegion: blankToUndefined(process.env.CLOUDFRONT_BUCKET_REGION) || baseConfig.bucketRegion,
   };
+}
+
+/**
+ * Explicit local/test opt-out. `-c customDomain=false` arrives as the string "false".
+ * Any other value, including unset, keeps the custom domain on.
+ */
+export function customDomainOptOut(contextValue?: unknown): boolean {
+  return contextValue === false || contextValue === "false";
+}
+
+export function certificatePlan(
+  config: CloudFrontEnvironmentConfig,
+  optedOut = false
+): CertificatePlan {
+  if (config.customDomains.length === 0) {
+    return "none";
+  }
+  if (optedOut) {
+    return "pending";
+  }
+  if (config.certificateArn) {
+    return "import";
+  }
+  return "create";
+}
+
+export function certificateAttachment(
+  config: CloudFrontEnvironmentConfig,
+  optedOut = false
+): CertificateAttachment {
+  const plan = certificatePlan(config, optedOut);
+  switch (plan) {
+    case "none":
+      return "not-configured";
+    case "pending":
+      return "pending-certificate";
+    case "import":
+    case "create":
+      return "attached";
+    default: {
+      const unexpected: never = plan;
+      throw new Error(`Unexpected certificate plan: ${String(unexpected)}`);
+    }
+  }
 }
 
 export function validateCloudFrontConfig(
   environment: string,
   config: CloudFrontEnvironmentConfig
 ): void {
-  if (config.customDomain && !config.certificateArn) {
+  // Environments without alternate names ignore the ARN so a prod secret in the
+  // shell does not fail dev or local deploys.
+  if (!config.certificateArn || config.customDomains.length === 0) {
+    return;
+  }
+
+  if (!US_EAST_1_CERT_ARN.test(config.certificateArn)) {
     throw new Error(
       `CloudFront configuration error for environment '${environment}': ` +
-      `Custom domain '${config.customDomain}' requires a certificate ARN. ` +
-      `Set CLOUDFRONT_CERTIFICATE_ARN environment variable.`
+        `CLOUDFRONT_CERTIFICATE_ARN must be a us-east-1 ACM certificate ARN ` +
+        `(arn:aws:acm:us-east-1:ACCOUNT:certificate/UUID). ` +
+        `CloudFront rejects certificates from any other region. ` +
+        `Request the certificate in us-east-1 and validate it with Namecheap CNAMEs.`
     );
   }
 }
