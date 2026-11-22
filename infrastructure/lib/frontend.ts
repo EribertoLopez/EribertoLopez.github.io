@@ -25,7 +25,7 @@ import {
   certificateAttachment,
   certificatePlan,
   CloudFrontEnvironmentConfig,
-  customDomainRequested,
+  customDomainOptOut,
   getCloudFrontConfig,
   validateCloudFrontConfig,
 } from "./config/cloudfront-config";
@@ -44,9 +44,9 @@ export class FrontendStack extends cdk.Stack {
   private createFrontend(environment: string) {
     const cloudFrontConfig = getCloudFrontConfig(environment);
     validateCloudFrontConfig(environment, cloudFrontConfig);
-    const requested = customDomainRequested(this.node.tryGetContext("customDomain"));
-    const plan = certificatePlan(cloudFrontConfig, requested);
-    const attachment = certificateAttachment(cloudFrontConfig, requested);
+    const optedOut = customDomainOptOut(this.node.tryGetContext("customDomain"));
+    const plan = certificatePlan(cloudFrontConfig, optedOut);
+    const attachment = certificateAttachment(cloudFrontConfig, optedOut);
 
     // Private S3 bucket for the site assets
     const siteBucket = new Bucket(this, "SiteBucket", {
@@ -82,7 +82,7 @@ export class FrontendStack extends cdk.Stack {
 
     if (plan === "pending") {
       cdk.Annotations.of(this).addWarning(
-        `Alternate domain names ${cloudFrontConfig.customDomains.join(", ")} stay off this distribution. Deploy with ENABLE_CUSTOM_DOMAIN=true or -c customDomain=true to create the us-east-1 certificate and wait for Namecheap validation. CLOUDFRONT_CERTIFICATE_ARN imports an existing certificate instead. Keep the Namecheap website records on GitHub Pages until CloudFront lists those names.`
+        `Alternate domain names ${cloudFrontConfig.customDomains.join(", ")} are off this distribution because CDK context customDomain=false. A normal prod deploy creates the us-east-1 certificate and attaches both names.`
       );
     }
 
@@ -162,7 +162,7 @@ export class FrontendStack extends cdk.Stack {
     new cdk.CfnOutput(this, "CustomDomainAttachment", {
       value: attachment,
       description:
-        "attached: certificate and alternate names are on the distribution. pending-certificate: redeploy with ENABLE_CUSTOM_DOMAIN=true or -c customDomain=true. not-configured: this environment has no custom domains.",
+        "attached: certificate and alternate names are on the distribution. pending-certificate: synth used -c customDomain=false. not-configured: this environment has no custom domains.",
     });
 
     if (certificate) {

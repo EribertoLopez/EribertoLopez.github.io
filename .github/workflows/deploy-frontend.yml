@@ -2,11 +2,6 @@ name: Deploy Frontend
 
 on:
   workflow_dispatch:
-    inputs:
-      enable_custom_domain:
-        description: "Create the us-east-1 ACM certificate and wait until Namecheap DNS validation finishes"
-        type: boolean
-        default: false
   push:
     branches: [main]
     paths:
@@ -65,17 +60,13 @@ jobs:
       - name: CDK deploy frontend
         env:
           CLOUDFRONT_CERTIFICATE_ARN: ${{ secrets.CLOUDFRONT_CERTIFICATE_ARN }}
-          ENABLE_CUSTOM_DOMAIN: ${{ github.event_name == 'workflow_dispatch' && inputs.enable_custom_domain && 'true' || 'false' }}
         run: |
           if [ -n "$CLOUDFRONT_CERTIFICATE_ARN" ]; then
             echo "CLOUDFRONT_CERTIFICATE_ARN is set. Importing that certificate and skipping ACM creation."
-            npm run deploy:frontend
-          elif [ "$ENABLE_CUSTOM_DOMAIN" = "true" ]; then
-            echo "ENABLE_CUSTOM_DOMAIN=true. CDK creates the ACM certificate and this job waits for Namecheap validation."
-            echo "Validation CNAME name and value show in the ACM console and in the CloudFormation certificate events."
-            echo "This job ends at 6 hours. CloudFormation can keep waiting for about 72 hours."
-            npm run deploy:frontend
           else
-            echo "Custom domain flag is off. Deploying without alternate domain names."
-            npm run deploy:frontend
+            echo "Prod deploy creates the DNS-validated certificate for eribertolopez.com and www.eribertolopez.com."
+            echo "The first deploy waits until the Namecheap validation CNAMEs are in place."
+            echo "Validation names show in the ACM console and in the CloudFormation certificate events."
+            echo "This job ends at 6 hours. CloudFormation can keep waiting for about 72 hours."
           fi
+          npm run deploy:frontend

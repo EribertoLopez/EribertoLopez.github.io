@@ -5,10 +5,10 @@
  * the website ALIAS/CNAME records are added in Namecheap Advanced DNS.
  * This stack does not create a hosted zone or DNS records.
  *
- * CloudFront accepts only us-east-1 certificates. A normal deploy leaves the
- * alternate names off the distribution. Set ENABLE_CUSTOM_DOMAIN=true or CDK
- * context customDomain=true to create a DNS-validated certificate in this
- * stack. That deploy waits until the Namecheap validation CNAMEs exist.
+ * CloudFront accepts only us-east-1 certificates. Prod creates a DNS-validated
+ * certificate in this stack and attaches both names. The first deploy waits
+ * until the Namecheap validation CNAMEs exist. Pass CDK context
+ * `-c customDomain=false` to leave the names off for a local synth.
  * CLOUDFRONT_CERTIFICATE_ARN imports an existing us-east-1 certificate and
  * skips creation.
  */
@@ -131,37 +131,34 @@ export function getCloudFrontConfig(environment: string): CloudFrontEnvironmentC
 }
 
 /**
- * True when this deploy should attach the apex. Either source is enough.
- * CDK context `-c customDomain=true` arrives as the string "true".
+ * Explicit local/test opt-out. `-c customDomain=false` arrives as the string "false".
+ * Any other value, including unset, keeps the custom domain on.
  */
-export function customDomainRequested(contextValue?: unknown): boolean {
-  if (process.env.ENABLE_CUSTOM_DOMAIN?.trim().toLowerCase() === "true") {
-    return true;
-  }
-  return contextValue === true || contextValue === "true";
+export function customDomainOptOut(contextValue?: unknown): boolean {
+  return contextValue === false || contextValue === "false";
 }
 
 export function certificatePlan(
   config: CloudFrontEnvironmentConfig,
-  requested: boolean
+  optedOut = false
 ): CertificatePlan {
   if (config.customDomains.length === 0) {
     return "none";
   }
+  if (optedOut) {
+    return "pending";
+  }
   if (config.certificateArn) {
     return "import";
   }
-  if (requested) {
-    return "create";
-  }
-  return "pending";
+  return "create";
 }
 
 export function certificateAttachment(
   config: CloudFrontEnvironmentConfig,
-  requested = false
+  optedOut = false
 ): CertificateAttachment {
-  const plan = certificatePlan(config, requested);
+  const plan = certificatePlan(config, optedOut);
   switch (plan) {
     case "none":
       return "not-configured";

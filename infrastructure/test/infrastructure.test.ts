@@ -18,7 +18,6 @@ const ENV_KEYS = [
   "CLOUDFRONT_CACHE_POLICY_ID",
   "CLOUDFRONT_WEB_ACL_ARN",
   "CLOUDFRONT_BUCKET_REGION",
-  "ENABLE_CUSTOM_DOMAIN",
 ];
 
 function withEnv(vars: Record<string, string | undefined>, run: () => void): void {
@@ -162,30 +161,46 @@ describe("CloudFront custom domain", () => {
     fs.writeFileSync(path.join(outDir, ".synth-placeholder"), "placeholder\n");
   });
 
-  test("prod waits for a us-east-1 certificate before attaching the domain", () => {
+  test("prod creates a DNS-validated certificate and attaches both names", () => {
     withEnv({}, () => {
       const config = getCloudFrontConfig("prod");
       expect(config.customDomains).toEqual(["eribertolopez.com", "www.eribertolopez.com"]);
-      expect(certificateAttachment(config)).toBe("pending-certificate");
+      expect(certificateAttachment(config)).toBe("attached");
 
-      const template = synthFrontend("prod", "us-west-2");
+      const template = synthFrontend("prod", "us-east-1");
+      const certificates = template.findResources("AWS::CertificateManager::Certificate");
+      const certificateIds = Object.keys(certificates);
+      expect(certificateIds).toHaveLength(1);
+      expect(certificates[certificateIds[0]].Properties).toMatchObject({
+        DomainName: "eribertolopez.com",
+        SubjectAlternativeNames: ["www.eribertolopez.com"],
+        ValidationMethod: "DNS",
+      });
+      expect(certificates[certificateIds[0]].Properties?.DomainValidationOptions).toBeUndefined();
+
       const distribution = distributionConfig(template);
-      expect(distribution.Aliases).toBeUndefined();
-      expect(distribution.ViewerCertificate?.AcmCertificateArn).toBeUndefined();
-      expect(template.toJSON().Outputs.CustomDomainAttachment.Value).toBe("pending-certificate");
-      expect(template.toJSON().Outputs.SiteDomainNames.Value).toBe(
-        "eribertolopez.com,www.eribertolopez.com"
-      );
-      expect(template.toJSON().Outputs.DistributionDomainName.Value).toBeDefined();
-      expect(JSON.stringify(template.toJSON())).not.toContain("AWS::Route53::");
-      expect(template.findResources("AWS::CertificateManager::Certificate")).toEqual({});
+      expect(distribution.Aliases).toEqual(["eribertolopez.com", "www.eribertolopez.com"]);
+      expect(JSON.stringify(distribution.ViewerCertificate?.AcmCertificateArn)).toContain(certificateIds[0]);
+      expect(distribution.ViewerCertificate?.SslSupportMethod).toBe("sni-only");
+
+      const outputs = template.toJSON().Outputs;
+      expect(outputs.CustomDomainAttachment.Value).toBe("attached");
+      expect(outputs.SiteDomainNames.Value).toBe("eribertolopez.com,www.eribertolopez.com");
+      expect(outputs.DistributionDomainName.Value).toBeDefined();
+      expect(outputs.DistributionId.Value).toBeDefined();
+      expect(JSON.stringify(outputs.CertificateArn.Value)).toContain(certificateIds[0]);
+
+      const resourceTypes = Object.values(
+        template.toJSON().Resources as Record<string, { Type: string }>
+      ).map((resource) => resource.Type);
+      expect(resourceTypes.filter((type) => type.includes("Route53"))).toEqual([]);
     });
   });
 
-  test("a blank certificate ARN is treated as unset", () => {
+  test("a blank certificate ARN is treated as unset and the stack still creates a certificate", () => {
     withEnv({ CLOUDFRONT_CERTIFICATE_ARN: "   " }, () => {
       expect(getCloudFrontConfig("prod").certificateArn).toBeUndefined();
-      expect(certificateAttachment(getCloudFrontConfig("prod"))).toBe("pending-certificate");
+      expect(certificateAttachment(getCloudFrontConfig("prod"))).toBe("attached");
     });
   });
 
@@ -231,48 +246,18 @@ describe("CloudFront custom domain", () => {
     });
   });
 
-  test("ENABLE_CUSTOM_DOMAIN creates a DNS-validated certificate in us-east-1", () => {
-    withEnv({ ENABLE_CUSTOM_DOMAIN: "true" }, () => {
-      const template = synthFrontend("prod", "us-east-1");
-      const certificates = template.findResources("AWS::CertificateManager::Certificate");
-      const certificateIds = Object.keys(certificates);
-      expect(certificateIds).toHaveLength(1);
-      const certificate = certificates[certificateIds[0]];
-      expect(certificate.Properties).toMatchObject({
-        DomainName: "eribertolopez.com",
-        SubjectAlternativeNames: ["www.eribertolopez.com"],
-        ValidationMethod: "DNS",
-      });
-      expect(certificate.Properties?.DomainValidationOptions).toBeUndefined();
-
-      const distribution = distributionConfig(template);
-      expect(distribution.Aliases).toEqual(["eribertolopez.com", "www.eribertolopez.com"]);
-      expect(JSON.stringify(distribution.ViewerCertificate?.AcmCertificateArn)).toContain(certificateIds[0]);
-      expect(distribution.ViewerCertificate?.SslSupportMethod).toBe("sni-only");
-
-      const outputs = template.toJSON().Outputs;
-      expect(outputs.CustomDomainAttachment.Value).toBe("attached");
-      expect(outputs.DistributionDomainName.Value).toBeDefined();
-      expect(outputs.DistributionId.Value).toBeDefined();
-      expect(JSON.stringify(outputs.CertificateArn.Value)).toContain(certificateIds[0]);
-
-      const resourceTypes = Object.values(
-        template.toJSON().Resources as Record<string, { Type: string }>
-      ).map((resource) => resource.Type);
-      expect(resourceTypes.filter((type) => type.includes("Route53"))).toEqual([]);
-    });
-  });
-
-  test("CDK context customDomain=true also creates the certificate", () => {
+  test("-c customDomain=false leaves the names off the distribution", () => {
     withEnv({}, () => {
-      const template = synthFrontend("prod", "us-east-1", { customDomain: "true" });
-      expect(Object.keys(template.findResources("AWS::CertificateManager::Certificate"))).toHaveLength(1);
-      expect(template.toJSON().Outputs.CustomDomainAttachment.Value).toBe("attached");
+      const template = synthFrontend("prod", "us-west-2", { customDomain: "false" });
+      expect(template.findResources("AWS::CertificateManager::Certificate")).toEqual({});
+      expect(distributionConfig(template).Aliases).toBeUndefined();
+      expect(template.toJSON().Outputs.CustomDomainAttachment.Value).toBe("pending-certificate");
+      expect(template.toJSON().Outputs.CertificateArn).toBeUndefined();
     });
   });
 
-  test("an imported ARN wins over the create flag and does not add a certificate resource", () => {
-    withEnv({ ENABLE_CUSTOM_DOMAIN: "true", CLOUDFRONT_CERTIFICATE_ARN: CERT_ARN }, () => {
+  test("an imported ARN skips certificate creation", () => {
+    withEnv({ CLOUDFRONT_CERTIFICATE_ARN: CERT_ARN }, () => {
       const template = synthFrontend("prod", "us-east-1");
       expect(template.findResources("AWS::CertificateManager::Certificate")).toEqual({});
       expect(distributionConfig(template).ViewerCertificate?.AcmCertificateArn).toBe(CERT_ARN);
@@ -280,14 +265,14 @@ describe("CloudFront custom domain", () => {
     });
   });
 
-  test("the create flag outside us-east-1 fails before deploy", () => {
-    withEnv({ ENABLE_CUSTOM_DOMAIN: "true" }, () => {
+  test("creating the certificate outside us-east-1 fails before deploy", () => {
+    withEnv({}, () => {
       expect(() => synthFrontend("prod", "us-west-2")).toThrow(/us-east-1/);
     });
   });
 
-  test("dev does not create the apex certificate when the flag is on", () => {
-    withEnv({ ENABLE_CUSTOM_DOMAIN: "true" }, () => {
+  test("dev does not create the apex certificate", () => {
+    withEnv({}, () => {
       const template = synthFrontend("dev", "us-east-1");
       expect(template.findResources("AWS::CertificateManager::Certificate")).toEqual({});
       expect(distributionConfig(template).Aliases).toBeUndefined();
