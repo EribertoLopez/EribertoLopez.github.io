@@ -5,13 +5,13 @@ excerpt: >-
   new branching model every ticket. Here is how initiatives, projects, and
   issues in Linear map to FEAT, PROJ, and issue branches in GitHub — and
   the Linear SDLC Grok Bot I use to drive it.
-coverImage: '/assets/blog/agentic-engineering/cover.png'
+coverImage: '/assets/blog/sdlc-grok-cursor-linear/cover.png'
 date: '2026-11-21T04:00:00.000Z'
 author:
   name: Eri Lopez
   picture: '/assets/blog/authors/EriLopez3.png'
 ogImage:
-  url: '/assets/blog/agentic-engineering/cover.png'
+  url: '/assets/blog/sdlc-grok-cursor-linear/cover.png'
 isPublished: true
 category: 'agentic-engineering'
 ---
