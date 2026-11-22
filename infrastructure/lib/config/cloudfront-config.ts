@@ -5,9 +5,12 @@
  * the website ALIAS/CNAME records are added in Namecheap Advanced DNS.
  * This stack does not create a hosted zone or DNS records.
  *
- * CloudFront accepts only us-east-1 certificates. Import the issued
- * certificate with CLOUDFRONT_CERTIFICATE_ARN. The deploy stays unblocked
- * while the owner adds the Namecheap validation CNAMEs.
+ * CloudFront accepts only us-east-1 certificates. A normal deploy leaves the
+ * alternate names off the distribution. Set ENABLE_CUSTOM_DOMAIN=true or CDK
+ * context customDomain=true to create a DNS-validated certificate in this
+ * stack. That deploy waits until the Namecheap validation CNAMEs exist.
+ * CLOUDFRONT_CERTIFICATE_ARN imports an existing us-east-1 certificate and
+ * skips creation.
  */
 
 export const SITE_APEX_DOMAIN = "eribertolopez.com";
@@ -38,6 +41,9 @@ export interface CloudFrontEnvironmentConfig {
 
 export type CertificateAttachment = "attached" | "pending-certificate" | "not-configured";
 
+/** How the distribution gets its certificate. `create` is the path that waits on DNS. */
+export type CertificatePlan = "import" | "create" | "pending" | "none";
+
 const sharedEdge: Pick<
   CloudFrontEnvironmentConfig,
   | "priceClass"
@@ -63,7 +69,7 @@ const sharedEdge: Pick<
 
 /**
  * Environment-specific CloudFront configurations.
- * The certificate ARN is never stored here. Set CLOUDFRONT_CERTIFICATE_ARN.
+ * The certificate ARN is never stored here.
  */
 export const cloudFrontConfigurations: Record<string, CloudFrontEnvironmentConfig> = {
   local: {
@@ -124,14 +130,51 @@ export function getCloudFrontConfig(environment: string): CloudFrontEnvironmentC
   };
 }
 
-export function certificateAttachment(config: CloudFrontEnvironmentConfig): CertificateAttachment {
+/**
+ * True when this deploy should attach the apex. Either source is enough.
+ * CDK context `-c customDomain=true` arrives as the string "true".
+ */
+export function customDomainRequested(contextValue?: unknown): boolean {
+  if (process.env.ENABLE_CUSTOM_DOMAIN?.trim().toLowerCase() === "true") {
+    return true;
+  }
+  return contextValue === true || contextValue === "true";
+}
+
+export function certificatePlan(
+  config: CloudFrontEnvironmentConfig,
+  requested: boolean
+): CertificatePlan {
   if (config.customDomains.length === 0) {
-    return "not-configured";
+    return "none";
   }
   if (config.certificateArn) {
-    return "attached";
+    return "import";
   }
-  return "pending-certificate";
+  if (requested) {
+    return "create";
+  }
+  return "pending";
+}
+
+export function certificateAttachment(
+  config: CloudFrontEnvironmentConfig,
+  requested = false
+): CertificateAttachment {
+  const plan = certificatePlan(config, requested);
+  switch (plan) {
+    case "none":
+      return "not-configured";
+    case "pending":
+      return "pending-certificate";
+    case "import":
+    case "create":
+      return "attached";
+    default: {
+      const unexpected: never = plan;
+      throw new Error(`Unexpected certificate plan: ${String(unexpected)}`);
+    }
+  }
 }
 
 export function validateCloudFrontConfig(

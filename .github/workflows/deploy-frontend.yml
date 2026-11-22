@@ -2,6 +2,11 @@ name: Deploy Frontend
 
 on:
   workflow_dispatch:
+    inputs:
+      enable_custom_domain:
+        description: "Create the us-east-1 ACM certificate and wait until Namecheap DNS validation finishes"
+        type: boolean
+        default: false
   push:
     branches: [main]
     paths:
@@ -16,7 +21,7 @@ env:
   # configure-aws-credentials exports AWS_REGION. The CDK CLI copies it to
   # CDK_DEFAULT_REGION, so this job updates EribertoLopez-Frontend-Stack in
   # us-east-1. bin/infrastructure.ts falls back to us-west-2 only when that
-  # variable is unset. The imported ACM certificate must also be us-east-1.
+  # variable is unset. The ACM certificate is created in that same stack.
   AWS_REGION: us-east-1
 
 concurrency:
@@ -27,6 +32,10 @@ jobs:
   deploy:
     name: Build & Deploy Frontend
     runs-on: ubuntu-latest
+    # GitHub-hosted runners cap a job at 360 minutes. CloudFormation itself
+    # keeps a DNS-validated certificate IN_PROGRESS for up to about 72 hours.
+    # Add the Namecheap CNAMEs while this job is still running when you can.
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
 
@@ -56,10 +65,17 @@ jobs:
       - name: CDK deploy frontend
         env:
           CLOUDFRONT_CERTIFICATE_ARN: ${{ secrets.CLOUDFRONT_CERTIFICATE_ARN }}
+          ENABLE_CUSTOM_DOMAIN: ${{ github.event_name == 'workflow_dispatch' && inputs.enable_custom_domain && 'true' || 'false' }}
         run: |
           if [ -n "$CLOUDFRONT_CERTIFICATE_ARN" ]; then
-            echo "CLOUDFRONT_CERTIFICATE_ARN is set. eribertolopez.com and www will be attached."
+            echo "CLOUDFRONT_CERTIFICATE_ARN is set. Importing that certificate and skipping ACM creation."
+            npm run deploy:frontend
+          elif [ "$ENABLE_CUSTOM_DOMAIN" = "true" ]; then
+            echo "ENABLE_CUSTOM_DOMAIN=true. CDK creates the ACM certificate and this job waits for Namecheap validation."
+            echo "Validation CNAME name and value show in the ACM console and in the CloudFormation certificate events."
+            echo "This job ends at 6 hours. CloudFormation can keep waiting for about 72 hours."
+            npm run deploy:frontend
           else
-            echo "CLOUDFRONT_CERTIFICATE_ARN is unset. Deploying without alternate domain names."
+            echo "Custom domain flag is off. Deploying without alternate domain names."
+            npm run deploy:frontend
           fi
-          npm run deploy:frontend

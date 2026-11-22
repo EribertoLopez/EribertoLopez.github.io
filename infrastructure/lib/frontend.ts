@@ -23,6 +23,9 @@ import {
 import { loadSiteRouterCode } from "./cloudfront-functions/load-site-router";
 import {
   certificateAttachment,
+  certificatePlan,
+  CloudFrontEnvironmentConfig,
+  customDomainRequested,
   getCloudFrontConfig,
   validateCloudFrontConfig,
 } from "./config/cloudfront-config";
@@ -41,7 +44,9 @@ export class FrontendStack extends cdk.Stack {
   private createFrontend(environment: string) {
     const cloudFrontConfig = getCloudFrontConfig(environment);
     validateCloudFrontConfig(environment, cloudFrontConfig);
-    const attachment = certificateAttachment(cloudFrontConfig);
+    const requested = customDomainRequested(this.node.tryGetContext("customDomain"));
+    const plan = certificatePlan(cloudFrontConfig, requested);
+    const attachment = certificateAttachment(cloudFrontConfig, requested);
 
     // Private S3 bucket for the site assets
     const siteBucket = new Bucket(this, "SiteBucket", {
@@ -73,18 +78,11 @@ export class FrontendStack extends cdk.Stack {
       comment: "Redirect www to the apex and map extensionless Next.js export paths to .html",
     });
 
-    const certificate =
-      attachment === "attached" && cloudFrontConfig.certificateArn
-        ? acm.Certificate.fromCertificateArn(
-            this,
-            "SiteCertificate",
-            cloudFrontConfig.certificateArn
-          )
-        : undefined;
+    const certificate = this.resolveCertificate(environment, cloudFrontConfig, plan);
 
-    if (attachment === "pending-certificate") {
+    if (plan === "pending") {
       cdk.Annotations.of(this).addWarning(
-        `Alternate domain names ${cloudFrontConfig.customDomains.join(", ")} stay off this distribution until CLOUDFRONT_CERTIFICATE_ARN is a validated us-east-1 ACM certificate. Keep the Namecheap website records on GitHub Pages until CloudFront lists those names.`
+        `Alternate domain names ${cloudFrontConfig.customDomains.join(", ")} stay off this distribution. Deploy with ENABLE_CUSTOM_DOMAIN=true or -c customDomain=true to create the us-east-1 certificate and wait for Namecheap validation. CLOUDFRONT_CERTIFICATE_ARN imports an existing certificate instead. Keep the Namecheap website records on GitHub Pages until CloudFront lists those names.`
       );
     }
 
@@ -164,14 +162,66 @@ export class FrontendStack extends cdk.Stack {
     new cdk.CfnOutput(this, "CustomDomainAttachment", {
       value: attachment,
       description:
-        "attached: certificate and alternate names are on the distribution. pending-certificate: set CLOUDFRONT_CERTIFICATE_ARN and deploy again. not-configured: this environment has no custom domains.",
+        "attached: certificate and alternate names are on the distribution. pending-certificate: redeploy with ENABLE_CUSTOM_DOMAIN=true or -c customDomain=true. not-configured: this environment has no custom domains.",
     });
 
     if (certificate) {
       new cdk.CfnOutput(this, "CertificateArn", {
         value: certificate.certificateArn,
-        description: "us-east-1 ACM certificate attached to the distribution.",
+        description:
+          "us-east-1 ACM certificate attached to the distribution. Present after the stack finishes; DNS validation is still in progress while the certificate resource is CREATE_IN_PROGRESS.",
       });
     }
+  }
+
+  private resolveCertificate(
+    environment: string,
+    config: CloudFrontEnvironmentConfig,
+    plan: ReturnType<typeof certificatePlan>
+  ): acm.ICertificate | undefined {
+    switch (plan) {
+      case "none":
+      case "pending":
+        return undefined;
+      case "import": {
+        const arn = config.certificateArn;
+        if (!arn) {
+          throw new Error(
+            `CloudFront configuration error for environment '${environment}': import plan is missing CLOUDFRONT_CERTIFICATE_ARN.`
+          );
+        }
+        return acm.Certificate.fromCertificateArn(this, "SiteCertificate", arn);
+      }
+      case "create": {
+        this.assertCertificateRegion(environment);
+        const [domainName, ...subjectAlternativeNames] = config.customDomains;
+        if (!domainName) {
+          throw new Error(
+            `CloudFront configuration error for environment '${environment}': custom domain is enabled but no domain names are configured.`
+          );
+        }
+        return new acm.Certificate(this, "SiteCertificate", {
+          domainName,
+          subjectAlternativeNames: subjectAlternativeNames.length ? subjectAlternativeNames : undefined,
+          validation: acm.CertificateValidation.fromDns(),
+        });
+      }
+      default: {
+        const unexpected: never = plan;
+        throw new Error(`Unexpected certificate plan: ${String(unexpected)}`);
+      }
+    }
+  }
+
+  private assertCertificateRegion(environment: string): void {
+    if (cdk.Token.isUnresolved(this.region) || this.region === "us-east-1") {
+      return;
+    }
+    throw new Error(
+      `CloudFront configuration error for environment '${environment}': ` +
+        `creating the DNS-validated certificate requires this stack in us-east-1 ` +
+        `(CloudFront only accepts certificates from that region). Current region: ${this.region}. ` +
+        `Deploy Frontend already sets AWS_REGION=us-east-1.`
+    );
   }
 }
