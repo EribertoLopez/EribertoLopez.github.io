@@ -24,6 +24,8 @@ const PostPreview = ({
   slug,
   currentTheme
 }: Props) => {
+  const asPath = `/${currentTheme.toLowerCase()}/${slug}`
+  const hrefPath = `/${currentTheme.toLowerCase()}/[slug]`
   return (
     <div>
       <div className="mb-5">
@@ -31,8 +33,8 @@ const PostPreview = ({
       </div>
       <h3 className="text-3xl mb-3 leading-snug">
         <Link
-          as={`/${currentTheme}/${slug}`}
-          href={`/${currentTheme}/[slug]`}
+          as={asPath}
+          href={hrefPath}
           className="hover:underline"
         >
           {title}
