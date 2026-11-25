@@ -1,6 +1,7 @@
 import MoreStories from '../../components/more-stories'
 import HeroPost from '../../components/hero-post'
 import Intro from '../../components/intro'
+import Seo from '../../components/seo'
 import { getPostsByCategory } from '../../lib/api'
 import Post from '../../types/post'
 import { useState } from 'react'
@@ -29,6 +30,8 @@ const Content = ({ currentTheme, allPosts }: { currentTheme: Sections; allPosts:
           slug={heroPost.slug}
           excerpt={heroPost.excerpt}
           currentTheme={currentTheme}
+          readingTime={heroPost.readingTime}
+          tags={heroPost.tags}
         />
       )}
       {morePosts.length > 0 && <MoreStories posts={morePosts} currentTheme={currentTheme} />}
@@ -47,7 +50,15 @@ export default function AIIndex({ allPosts }: Props) {
       onThemeChange={() => {}}
       contentImage={heroPost?.coverImage || ''}
     >
-      <Content currentTheme={currentTheme} allPosts={allPosts} />
+      <>
+        <Seo
+          title="Agentic engineering"
+          description="Exploring agentic engineering: AI agents that ship real work. Posts on multi-agent systems, agent workflows and the tools behind them."
+          path="/ai"
+          image={heroPost?.coverImage}
+        />
+        <Content currentTheme={currentTheme} allPosts={allPosts} />
+      </>
     </SidebarLayout>
   )
 }
@@ -61,6 +72,8 @@ export const getStaticProps = async () => {
     'coverImage',
     'excerpt',
     'isPublished',
+    'tags',
+    'readingTime',
   ])
 
   return {

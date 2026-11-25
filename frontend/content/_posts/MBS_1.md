@@ -9,6 +9,7 @@ author:
 ogImage:
   url: '/assets/blog/mindBodySoul/tulum_beach.jpeg'
 isPublished: true
+tags: ['Personal']
 ---
 
 ## Inspiration

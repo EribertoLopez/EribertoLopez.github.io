@@ -7,7 +7,7 @@ import PostHeader from '../../components/post-header'
 import Layout from '../../components/layout'
 import { getPostBySlug, getAllPosts, getProjectBySlug, getAllProjects, getAllResumes, getResumeBySlug } from '../../lib/api'
 import PostTitle from '../../components/post-title'
-import Head from 'next/head'
+import Seo from '../../components/seo'
 import markdownToHtml from '../../lib/markdownToHtml'
 import type PostType from '../../types/post'
 import { Sections } from '../../lib/ConfigUtils'
@@ -412,10 +412,8 @@ export default function Post({ post, morePosts, preview, currentTheme = Sections
         ) : (
           <>
             <article className="mb-32">
-              <Head>
-                <title>{title}</title>
-                {post.ogImage?.url && <meta property="og:image" content={post.ogImage.url} />}
-              </Head>
+              {/* Older resume versions stay reachable by link but out of search results. */}
+              <Seo title="Resume" path={`/resume/${post.slug}`} image={post.ogImage?.url} noindex />
               <MyResume />
               {/* <PostHeader
                 title={post.title}

@@ -126,11 +126,11 @@ export class FrontendStack extends cdk.Stack {
         CacheControl.immutable(),
       ],
       prune: false,
-      exclude: ["*.html", "**/*.html", "*.txt", "**/*.txt", ...publishedAssetExcludes],
+      exclude: ["*.html", "**/*.html", "*.txt", "**/*.txt", "*.xml", "**/*.xml", ...publishedAssetExcludes],
       memoryLimit: 3008, // Increase memory (and timeout) for large deployments
     });
 
-    // 2b) HTML (no-cache so refresh picks up new content)
+    // 2b) HTML, robots.txt, sitemap.xml and feed.xml (no-cache so refresh picks up new content)
     new BucketDeployment(this, "DeployHtml", {
       sources: [Source.asset(siteBundlePath)],
       destinationBucket: siteBucket,
@@ -138,7 +138,7 @@ export class FrontendStack extends cdk.Stack {
       distributionPaths: ["/*"],
       cacheControl: [CacheControl.noCache()],
       prune: true,
-      include: ["*.html", "**/*.html", "*.txt", "**/*.txt"],
+      include: ["*.html", "**/*.html", "*.txt", "**/*.txt", "*.xml", "**/*.xml"],
       exclude: publishedAssetExcludes,
       memoryLimit: 3008, // Increase memory (and timeout) for large deployments
     });

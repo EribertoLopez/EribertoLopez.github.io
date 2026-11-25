@@ -13,6 +13,8 @@ on:
       - "frontend/next.config.*"
       - "frontend/package.json"
       - "frontend/tailwind.config.*"
+      - "frontend/content/**"
+      - "frontend/scripts/**"
   workflow_dispatch:
   workflow_call:
 
@@ -64,13 +66,17 @@ jobs:
             --cache-control "public, max-age=31536000, immutable" \
             --exclude "*.html" \
             --exclude "*.json" \
+            --exclude "*.xml" \
+            --exclude "*.txt" \
             --exclude "CNAME"
-          # HTML and JSON get shorter cache. CNAME stays in git for GitHub Pages
+          # HTML, JSON, sitemap/feed (.xml) and robots.txt get shorter cache. CNAME stays in git for GitHub Pages
           # and is not part of the CloudFront site.
           aws s3 sync frontend/out/ s3://${{ secrets.S3_BUCKET_NAME }}/ \
             --cache-control "public, max-age=60, s-maxage=600" \
             --include "*.html" \
             --include "*.json" \
+            --include "*.xml" \
+            --include "*.txt" \
             --exclude "_next/*" \
             --exclude "CNAME"
           aws s3 rm "s3://${{ secrets.S3_BUCKET_NAME }}/CNAME" || true

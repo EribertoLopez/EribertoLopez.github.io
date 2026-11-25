@@ -14,6 +14,7 @@ author:
 ogImage:
   url: '/assets/blog/multi-agent-lifestyle-trackers/cover.png'
 isPublished: true
+tags: ['Agentic Engineering', 'Multi-Agent Systems', 'Experiments']
 category: 'agentic-engineering'
 ---
 

@@ -13,6 +13,8 @@ type PostType = {
   }
   content: string
   category?: string
+  tags?: string[]
+  readingTime?: number
 }
 
 export default PostType

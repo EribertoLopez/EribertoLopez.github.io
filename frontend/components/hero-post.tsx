@@ -4,6 +4,7 @@ import CoverImage from './cover-image'
 import Link from 'next/link'
 import type Author from '../types/author'
 import { Sections } from '../lib/ConfigUtils'
+import PostMeta from './post-meta'
 
 type Props = {
   title: string
@@ -13,6 +14,8 @@ type Props = {
   author: Author
   slug: string,
   currentTheme: Sections,
+  readingTime?: number
+  tags?: string[]
 }
 
 const HeroPost = ({
@@ -22,7 +25,9 @@ const HeroPost = ({
   excerpt,
   author,
   slug,
-  currentTheme
+  currentTheme,
+  readingTime,
+  tags,
 }: Props) => {
   // TODO: This get repeatidly used when Link is used to route clicks
   const asPath: string = (currentTheme ? `/${currentTheme.toLowerCase()}` : '').concat(`/${slug}`) 
@@ -47,6 +52,7 @@ const HeroPost = ({
           <div className="mb-4 md:mb-0 text-lg">
             <DateFormatter dateString={date} />
           </div>
+          <PostMeta readingTime={readingTime} tags={tags} className="mt-4" />
         </div>
         <div>
           <p className="text-lg leading-relaxed mb-4">{excerpt}</p>

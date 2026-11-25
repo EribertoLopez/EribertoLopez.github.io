@@ -4,6 +4,7 @@ import CoverImage from './cover-image'
 import Link from 'next/link'
 import type Author from '../types/author'
 import { Sections } from '../lib/ConfigUtils'
+import PostMeta from './post-meta'
 
 type Props = {
   title: string
@@ -13,6 +14,8 @@ type Props = {
   author: Author
   slug: string
   currentTheme: Sections
+  readingTime?: number
+  tags?: string[]
 }
 
 const PostPreview = ({
@@ -22,7 +25,9 @@ const PostPreview = ({
   excerpt,
   author,
   slug,
-  currentTheme
+  currentTheme,
+  readingTime,
+  tags,
 }: Props) => {
   const asPath = `/${currentTheme.toLowerCase()}/${slug}`
   const hrefPath = `/${currentTheme.toLowerCase()}/[slug]`
@@ -43,6 +48,7 @@ const PostPreview = ({
       <div className="text-lg mb-4">
         <DateFormatter dateString={date} />
       </div>
+      <PostMeta readingTime={readingTime} tags={tags} className="mb-4" />
       <p className="text-lg leading-relaxed mb-4">{excerpt}</p>
       <Avatar name={author.name} picture={author.picture} />
     </div>

@@ -12,6 +12,7 @@ author:
 ogImage:
   url: '/assets/blog/agentic-engineering/cover.png'
 isPublished: true
+tags: ['Agentic Engineering', 'Multi-Agent Systems', 'Engineering Leadership']
 category: 'agentic-engineering'
 ---
 

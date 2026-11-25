@@ -1,7 +1,7 @@
 import Container from '../../components/container'
 import Layout from '../../components/layout'
 
-import Head from 'next/head'
+import Seo from '../../components/seo'
 
 import myImage from "../../public/favicon/IBelieveICanShibe_edited_50x50.png";
 
@@ -13,9 +13,7 @@ export default function Index() {
   return (
     <div style={{ background: '#b3dcc6'}}>
       <Layout>
-        <Head>
-          <title>{`Contact | Eriberto Lopez`}</title>
-        </Head>
+        <Seo title="Contact" description="Get in touch with Eriberto Lopez." path="/contact" noindex />
         <Container>
             <div className={styles.contact}>
                 <div >Under Construction </div>

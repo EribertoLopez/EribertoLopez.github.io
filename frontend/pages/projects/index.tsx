@@ -2,7 +2,8 @@ import { themes, Sections } from '../../lib/ConfigUtils';
 import SidebarLayout from '../../components/SidebarLayout';
 import { ExternalLink } from 'lucide-react';
 import Project from '../../types/project'
-import { getAllProjects } from '../../lib/api';
+import { getPublishedProjects } from '../../lib/api';
+import Seo from '../../components/seo';
 import Intro from '../../components/intro';
 import HeroPost from '../../components/hero-post';
 import MoreProjects from '../../components/more-projects';
@@ -98,13 +99,21 @@ export default function Index({ allProjects }: Props) {
       onThemeChange={() => {}}
       contentImage={undefined}
     >
-      <Content currentTheme={Sections.Projects} allProjects={allProjects} />
+      <>
+        <Seo
+          title="Projects"
+          description="Things Eriberto Lopez has built and made, from software experiments to acrylic pour paintings."
+          path="/projects"
+          image={allProjects[0]?.coverImage}
+        />
+        <Content currentTheme={Sections.Projects} allProjects={allProjects} />
+      </>
     </SidebarLayout>
   )
 }
 
 export const getStaticProps = async () => {
-  const allProjects = getAllProjects([
+  const allProjects = getPublishedProjects([
     'title',
     'date',
     'slug',

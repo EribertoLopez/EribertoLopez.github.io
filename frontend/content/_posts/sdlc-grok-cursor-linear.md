@@ -13,6 +13,7 @@ author:
 ogImage:
   url: '/assets/blog/sdlc-grok-cursor-linear/cover.png'
 isPublished: true
+tags: ['Agentic Engineering', 'Developer Workflow', 'SDLC']
 category: 'agentic-engineering'
 ---
 ## Why I needed a process agents can follow

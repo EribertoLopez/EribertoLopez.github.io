@@ -3,7 +3,9 @@ import { themes, Sections } from '../lib/ConfigUtils'
 import SidebarLayout from '../components/SidebarLayout'
 import Post from '../types/post'
 import Project from '../types/project'
-import { getAllPosts, getAllProjects, getAllResumes } from '../lib/api'
+import { getPublishedPosts, getPublishedProjects, getAllResumes } from '../lib/api'
+import Seo from '../components/seo'
+import { personJsonLd, websiteJsonLd } from '../lib/jsonld'
 import Intro from '../components/intro'
 import HeroProject from '../components/hero-project'
 import ResumeHero from '../components/hero-resume'
@@ -72,13 +74,16 @@ export default function Index({ allPosts, allResumes, allProjects }: Props) {
       onThemeChange={() => {}}
       contentImage={undefined} // TODO: fix :(
     >
-      <Content currentTheme={Sections.Home} allPosts={allPosts} allResumes={allResumes} allProjects={allProjects}/>
+      <>
+        <Seo path="/" type="profile" jsonLd={[personJsonLd(), websiteJsonLd()]} />
+        <Content currentTheme={Sections.Home} allPosts={allPosts} allResumes={allResumes} allProjects={allProjects}/>
+      </>
     </SidebarLayout>
   )
 }
 
 export const getStaticProps = async () => {
-  const allPosts = getAllPosts([
+  const allPosts = getPublishedPosts([
     'title',
     'date',
     'slug',
@@ -96,7 +101,7 @@ export const getStaticProps = async () => {
     'excerpt',
     'isPublished',
   ])
-  const allProjects = getAllProjects([
+  const allProjects = getPublishedProjects([
     'title',
     'date',
     'slug',

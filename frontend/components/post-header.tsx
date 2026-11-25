@@ -5,6 +5,7 @@ import PostTitle from './post-title'
 import type Author from '../types/author'
 import { Sections } from '../lib/ConfigUtils'
 import { Github, Linkedin, Globe } from 'lucide-react';
+import PostMeta from './post-meta'
 
 type Props = {
   title: string
@@ -12,6 +13,8 @@ type Props = {
   date: string
   author: Author
   currentTheme: Sections
+  readingTime?: number
+  tags?: string[]
 }
 
 type Skill = {
@@ -202,7 +205,7 @@ const MyResume = () => {
   return <Resume {...resumeData} />;
 };
 
-const PostHeader = ({ title, coverImage, date, author, currentTheme }: Props) => {
+const PostHeader = ({ title, coverImage, date, author, currentTheme, readingTime, tags }: Props) => {
 
       return (
         <>
@@ -221,6 +224,7 @@ const PostHeader = ({ title, coverImage, date, author, currentTheme }: Props) =>
             <div className="mb-6 text-lg">
               <DateFormatter dateString={date} />
             </div>
+            <PostMeta readingTime={readingTime} tags={tags} className="mb-6" />
           </div>
         </>
       )

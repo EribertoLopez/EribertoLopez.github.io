@@ -4,9 +4,10 @@ import Container from '../../components/container'
 import PostBody from '../../components/post-body'
 import PostHeader from '../../components/post-header'
 import Layout from '../../components/layout'
-import { getPostBySlug, getAllPosts } from '../../lib/api'
+import { getPostBySlug, getPublishedPosts } from '../../lib/api'
 import PostTitle from '../../components/post-title'
-import Head from 'next/head'
+import Seo from '../../components/seo'
+import { blogPostingJsonLd } from '../../lib/jsonld'
 import markdownToHtml from '../../lib/markdownToHtml'
 import type PostType from '../../types/post'
 import { Sections } from '../../lib/ConfigUtils'
@@ -33,18 +34,33 @@ export default function Post({ post, morePosts, preview, currentTheme = Sections
           <PostTitle>Loading…</PostTitle>
         ) : (
           <SidebarLayout
-            headTitle={`Home | Eriberto Lopez`}
+            headTitle={`${post.title} | Eriberto Lopez`}
             currentTheme={currentTheme}
             onThemeChange={() => {}}
             contentImage={post.coverImage} // TODO: fix :(            
           >
             <article className="mb-32">
-              <Head>
-                <title>{title}</title>
-                <meta property="og:image" content={post.ogImage.url} />
-              </Head>
+              <Seo
+                title={post.title}
+                description={post.excerpt}
+                path={`/latest/${post.slug}`}
+                image={post.ogImage?.url || post.coverImage}
+                type="article"
+                publishedTime={post.date}
+                tags={post.tags}
+                jsonLd={blogPostingJsonLd({
+                  title: post.title,
+                  excerpt: post.excerpt,
+                  date: post.date,
+                  path: `/latest/${post.slug}`,
+                  image: post.ogImage?.url || post.coverImage,
+                  tags: post.tags,
+                })}
+              />
               <PostHeader
                 title={post.title}
+                readingTime={post.readingTime}
+                tags={post.tags}
                 coverImage={post.coverImage}
                 date={post.date}
                 author={post.author}
@@ -74,6 +90,9 @@ export async function getStaticProps({ params }: Params) {
     'content',
     'ogImage',
     'coverImage',
+    'excerpt',
+    'tags',
+    'readingTime',
   ])
   const content = await markdownToHtml(post.content || '')
 
@@ -88,7 +107,7 @@ export async function getStaticProps({ params }: Params) {
 }
 
 export async function getStaticPaths() {
-  const posts = getAllPosts(['slug'])
+  const posts = getPublishedPosts(['slug'])
 
   return {
     paths: posts.map((post) => {

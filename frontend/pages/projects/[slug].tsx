@@ -4,9 +4,9 @@ import Container from '../../components/container'
 import PostBody from '../../components/post-body'
 import PostHeader from '../../components/post-header'
 import Layout from '../../components/layout'
-import { getProjectBySlug, getAllProjects } from '../../lib/api'
+import { getProjectBySlug, getPublishedProjects } from '../../lib/api'
 import PostTitle from '../../components/post-title'
-import Head from 'next/head'
+import Seo from '../../components/seo'
 import markdownToHtml from '../../lib/markdownToHtml'
 import { Sections } from '../../lib/ConfigUtils'
 import ProjectType from '../../types/project'
@@ -34,16 +34,20 @@ export default function Post({ post, morePosts, preview, currentTheme = Sections
           <PostTitle>Loading…</PostTitle>
         ) : (
           <SidebarLayout
-            headTitle={`Home | Eriberto Lopez`}
+            headTitle={`${post.title} | Eriberto Lopez`}
             currentTheme={currentTheme}
             onThemeChange={() => {}}
             contentImage={post.coverImage} // TODO: fix :(            
           >
             <article className="mb-32">
-              <Head>
-                <title>{title}</title>
-                <meta property="og:image" content={post.ogImage.url} />
-              </Head>
+              <Seo
+                title={post.title}
+                description={post.excerpt}
+                path={`/projects/${post.slug}`}
+                image={post.ogImage?.url || post.coverImage}
+                type="article"
+                publishedTime={post.date}
+              />
               <PostHeader
                 title={post.title}
                 coverImage={post.coverImage}
@@ -83,7 +87,8 @@ export async function getStaticProps({ params }: Params) {
     'content',
     'ogImage',
     'coverImage',
-    'gallery'
+    'gallery',
+    'excerpt',
   ])
   const content = await markdownToHtml(post.content || '')
 
@@ -98,7 +103,7 @@ export async function getStaticProps({ params }: Params) {
 }
 
 export async function getStaticPaths() {
-  const posts = getAllProjects(['slug'])
+  const posts = getPublishedProjects(['slug'])
 
   return {
     paths: posts.map((post) => {
